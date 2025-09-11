@@ -7,11 +7,12 @@ echo "🚀 Starting Browser Tools MCP Server..."
 echo "================================================"
 echo ""
 
-# Set port to 3026 to avoid conflict with ~/development/madi-test (using 3025)
-PORT=3026
+# Get assigned port for this project from registry
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PORT=$("$SCRIPT_DIR/get-browser-tools-port.sh" | tail -n 1)
 
 echo "📍 Configuration:"
-echo "   Port: $PORT (avoiding conflict with port 3025)"
+echo "   Port: $PORT (assigned to this project)"
 echo ""
 
 # Function to check if a process is running on a port

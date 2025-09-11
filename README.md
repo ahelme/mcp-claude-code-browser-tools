@@ -1,41 +1,60 @@
 # Browser Tools MCP Setup (Project-Level)
 
-A PROJECT-SPECIFIC configuration for Browser Tools MCP (Model Context Protocol) server for browser automation and testing.
+PROJECT-SPECIFIC configuration for Browser Tools MCP server (not global). Configuration in `.claude/` directory.
 
-**Important**: This sets up browser-tools MCP for THIS PROJECT ONLY, not globally. The configuration lives in this project's `.claude/` directory.
+## Configuration
 
-## Overview
-
-This repository contains configuration and scripts for setting up Browser Tools MCP, which provides AI-powered browser automation capabilities through Anthropic's Model Context Protocol.
-
-## Current Configuration
-
-- **Browser Tools MCP**: v1.2.1 (latest version)
-- **Playwright MCP**: Latest version
-- **Port**: 3026 (configured to avoid conflict with port 3025 used by ~/development/madi-test)
+- **Browser Tools MCP**: v1.2.1
+- **Playwright MCP**: Latest
+- **Port**: Auto-assigned (`./scripts/get-browser-tools-port.sh`)
+- **Registry**: `~/.claude/browser-tools-ports/registry.json`
 
 ## Features
 
-Browser Tools MCP provides:
-- Accessibility, Performance, SEO, and Best Practices audits
-- Screenshot capture and DOM analysis
-- Console log and network activity monitoring
-- NextJS-specific auditing capabilities
-- 60-second active headless browser sessions
-- **Automatic graceful shutdown when Claude Code exits**
-- **No orphaned processes or port conflicts**
+- Accessibility, Performance, SEO, Best Practices audits
+- Screenshot capture, DOM analysis
+- Console log, network monitoring
+- NextJS-specific auditing
+- 60-second headless sessions
+- Graceful shutdown on Claude exit
+- No orphaned processes
 
-## Setup Instructions
+## Available MCP Tools
 
-1. **Install Dependencies**
-   The MCP servers are configured to use npx, so no manual installation is needed.
+**Browser-tools functions** (mcp__browser-tools__*):
+- `navigate` - Go to URL
+- `screenshot` - Capture page
+- `click` - Click elements
+- `type` - Enter text
+- `evaluate` - Run JavaScript
+- `getContent` - Get page HTML
+- `audit` - Run Lighthouse audits
 
-2. **Start Browser Tools Server**
+**Playwright functions** (mcp__playwright__*):
+- Full Playwright API access
+- Advanced automation
+- Multi-browser support
+
+## Port Registry
+
+- **Location**: `~/.claude/browser-tools-ports/registry.json`
+- **Auto-assigns** unique ports per project
+- **Prevents** conflicts between projects
+- **Check port**: `./scripts/get-browser-tools-port.sh`
+
+## Setup
+
+1. **Start server** (auto-uses assigned port):
    ```bash
    ./scripts/start-browser-tools.sh
    ```
 
-3. **Testing**
+2. **Check port**:
+   ```bash
+   ./scripts/get-browser-tools-port.sh
+   ```
+
+3. **Run tests**:
    ```bash
    node ./scripts/test-ui-with-browser-tools.js
    ```
@@ -59,29 +78,31 @@ browser-tools-setup/
 
 ## Important Notes
 
-- Browser Tools MCP may conflict if running in multiple directories
-- The server runs on port 3025 by default
-- Chrome extension required for manual testing
-- Use browser-tools MCP instead of Puppeteer for all browser automation
+- Port registry manages assignments automatically
+- Chrome extension required for manual testing  
+- Use browser-tools MCP, not Puppeteer
+- Check port: `./scripts/get-browser-tools-port.sh`
 
-## Development Workflow
+## Workflow
 
-1. Always use browser-tools MCP (NOT Puppeteer) for UI development
-2. Save screenshots to `./.screenshots/`
-3. Save test files to `./.tests/`
-4. Use Memory Bank for session persistence
+1. Use browser-tools MCP (not Puppeteer)
+2. Screenshots: `./.screenshots/`
+3. Test files: `./.tests/`
+4. Session persistence: Memory Bank
 
 ## Troubleshooting
 
-If browser-tools doesn't connect:
-1. Check if another instance is running on port 3025
-2. Close all Chrome windows and restart
-3. Ensure only one DevTools panel is open
-4. Verify the Chrome extension is enabled
+If connection fails:
+1. Check port: `./scripts/get-browser-tools-port.sh`
+2. Verify available: `lsof -i :YOUR_PORT`
+3. Restart Chrome
+4. One DevTools panel only
+5. Extension enabled
 
 ## Documentation
 
 - [QUICK-START.md](QUICK-START.md) - 30-second installation guide
+- [PORT-REGISTRY.md](PORT-REGISTRY.md) - Port management system documentation
 - [ERROR-RECOVERY.md](ERROR-RECOVERY.md) - **Emergency fixes if Claude won't start**
 - [SETUP-OPTIONS.md](SETUP-OPTIONS.md) - Different configuration approaches
 - [SHUTDOWN-HANDLING.md](SHUTDOWN-HANDLING.md) - How graceful shutdown works
@@ -90,7 +111,7 @@ If browser-tools doesn't connect:
 
 ## 🚨 Quick Recovery
 
-If browser-tools causes Claude startup issues:
+If Claude won't start:
 ```bash
 # Disable immediately
 ./scripts/disable-browser-tools.sh

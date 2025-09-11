@@ -1,102 +1,67 @@
-# Browser Tools Testing Scripts
+# Browser Tools Scripts
 
-This directory contains scripts for testing websites with browser automation tools using Browser Tools MCP.
+Scripts for browser automation testing with Browser Tools MCP.
 
 ## Scripts
 
 ### 1. `start-browser-tools.sh`
-Starts the browser-tools MCP server for UI testing.
-
-**Usage:**
+Starts browser-tools server on auto-assigned port.
 ```bash
 ./scripts/start-browser-tools.sh
 ```
 
-**What it does:**
-- Starts the browser-tools server on port 3026 (to avoid conflicts)
-- Provides instructions for connecting Chrome extension
-- Sets up environment for browser automation testing
+### 2. `get-browser-tools-port.sh`
+Returns this project's assigned port from registry.
+```bash
+./scripts/get-browser-tools-port.sh
+```
 
-### 2. `test-ui-with-browser-tools.js`
-Example test cases for browser automation using browser-tools MCP.
-
-**Usage:**
+### 3. `test-ui-with-browser-tools.js`
+Example browser automation test cases.
 ```bash
 node ./scripts/test-ui-with-browser-tools.js
 ```
 
-**What it tests:**
-- Page load and navigation
-- Screenshot capture
-- DOM element inspection
-- Console log monitoring
-- Network activity tracking
-- Accessibility compliance
-- Performance metrics
+Tests: navigation, screenshots, DOM, console, network, accessibility, performance.
 
-## Setup Instructions
+## Quick Setup
 
-1. **Install Chrome Extension**
-   - Download the BrowserToolsMCP Chrome extension
-   - Install it in Chrome
+1. Install BrowserToolsMCP Chrome extension
+2. Start your web app
+3. Run: `./scripts/start-browser-tools.sh`
+4. Open Chrome → DevTools (F12) → BrowserToolsMCP panel
+5. Server auto-connects on assigned port
 
-2. **Start Your Web Application**
-   ```bash
-   # Start your local development server
-   # Example: npm start, yarn dev, python -m http.server, etc.
-   ```
+## Test URLs
 
-3. **Start Browser-Tools Server**
-   ```bash
-   ./scripts/start-browser-tools.sh
-   ```
-
-4. **Connect Chrome**
-   - Open Chrome and navigate to your test URL
-   - Open DevTools (F12)
-   - Find the BrowserToolsMCP panel
-   - The server will automatically connect on port 3026
-
-5. **Run Tests**
-   - Use the BrowserToolsMCP panel to:
-     - Capture screenshots
-     - Run accessibility audits
-     - Monitor console output
-     - Check network activity
-     - Analyze DOM elements
-
-## Example Test URLs
-
-- **Local Development**: http://localhost:3000
-- **Public Sites**: https://example.com, https://google.com
-- **Testing Playground**: https://the-internet.herokuapp.com/
+- Local: `http://localhost:3000`
+- Public: `https://example.com`
+- Playground: `https://the-internet.herokuapp.com/`
 
 ## Expected Results
 
-✅ All pages load without errors  
-✅ Screenshots captured successfully  
-✅ DOM elements can be inspected  
-✅ Console logs are captured  
-✅ Network requests are tracked  
-✅ Accessibility audit passes  
-✅ Performance metrics are collected  
-✅ Browser automation commands work correctly  
+✅ Pages load  
+✅ Screenshots work  
+✅ DOM inspection  
+✅ Console capture  
+✅ Network tracking  
+✅ Audits pass  
+✅ Metrics collected  
 
 ## Troubleshooting
 
-If browser-tools doesn't connect:
-1. Close all Chrome windows
-2. Restart the browser-tools server
-3. Make sure only one DevTools panel is open
-4. Check that the extension is enabled
+1. Restart Chrome
+2. Restart server
+3. One DevTools panel only
+4. Extension enabled
 
-## Common Elements to Test
+## Test Elements
 
-- **Navigation**: Links, menus, breadcrumbs
-- **Forms**: Input fields, buttons, validation
-- **Images**: Loading, alt text, responsive sizing
-- **Tables**: Data display, sorting, pagination
-- **Modals**: Open/close, overlays, focus management
-- **Interactive**: Dropdowns, accordions, tabs
-- **Media**: Videos, audio players, embeds
-- **Responsive**: Mobile, tablet, desktop views
+- Navigation: links, menus
+- Forms: inputs, validation
+- Images: loading, alt text
+- Tables: sorting, pagination
+- Modals: overlays, focus
+- Interactive: dropdowns, tabs
+- Media: video, audio
+- Responsive: mobile, tablet, desktop
