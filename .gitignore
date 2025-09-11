@@ -34,3 +34,7 @@ logs/
 dist/
 build/
 out/
+
+# Backups and archives
+.backups/
+.archive/
