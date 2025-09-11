@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Example test page for Browser Tools MCP automation testing">
+    <title>Browser Tools MCP - Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .test-form {
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .test-elements {
+            margin: 20px 0;
+        }
+        .accordion {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .accordion-header {
+            padding: 15px;
+            background: #f7f7f7;
+            cursor: pointer;
+            user-select: none;
+        }
+        .accordion-content {
+            padding: 15px;
+            display: none;
+        }
+        .accordion-content.active {
+            display: block;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+        }
+        .tabs {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .tab-buttons {
+            display: flex;
+            background: #f7f7f7;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 0;
+        }
+        .tab-button.active {
+            background: white;
+            border-bottom: 2px solid #667eea;
+        }
+        .tab-content {
+            padding: 20px;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Browser Tools MCP Test Page</h1>
+        
+        <p>This page contains various HTML elements for testing browser automation with Browser Tools MCP.</p>
+        
+        <!-- Test Form -->
+        <section class="test-form">
+            <h2>Test Form</h2>
+            <form id="testForm">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <select id="category" name="category">
+                        <option value="">Select a category</option>
+                        <option value="automation">Automation</option>
+                        <option value="testing">Testing</option>
+                        <option value="development">Development</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" rows="4"></textarea>
+                </div>
+                
+                <button type="submit">Submit Form</button>
+            </form>
+        </section>
+        
+        <!-- Interactive Elements -->
+        <section class="test-elements">
+            <h2>Interactive Elements</h2>
+            
+            <!-- Accordion -->
+            <div class="accordion">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    Click to Toggle Accordion
+                </div>
+                <div class="accordion-content">
+                    <p>This is the accordion content. It can be toggled by clicking the header.</p>
+                </div>
+            </div>
+            
+            <!-- Modal Trigger -->
+            <button onclick="openModal()">Open Modal Dialog</button>
+            
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="switchTab(event, 'tab1')">Tab 1</button>
+                    <button class="tab-button" onclick="switchTab(event, 'tab2')">Tab 2</button>
+                    <button class="tab-button" onclick="switchTab(event, 'tab3')">Tab 3</button>
+                </div>
+                <div class="tab-content">
+                    <div id="tab1" class="tab-pane active">
+                        <h3>Tab 1 Content</h3>
+                        <p>This is the content of the first tab.</p>
+                    </div>
+                    <div id="tab2" class="tab-pane">
+                        <h3>Tab 2 Content</h3>
+                        <p>This is the content of the second tab.</p>
+                    </div>
+                    <div id="tab3" class="tab-pane">
+                        <h3>Tab 3 Content</h3>
+                        <p>This is the content of the third tab.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Test Image -->
+        <section>
+            <h2>Test Image</h2>
+            <img src="https://via.placeholder.com/600x300/667eea/ffffff?text=Browser+Tools+MCP+Test+Image" 
+                 alt="Test image for browser automation">
+        </section>
+        
+        <!-- Links -->
+        <section>
+            <h2>Test Links</h2>
+            <ul>
+                <li><a href="#top">Internal Link (Top)</a></li>
+                <li><a href="https://example.com" target="_blank">External Link (Example.com)</a></li>
+                <li><a href="mailto:test@example.com">Email Link</a></li>
+                <li><a href="tel:+1234567890">Phone Link</a></li>
+            </ul>
+        </section>
+    </div>
+    
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2>Modal Dialog</h2>
+            <p>This is a modal dialog window.</p>
+            <button onclick="closeModal()">Close Modal</button>
+        </div>
+    </div>
+    
+    <script>
+        // Form submission
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submitted with data:', {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                category: document.getElementById('category').value,
+                message: document.getElementById('message').value
+            });
+            alert('Form submitted! Check console for data.');
+        });
+        
+        // Accordion toggle
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            content.classList.toggle('active');
+            console.log('Accordion toggled:', content.classList.contains('active') ? 'opened' : 'closed');
+        }
+        
+        // Modal functions
+        function openModal() {
+            document.getElementById('modal').classList.add('active');
+            console.log('Modal opened');
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            console.log('Modal closed');
+        }
+        
+        // Tab switching
+        function switchTab(event, tabId) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-pane');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active from all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            
+            console.log('Switched to tab:', tabId);
+        }
+        
+        // Log page load
+        console.log('Test page loaded successfully');
+        console.log('Browser Tools MCP Test Page ready for automation testing');
+    </script>
+</body>
+</html>

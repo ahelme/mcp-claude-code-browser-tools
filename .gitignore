@@ -7,9 +7,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Test outputs
-.screenshots/
-.tests/
+# Test outputs (keep example files, ignore actual test results)
+.screenshots/*.png
+.screenshots/*.jpg
+.tests/*.result.json
+.tests/*.output.txt
 
 # OS files
 .DS_Store
