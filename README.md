@@ -8,9 +8,9 @@ This repository contains configuration and scripts for setting up Browser Tools 
 
 ## Current Configuration
 
-- **Browser Tools MCP**: v1.2.0 (latest: v1.2.1)
+- **Browser Tools MCP**: v1.2.1 (latest version)
 - **Playwright MCP**: Latest version
-- **Port**: 3025 (default) or auto-discovery on ports 3026-3035
+- **Port**: 3026 (configured to avoid conflict with port 3025 used by ~/development/madi-test)
 
 ## Features
 

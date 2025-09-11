@@ -3,12 +3,9 @@
 ## Current Issues & Solutions
 
 ### Issue 1: Port Conflict
-**Problem**: Browser-tools MCP server running in another directory is using port 3025
-**Status**: Identified
-**Solution Options**:
-1. Stop the other browser-tools instance
-2. Configure this instance to use a different port
-3. Use port auto-discovery feature (ports 3026-3035)
+**Problem**: Browser-tools MCP server running in ~/development/madi-test is using port 3025
+**Status**: Resolved ✅
+**Solution**: Configured this instance to use port 3026 in all scripts and documentation
 
 ### Issue 2: MCP Server Connection
 **Problem**: Need to verify MCP server can connect properly
@@ -19,12 +16,13 @@
 3. Verify DevTools panel shows BrowserToolsMCP
 
 ### Issue 3: Scripts Reference PostFlow
-**Problem**: Current scripts in `/scripts/` are from PostFlow project
-**Status**: Needs updating
-**Action Required**: 
-- Update scripts to be generic browser-tools testing examples
-- Remove PostFlow-specific references
-- Add example test cases for common browser automation tasks
+**Problem**: Scripts in `/scripts/` contained PostFlow-specific references
+**Status**: Resolved ✅
+**Solution**: 
+- Updated all scripts to be generic browser-tools testing examples
+- Removed all PostFlow-specific references
+- Added comprehensive example test cases for browser automation
+- Created test-ui-with-browser-tools.js with 10 test categories
 
 ## Configuration Notes
 
@@ -34,9 +32,10 @@
 - Playwright MCP: Latest version via npx
 
 ### Port Configuration
-- Default port: 3025
-- Alternative ports: 3026-3035 (auto-discovery)
-- Check port usage: `lsof -i :3025`
+- Configured port: 3026 (to avoid conflict with ~/development/madi-test on 3025)
+- Alternative ports: 3027-3035 (if needed)
+- Check port usage: `lsof -i :3026`
+- Change port: Edit PORT variable in `scripts/start-browser-tools.sh`
 
 ## Testing Checklist
 

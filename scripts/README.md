@@ -1,6 +1,6 @@
-# PostFlow Testing Scripts
+# Browser Tools Testing Scripts
 
-This directory contains scripts for testing PostFlow with browser automation tools.
+This directory contains scripts for testing websites with browser automation tools using Browser Tools MCP.
 
 ## Scripts
 
@@ -13,12 +13,12 @@ Starts the browser-tools MCP server for UI testing.
 ```
 
 **What it does:**
-- Checks if PostFlow is running (frontend on 3000, backend on 3001)
-- Starts the browser-tools server
+- Starts the browser-tools server on port 3026 (to avoid conflicts)
 - Provides instructions for connecting Chrome extension
+- Sets up environment for browser automation testing
 
 ### 2. `test-ui-with-browser-tools.js`
-Comprehensive UI test plan for PostFlow using browser-tools.
+Example test cases for browser automation using browser-tools MCP.
 
 **Usage:**
 ```bash
@@ -26,11 +26,11 @@ node ./scripts/test-ui-with-browser-tools.js
 ```
 
 **What it tests:**
-- Login page and authentication
-- Dashboard with ShadCN cards
-- Projects and Students pages
-- Admin functionality
-- Yellow theme consistency
+- Page load and navigation
+- Screenshot capture
+- DOM element inspection
+- Console log monitoring
+- Network activity tracking
 - Accessibility compliance
 - Performance metrics
 
@@ -40,13 +40,10 @@ node ./scripts/test-ui-with-browser-tools.js
    - Download the BrowserToolsMCP Chrome extension
    - Install it in Chrome
 
-2. **Start PostFlow**
+2. **Start Your Web Application**
    ```bash
-   # Terminal 1 - Backend
-   npm start
-   
-   # Terminal 2 - Frontend
-   cd client && npm start
+   # Start your local development server
+   # Example: npm start, yarn dev, python -m http.server, etc.
    ```
 
 3. **Start Browser-Tools Server**
@@ -55,10 +52,10 @@ node ./scripts/test-ui-with-browser-tools.js
    ```
 
 4. **Connect Chrome**
-   - Open Chrome and go to http://localhost:3000
+   - Open Chrome and navigate to your test URL
    - Open DevTools (F12)
    - Find the BrowserToolsMCP panel
-   - The server will automatically connect
+   - The server will automatically connect on port 3026
 
 5. **Run Tests**
    - Use the BrowserToolsMCP panel to:
@@ -68,20 +65,22 @@ node ./scripts/test-ui-with-browser-tools.js
      - Check network activity
      - Analyze DOM elements
 
-## Test Credentials
+## Example Test URLs
 
-- **Admin**: admin@filmschool.edu / admin123
-- **Producer**: producer@filmschool.edu / producer123
+- **Local Development**: http://localhost:3000
+- **Public Sites**: https://example.com, https://google.com
+- **Testing Playground**: https://the-internet.herokuapp.com/
 
 ## Expected Results
 
 ✅ All pages load without errors  
-✅ Yellow theme is consistent (HSL: 47 96% 53%)  
-✅ ShadCN components render correctly  
-✅ No console errors  
+✅ Screenshots captured successfully  
+✅ DOM elements can be inspected  
+✅ Console logs are captured  
+✅ Network requests are tracked  
 ✅ Accessibility audit passes  
-✅ Performance metrics are acceptable  
-✅ Responsive design works on all screen sizes  
+✅ Performance metrics are collected  
+✅ Browser automation commands work correctly  
 
 ## Troubleshooting
 
@@ -91,13 +90,13 @@ If browser-tools doesn't connect:
 3. Make sure only one DevTools panel is open
 4. Check that the extension is enabled
 
-## ShadCN Components to Verify
+## Common Elements to Test
 
-- **Button**: Primary yellow, outline, secondary variants
-- **Card**: Dashboard statistics cards
-- **Input**: Form inputs
-- **Select**: Dropdown menus
-- **Table**: Data tables
-- **Dialog**: Modal dialogs
-- **Toast**: Notification toasts
-- **Badge**: Status badges
+- **Navigation**: Links, menus, breadcrumbs
+- **Forms**: Input fields, buttons, validation
+- **Images**: Loading, alt text, responsive sizing
+- **Tables**: Data display, sorting, pagination
+- **Modals**: Open/close, overlays, focus management
+- **Interactive**: Dropdowns, accordions, tabs
+- **Media**: Videos, audio players, embeds
+- **Responsive**: Mobile, tablet, desktop views
