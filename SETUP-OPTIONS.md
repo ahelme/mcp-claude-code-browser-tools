@@ -101,7 +101,9 @@ cp .claude/mcp-auto-start.json .claude/mcp.json
 - Starts browser-tools-server on port 3026
 - Waits for server initialization
 - Starts browser-tools-mcp
-- Handles cleanup on exit
+- **Handles graceful shutdown when Claude Code exits**
+- Cleans up all browser-tools processes automatically
+- No orphaned processes left running
 
 ### Auto-Start Config (`.claude/mcp-auto-start.json`)
 ```json

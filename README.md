@@ -1,6 +1,8 @@
-# Browser Tools MCP Setup
+# Browser Tools MCP Setup (Project-Level)
 
-A project to configure and test the Browser Tools MCP (Model Context Protocol) server for browser automation and testing.
+A PROJECT-SPECIFIC configuration for Browser Tools MCP (Model Context Protocol) server for browser automation and testing.
+
+**Important**: This sets up browser-tools MCP for THIS PROJECT ONLY, not globally. The configuration lives in this project's `.claude/` directory.
 
 ## Overview
 
