@@ -19,11 +19,39 @@ Browser-tools MCP functions start with `mcp__browser-tools__`. Key functions inc
 
 ## Prerequisites
 
-**IMPORTANT**: The browser-tools server must be running BEFORE Claude can use it:
+**IMPORTANT**: Browser-tools MCP has two components that work together:
+1. **browser-tools-server**: The browser automation server (can be started by Claude)
+2. **browser-tools-mcp**: The MCP interface (configured in `.claude/mcp.json`)
+
+### How It Actually Works
+
+**Reality Check**: 
+- MCP servers configured in `.claude/mcp.json` are managed by the Claude application
+- They start automatically when Claude launches or when configuration changes
+- Claude CANNOT directly invoke MCP functions unless the MCP server is already connected
+- The browser-tools-mcp in `.claude/mcp.json` needs to connect to browser-tools-server
+
+### What Claude CAN Do
+
+Claude can start the browser-tools-server in background:
 ```bash
-# User must run this in terminal first:
-./scripts/start-browser-tools.sh
+# Claude can run this:
+PORT=3026 npx @agentdeskai/browser-tools-server@latest
 ```
+
+### What Claude CANNOT Do
+
+- Cannot force the MCP connection to initialize within the session
+- Cannot directly call mcp__browser-tools__ functions unless already connected
+- Cannot restart the Claude application to pick up MCP changes
+
+### Solution for Users
+
+1. **Option A**: Restart Claude Code after configuration changes
+2. **Option B**: Run the server manually in terminal:
+   ```bash
+   ./scripts/start-browser-tools.sh
+   ```
 
 ## Step-by-Step Operating Instructions
 

@@ -13,17 +13,28 @@ Verify browser-tools MCP functions can be accessed and operated by Claude follow
 - Provides step-by-step examples
 - Contains troubleshooting guide
 
-### ⚠️ MCP Server Connection Test
+### ⚠️ MCP Server Connection Test - UPDATED
 
-**Status**: Unable to test - Server not running
+**Status**: Server started but MCP connection not established
 
-**Findings**:
+**New Findings**:
 1. Browser-tools MCP is configured in `.claude/mcp.json` ✅
-2. ListMcpResourcesTool does not show browser-tools in available servers
-3. This is expected behavior - browser-tools requires external server process
+2. Claude CAN start browser-tools-server using Bash with `run_in_background` ✅
+3. Server successfully running on port 3026 ✅
+4. BUT: MCP connection not established automatically ❌
 
-**Reason**: 
-Browser-tools MCP operates as a separate server process that must be started manually by the user. Claude cannot start this server autonomously.
+**Root Cause**: 
+- MCP servers in `.claude/mcp.json` are managed by Claude application
+- They initialize when Claude launches or config changes
+- Cannot be forced to connect mid-session
+- Browser-tools-mcp needs to find browser-tools-server at startup
+
+**What I Successfully Did**:
+```bash
+# Started browser-tools-server in background
+PORT=3026 npx @agentdeskai/browser-tools-server@latest
+# Server is running at http://localhost:3026 ✅
+```
 
 ### 📋 Verified Configuration
 
