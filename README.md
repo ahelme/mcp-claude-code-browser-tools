@@ -19,6 +19,26 @@ PROJECT-SPECIFIC configuration for Browser Tools MCP server (not global). Config
 - Graceful shutdown on Claude exit
 - No orphaned processes
 
+## Browser-Tools Architecture
+
+**THREE components, ONE port:**
+
+1. **MCP Server** (browser-tools-mcp) - Auto-started by Claude via `.claude/mcp.json`, communicates via stdio (no port)
+
+2. **Aggregator Server** - Started with `./scripts/start-browser-tools.sh` on port 3040, bridges Chrome extension and MCP
+
+3. **Chrome Extension** (BrowserToolsMCP) - Installed in Chrome, connects to Aggregator on port 3040
+
+**Data flow:**
+```
+Claude Code <--(stdio)--> MCP Server <--(internal)--> Aggregator Server <--(port 3040)--> Chrome Extension
+```
+
+**Key points:**
+- Only ONE port used (3040 for this project)
+- TWO processes run: MCP server (auto) + Aggregator (manual)
+- Port registry only manages the Aggregator port
+
 ## Available MCP Tools
 
 **Browser-tools functions** (mcp__browser-tools__*):
