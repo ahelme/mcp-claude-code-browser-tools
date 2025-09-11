@@ -22,6 +22,8 @@ Browser Tools MCP provides:
 - Console log and network activity monitoring
 - NextJS-specific auditing capabilities
 - 60-second active headless browser sessions
+- **Automatic graceful shutdown when Claude Code exits**
+- **No orphaned processes or port conflicts**
 
 ## Setup Instructions
 
@@ -76,6 +78,26 @@ If browser-tools doesn't connect:
 2. Close all Chrome windows and restart
 3. Ensure only one DevTools panel is open
 4. Verify the Chrome extension is enabled
+
+## Documentation
+
+- [QUICK-START.md](QUICK-START.md) - 30-second installation guide
+- [ERROR-RECOVERY.md](ERROR-RECOVERY.md) - **Emergency fixes if Claude won't start**
+- [SETUP-OPTIONS.md](SETUP-OPTIONS.md) - Different configuration approaches
+- [SHUTDOWN-HANDLING.md](SHUTDOWN-HANDLING.md) - How graceful shutdown works
+- [BROWSER-TOOLS-MCP-README.md](BROWSER-TOOLS-MCP-README.md) - Claude operating instructions
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues and solutions
+
+## 🚨 Quick Recovery
+
+If browser-tools causes Claude startup issues:
+```bash
+# Disable immediately
+./scripts/disable-browser-tools.sh
+
+# Re-enable when ready
+./scripts/enable-browser-tools.sh
+```
 
 ## Resources
 
