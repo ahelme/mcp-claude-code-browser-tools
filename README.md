@@ -1,4 +1,6 @@
-# Browser Tools MCP Setup (Project-Level)
+# Browser Tools for Claude Code
+
+**Why Browser Tools?** Direct console access means no more copy/pasting errors into Claude Code - see console logs, network requests, and run Lighthouse audits all within Claude's context.
 
 PROJECT-SPECIFIC configuration for Browser Tools MCP server (not global). Configuration in `.claude/` directory.
 

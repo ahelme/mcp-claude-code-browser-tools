@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Get the assigned port for browser-tools in this project
+# Browser Tools for Claude Code - Port Assignment Script
+# Gets the assigned port for browser-tools in this project
 # Creates and manages port assignments in ~/.claude/browser-tools-ports/
 
 REGISTRY_DIR="$HOME/.claude/browser-tools-ports"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Browser Tools MCP Server Activation Script
+# Browser Tools for Claude Code - Server Activation Script
 # This script starts the browser-tools server for browser automation testing
 
 echo "🚀 Starting Browser Tools MCP Server..."

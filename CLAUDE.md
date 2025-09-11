@@ -1,8 +1,8 @@
-# BrowserToolsMCP Setup - Claude Code Development Tools Setup Project
+# Browser Tools for Claude Code
 
 ## 🚀 Project Overview
 
-Get BrowserToolsMCP working by refining installation/configuration see:
+Get Browser Tools MCP working by refining installation/configuration see:
 https://github.com/AgentDeskAI/browser-tools-mcp/
 
 **Current Status**: Browser-tools server running successfully on port 3040 via intelligent port registry system.

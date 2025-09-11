@@ -1,6 +1,6 @@
-# Browser Tools Scripts
+# Browser Tools for Claude Code - Scripts
 
-Scripts for browser automation testing with Browser Tools MCP.
+Scripts for browser automation testing with Browser Tools MCP in Claude Code.
 
 ## Scripts
 

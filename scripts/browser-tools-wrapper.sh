@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Browser Tools MCP Wrapper Script
+# Browser Tools for Claude Code - Wrapper Script
 # This script starts both the Aggregator Server and the MCP Server
 # It ensures the Aggregator is running before starting the MCP
 
