@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "browser-tools": {
+      "command": "/Users/lennox/development/browser-tools-setup/scripts/browser-tools-mcp-wrapper.sh",
+      "args": [],
+      "env": {
+        "PORT": "3026"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y", 
+        "@agentdeskai/playwright-mcp"
+      ]
+    }
+  }
+}
