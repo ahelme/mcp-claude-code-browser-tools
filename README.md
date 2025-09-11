@@ -23,21 +23,22 @@ PROJECT-SPECIFIC configuration for Browser Tools MCP server (not global). Config
 
 **THREE components, ONE port:**
 
-1. **MCP Server** (browser-tools-mcp) - Auto-started by Claude via `.claude/mcp.json`, communicates via stdio (no port)
+1. **MCP Server** (browser-tools-mcp) - Auto-started by Claude via `.claude/mcp.json`
 
-2. **Aggregator Server** - Started with `./scripts/start-browser-tools.sh` on port 3040, bridges Chrome extension and MCP
+2. **Aggregator Server** - **NOW AUTO-STARTED** by wrapper script on assigned port
 
-3. **Chrome Extension** (BrowserToolsMCP) - Installed in Chrome, connects to Aggregator on port 3040
+3. **Chrome Extension** (BrowserToolsMCP) - [Download here](https://browsertools.agentdesk.ai/), drag the .crx file into Chrome's Extensions page (chrome://extensions)
 
 **Data flow:**
 ```
-Claude Code <--(stdio)--> MCP Server <--(internal)--> Aggregator Server <--(port 3040)--> Chrome Extension
+Claude Code <--(stdio)--> MCP Server <--(internal)--> Aggregator Server <--(assigned port)--> Chrome Extension
 ```
 
-**Key points:**
-- Only ONE port used (3040 for this project)
-- TWO processes run: MCP server (auto) + Aggregator (manual)
-- Port registry only manages the Aggregator port
+**Auto-start feature:**
+- Wrapper script (`browser-tools-wrapper.sh`) starts BOTH servers automatically
+- When Claude Code launches, browser-tools is immediately ready
+- No manual server start needed - just open Chrome when needed
+- Port auto-assigned from registry (check with `./scripts/get-browser-tools-port.sh`)
 
 ## Available MCP Tools
 
