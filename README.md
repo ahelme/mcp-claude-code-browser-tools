@@ -18,7 +18,7 @@ We created our own complete solution - both MCP server (`browser-tools-mcp-2025.
 - **Console monitoring** - Capture logs, errors, warnings
 - **Element interaction** - Click, type, wait for elements
 - **Clean implementation** - 100% MCP protocol compliant
-- **Zero npm dependencies** - No reliance on broken packages
+- **Minimal dependencies** - Just 3 npm packages (express, cors, ws)
 
 ## Quick Start
 

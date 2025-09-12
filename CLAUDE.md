@@ -40,10 +40,14 @@
 ### Starting the HTTP Bridge Server
 
 ```bash
+# First time only - install dependencies
+npm install
+
+# Start our custom HTTP bridge
 ./scripts/start-browser-tools.sh
 ```
 
-This starts the HTTP bridge server on port 3025 that connects our MCP server to Chrome.
+This starts our custom HTTP bridge server on port 3025 that connects our MCP server to Chrome.
 
 ### Available Browser Tools in Claude Code
 
@@ -74,11 +78,11 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 
 ## Important Files
 
-- `scripts/browser-tools-mcp-2025.js` - Our MCP server (MAIN)
-- `scripts/start-browser-tools.sh` - Start HTTP bridge
+- `scripts/browser-tools-mcp-2025.js` - Our custom MCP server
+- `scripts/http-bridge-server.js` - Our custom HTTP bridge
+- `scripts/start-browser-tools.sh` - Start script
 - `.claude/mcp.json` - MCP configuration
 - `.screenshots/` - Screenshot outputs
-- `.tests/` - Test files
 
 ## Why Custom Implementation?
 
@@ -119,4 +123,4 @@ MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js
 - HTTP bridge needs manual start (`./scripts/start-browser-tools.sh`)
 - Chrome extension must be installed for browser control
 - All debug output goes to stderr (never stdout)
-- HTTP bridge component from `@agentdeskai/browser-tools-server@1.2.1` (only HTTP, not MCP)
+- We built our own HTTP bridge - no dependency on the broken npm package!
