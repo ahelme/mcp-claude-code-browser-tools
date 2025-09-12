@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# Browser Tools Server - Standalone HTTP Server for browser-tools-mcp
-# IMPORTANT: This is NOT an MCP server - it's a separate HTTP server that browser-tools-mcp connects to
+# Browser Tools HTTP Bridge Server
+# This HTTP server bridges our custom MCP server to the Chrome extension
+# It uses the npm package's HTTP server component (which works fine)
 
-echo "🚀 Starting Browser Tools Server (HTTP Server for browser-tools-mcp)..."
-echo "======================================================================="
+echo "🚀 Starting Browser Tools HTTP Bridge Server..."
+echo "================================================"
 echo ""
-echo "⚠️  IMPORTANT: The server ignores port flags and always uses port 3025"
+echo "⚠️  IMPORTANT: This server always uses port 3025 (hardcoded)"
 echo ""
 
 # Function to check if a process is running on a port
@@ -105,26 +106,25 @@ else
 fi
 
 echo ""
-echo "Starting Browser Tools Server..."
-echo "================================="
+echo "Starting HTTP Bridge Server..."
+echo "==============================="
 echo ""
-echo "📝 How browser-tools works:"
-echo "1. This HTTP server runs on port 3025 (always)"
-echo "2. browser-tools-mcp (MCP server) connects to this HTTP server"
-echo "3. Chrome extension connects to this HTTP server"
-echo "4. Claude Code ← MCP ← HTTP Server ← Chrome Extension"
+echo "📝 How it works:"
+echo "1. Our custom MCP server (browser-tools-mcp-2025.js) auto-starts with Claude Code"
+echo "2. This HTTP bridge server runs on port 3025"
+echo "3. Chrome extension connects to this HTTP bridge"
+echo "4. Claude Code ← [MCP] ← [HTTP Bridge] ← [Chrome Extension]"
 echo ""
-echo "📌 For manual testing with Chrome:"
-echo "1. Install the Chrome extension (BrowserToolsMCP)"
-echo "2. Open Chrome and navigate to your test URL"
-echo "3. Open Chrome DevTools (F12)"
-echo "4. Find the BrowserToolsMCP panel in DevTools"
-echo "5. The extension will connect to this server on port 3025"
+echo "📌 Chrome Extension Setup:"
+echo "1. Install from: https://browsertools.agentdesk.ai/"
+echo "2. Extension will auto-connect to localhost:3025"
+echo "3. You'll see connection status in the extension icon"
 echo ""
-echo "Starting server (will use port 3025)..."
-echo "----------------------------------------"
+echo "Starting HTTP bridge (port 3025)..."
+echo "------------------------------------"
 
-# Start the browser-tools server (it will use port 3025 by default)
+# Start the HTTP bridge server (using the working HTTP component from npm package)
+# Note: We only use the HTTP server part, NOT the MCP part (which is broken)
 npx -y @agentdeskai/browser-tools-server@1.2.1
 
 # Note: This will keep running until you press Ctrl+C

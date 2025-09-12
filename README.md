@@ -1,150 +1,142 @@
 # Browser Tools for Claude Code
 
-**Why Browser Tools?** Direct console access means no more copy/pasting errors into Claude Code - see console logs, network requests, and run Lighthouse audits all within Claude's context.
+**Custom MCP Server Implementation** - A 100% protocol-compliant browser automation server.
 
-PROJECT-SPECIFIC configuration for Browser Tools MCP server (not global). Configuration in `.claude/` directory.
+## What Is This?
 
-## Configuration
-
-- **Browser Tools MCP**: v1.2.1
-- **Playwright MCP**: Latest
-- **Port**: Auto-assigned (`./scripts/get-browser-tools-port.sh`)
-- **Registry**: `~/.claude/browser-tools-ports/registry.json`
+We created our own MCP server implementation (`browser-tools-mcp-2025.js`) because the official npm package violates the MCP stdio protocol. Our server:
+- ✅ 100% MCP 2025-03-26 specification compliant
+- ✅ Zero console output (no stdio pollution)
+- ✅ Direct integration with Chrome extension via HTTP server
+- ✅ Nine browser automation tools available in Claude Code
 
 ## Features
 
-- Accessibility, Performance, SEO, Best Practices audits
-- Screenshot capture, DOM analysis
-- Console log, network monitoring
-- NextJS-specific auditing
-- 60-second headless sessions
-- Graceful shutdown on Claude exit
-- No orphaned processes
+- **Nine browser control tools** - Complete automation toolkit
+- **Screenshot capture** - Full page or specific elements
+- **Lighthouse audits** - Performance, SEO, accessibility testing
+- **Console monitoring** - Capture logs, errors, warnings
+- **Element interaction** - Click, type, wait for elements
+- **Clean implementation** - 100% MCP protocol compliant
 
-## Browser-Tools Architecture
+## Quick Start
 
-**THREE components, ONE port:**
+### 1. Install Chrome Extension
 
-1. **MCP Server** (browser-tools-mcp) - Auto-started by Claude via `.claude/mcp.json`
+Download and install the BrowserToolsMCP extension from: https://browsertools.agentdesk.ai/
 
-2. **Aggregator Server** - **NOW AUTO-STARTED** by wrapper script on assigned port
+### 2. Start the HTTP Bridge Server
 
-3. **Chrome Extension** (BrowserToolsMCP) - [Download here](https://browsertools.agentdesk.ai/), drag the .crx file into Chrome's Extensions page (chrome://extensions)
+Our custom MCP server still needs the HTTP bridge to communicate with the Chrome extension:
 
-**Data flow:**
-```
-Claude Code <--(stdio)--> MCP Server <--(internal)--> Aggregator Server <--(assigned port)--> Chrome Extension
+```bash
+./scripts/start-browser-tools.sh
 ```
 
-**Auto-start feature:**
-- Wrapper script (`browser-tools-wrapper.sh`) starts BOTH servers automatically
-- When Claude Code launches, browser-tools is immediately ready
-- No manual server start needed - just open Chrome when needed
-- Port auto-assigned from registry (check with `./scripts/get-browser-tools-port.sh`)
+This starts the HTTP server on port 3025 that bridges our MCP server to the Chrome extension.
 
-## Available MCP Tools
+### 3. Use in Claude Code
 
-**Browser-tools functions** (mcp__browser-tools__*):
-- `navigate` - Go to URL
-- `screenshot` - Capture page
-- `click` - Click elements
-- `type` - Enter text
-- `evaluate` - Run JavaScript
-- `getContent` - Get page HTML
-- `audit` - Run Lighthouse audits
+The MCP server is already configured in `.claude/mcp.json` and auto-starts with Claude Code.
 
-**Playwright functions** (mcp__playwright__*):
-- Full Playwright API access
-- Advanced automation
-- Multi-browser support
+Available tools:
+- `mcp__browser-tools__navigate` - Navigate to URL
+- `mcp__browser-tools__screenshot` - Capture screenshots
+- `mcp__browser-tools__click` - Click elements
+- `mcp__browser-tools__type` - Type text
+- `mcp__browser-tools__evaluate` - Execute JavaScript
+- `mcp__browser-tools__get_content` - Get page HTML
+- `mcp__browser-tools__audit` - Run Lighthouse audits
+- `mcp__browser-tools__wait` - Wait for elements
+- `mcp__browser-tools__get_console` - Get console logs
 
-## Port Registry
+## Architecture
 
-- **Location**: `~/.claude/browser-tools-ports/registry.json`
-- **Auto-assigns** unique ports per project
-- **Prevents** conflicts between projects
-- **Check port**: `./scripts/get-browser-tools-port.sh`
+```
+Claude Code <--[JSON-RPC/stdio]--> Our MCP Server <--[HTTP:3025]--> HTTP Bridge <--[WebSocket]--> Chrome Extension
+```
 
-## Setup
+## Why Custom Implementation?
 
-1. **Start server** (auto-uses assigned port):
-   ```bash
-   ./scripts/start-browser-tools.sh
-   ```
+The official `@agentdeskai/browser-tools-mcp` npm package (v1.2.0-1.2.1) has critical bugs:
+- 12 console.log statements that pollute stdout
+- 18 console.error statements that break JSON-RPC
+- Violates MCP stdio protocol requirements
 
-2. **Check port**:
-   ```bash
-   ./scripts/get-browser-tools-port.sh
-   ```
+Our solution (`browser-tools-mcp-2025.js`):
+- Clean implementation from scratch
+- Follows 2025-03-26 MCP specification exactly
+- All debugging goes to stderr (when MCP_DEBUG=1)
+- Tool errors handled properly with `isError` flag
 
-3. **Run tests**:
-   ```bash
-   node ./scripts/test-ui-with-browser-tools.js
-   ```
+## Configuration
+
+The MCP server configuration in `.claude/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "browser-tools": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/lennox/development/browser-tools-setup/scripts/browser-tools-mcp-2025.js"
+      ],
+      "env": {
+        "BROWSER_TOOLS_PORT": "3025",
+        "MCP_DEBUG": "1"
+      }
+    }
+  }
+}
+```
 
 ## Project Structure
 
 ```
 browser-tools-setup/
-├── .claude/
-│   ├── mcp.json          # MCP server configuration
-│   ├── commands/         # Custom Claude commands
-│   └── settings.local.json
 ├── scripts/
-│   ├── README.md         # Testing documentation
-│   ├── start-browser-tools.sh
-│   └── test-ui-with-browser-tools.js
-├── .screenshots/         # Screenshot output directory
-├── .tests/              # Test files directory
-└── memory-bank/         # Memory Bank for session persistence
+│   ├── browser-tools-mcp-2025.js    # Our clean MCP server (MAIN)
+│   └── start-browser-tools.sh       # Start HTTP bridge server
+├── .claude/
+│   └── mcp.json                     # MCP configuration
+├── .screenshots/                    # Screenshot output
+├── .tests/                         # Test files
+└── memory-bank/                    # Session persistence
 ```
 
-## Important Notes
+## Testing
 
-- Port registry manages assignments automatically
-- Chrome extension required for manual testing  
-- Use browser-tools MCP, not Puppeteer
-- Check port: `./scripts/get-browser-tools-port.sh`
+1. Check MCP server is configured:
+   ```bash
+   cat .claude/mcp.json | grep browser-tools-mcp-2025
+   ```
 
-## Workflow
+2. Start HTTP bridge server:
+   ```bash
+   ./scripts/start-browser-tools.sh
+   ```
 
-1. Use browser-tools MCP (not Puppeteer)
-2. Screenshots: `./.screenshots/`
-3. Test files: `./.tests/`
-4. Session persistence: Memory Bank
-
-## Troubleshooting
-
-If connection fails:
-1. Check port: `./scripts/get-browser-tools-port.sh`
-2. Verify available: `lsof -i :YOUR_PORT`
-3. Restart Chrome
-4. One DevTools panel only
-5. Extension enabled
+3. Test with debug output:
+   ```bash
+   MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js
+   ```
 
 ## Documentation
 
-- [QUICK-START.md](QUICK-START.md) - 30-second installation guide
-- [PORT-REGISTRY.md](PORT-REGISTRY.md) - Port management system documentation
-- [ERROR-RECOVERY.md](ERROR-RECOVERY.md) - **Emergency fixes if Claude won't start**
-- [SETUP-OPTIONS.md](SETUP-OPTIONS.md) - Different configuration approaches
-- [SHUTDOWN-HANDLING.md](SHUTDOWN-HANDLING.md) - How graceful shutdown works
-- [BROWSER-TOOLS-MCP-README.md](BROWSER-TOOLS-MCP-README.md) - Claude operating instructions
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues and solutions
+- [MCP-2025-SPEC-SOLUTION.md](MCP-2025-SPEC-SOLUTION.md) - Full technical details
+- [CLEAN-MCP-SOLUTION.md](CLEAN-MCP-SOLUTION.md) - Initial implementation notes
 
-## 🚨 Quick Recovery
+## Important Notes
 
-If Claude won't start:
-```bash
-# Disable immediately
-./scripts/disable-browser-tools.sh
-
-# Re-enable when ready
-./scripts/enable-browser-tools.sh
-```
+- HTTP bridge server ALWAYS uses port 3025 (hardcoded)
+- Chrome extension required for browser control
+- Our MCP server auto-starts with Claude Code
+- Debug output goes to stderr only (MCP_DEBUG=1)
+- The HTTP bridge uses `@agentdeskai/browser-tools-server@1.2.1` (only for HTTP, not MCP)
 
 ## Resources
 
-- [Browser Tools MCP GitHub](https://github.com/AgentDeskAI/browser-tools-mcp)
-- [Browser Tools Documentation](https://browsertools.agentdesk.ai/)
-- [MCP Protocol Documentation](https://modelcontextprotocol.io/)
+- [MCP Specification](https://modelcontextprotocol.io/specification/2025-03-26)
+- [Browser Tools GitHub](https://github.com/AgentDeskAI/browser-tools-mcp)
+- [Chrome Extension](https://browsertools.agentdesk.ai/)

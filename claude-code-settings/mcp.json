@@ -1,0 +1,44 @@
+{
+  "mcpServers": {
+    "memory-bank-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@movibe/memory-bank-mcp",
+        "--mode",
+        "code"
+      ],
+      "env": {
+        "MEMORY_BANK_ROOT": "/Users/lennox/development/browser-tools-setup/memory-bank"
+      }
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "browser-tools": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/lennox/development/browser-tools-setup/scripts/browser-tools-mcp-2025.js"
+      ],
+      "env": {
+        "BROWSER_TOOLS_PORT": "3025",
+        "MCP_DEBUG": "1"
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y", 
+        "@agentdeskai/playwright-mcp"
+      ]
+    }
+  }
+}
