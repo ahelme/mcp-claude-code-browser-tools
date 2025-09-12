@@ -1,0 +1,28 @@
+{
+  "name": "browser-tools-for-claude-code",
+  "version": "2.0.0",
+  "description": "Custom MCP server and HTTP bridge for browser automation in Claude Code",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/http-bridge-server.js",
+    "start-bridge": "node scripts/http-bridge-server.js",
+    "test-mcp": "MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "mcp",
+    "browser-tools",
+    "claude-code",
+    "browser-automation"
+  ],
+  "author": "A Helme",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

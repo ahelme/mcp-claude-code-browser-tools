@@ -123,8 +123,7 @@ echo ""
 echo "Starting HTTP bridge (port 3025)..."
 echo "------------------------------------"
 
-# Start the HTTP bridge server (using the working HTTP component from npm package)
-# Note: We only use the HTTP server part, NOT the MCP part (which is broken)
-npx -y @agentdeskai/browser-tools-server@1.2.1
+# Start our custom HTTP bridge server
+node scripts/http-bridge-server.js
 
 # Note: This will keep running until you press Ctrl+C

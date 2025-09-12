@@ -1,13 +1,13 @@
 # Browser Tools for Claude Code
 
-**Custom MCP Server Implementation** - A 100% protocol-compliant browser automation server.
+**Complete Custom Implementation** - Both MCP server and HTTP bridge built from scratch, 100% protocol-compliant.
 
 ## What Is This?
 
-We created our own MCP server implementation (`browser-tools-mcp-2025.js`) because the official npm package violates the MCP stdio protocol. Our server:
+We created our own complete solution - both MCP server (`browser-tools-mcp-2025.js`) and HTTP bridge (`http-bridge-server.js`) - because the official npm package violates the MCP stdio protocol. Our implementation:
 - ✅ 100% MCP 2025-03-26 specification compliant
 - ✅ Zero console output (no stdio pollution)
-- ✅ Direct integration with Chrome extension via HTTP server
+- ✅ Custom HTTP bridge for Chrome extension communication
 - ✅ Nine browser automation tools available in Claude Code
 
 ## Features
@@ -18,6 +18,7 @@ We created our own MCP server implementation (`browser-tools-mcp-2025.js`) becau
 - **Console monitoring** - Capture logs, errors, warnings
 - **Element interaction** - Click, type, wait for elements
 - **Clean implementation** - 100% MCP protocol compliant
+- **Zero npm dependencies** - No reliance on broken packages
 
 ## Quick Start
 
@@ -25,15 +26,17 @@ We created our own MCP server implementation (`browser-tools-mcp-2025.js`) becau
 
 Download and install the BrowserToolsMCP extension from: https://browsertools.agentdesk.ai/
 
-### 2. Start the HTTP Bridge Server
-
-Our custom MCP server still needs the HTTP bridge to communicate with the Chrome extension:
+### 2. Install Dependencies & Start HTTP Bridge
 
 ```bash
+# First time only - install dependencies
+npm install
+
+# Start our custom HTTP bridge server
 ./scripts/start-browser-tools.sh
 ```
 
-This starts the HTTP server on port 3025 that bridges our MCP server to the Chrome extension.
+This starts our custom HTTP bridge on port 3025 for Chrome extension communication.
 
 ### 3. Use in Claude Code
 
@@ -96,12 +99,13 @@ The MCP server configuration in `.claude/mcp.json`:
 ```
 browser-tools-setup/
 ├── scripts/
-│   ├── browser-tools-mcp-2025.js    # Our clean MCP server (MAIN)
-│   └── start-browser-tools.sh       # Start HTTP bridge server
+│   ├── browser-tools-mcp-2025.js    # Our custom MCP server
+│   ├── http-bridge-server.js        # Our custom HTTP bridge
+│   └── start-browser-tools.sh       # Start script
 ├── .claude/
 │   └── mcp.json                     # MCP configuration
+├── package.json                     # Project dependencies
 ├── .screenshots/                    # Screenshot output
-├── .tests/                         # Test files
 └── memory-bank/                    # Session persistence
 ```
 
@@ -133,7 +137,7 @@ browser-tools-setup/
 - Chrome extension required for browser control
 - Our MCP server auto-starts with Claude Code
 - Debug output goes to stderr only (MCP_DEBUG=1)
-- The HTTP bridge uses `@agentdeskai/browser-tools-server@1.2.1` (only for HTTP, not MCP)
+- We built our own HTTP bridge - no dependency on the broken npm package!
 
 ## Resources
 
