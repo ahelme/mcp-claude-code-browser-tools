@@ -86,7 +86,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 
 ## Why Custom Implementation?
 
-The official npm package (`@agentdeskai/browser-tools-mcp`) violates MCP protocol:
+The official npm package we used previously (`@agentdeskai/browser-tools-mcp`) violates MCP protocol:
 - Writes debug output to stdout (breaks JSON-RPC)
 - Has 30+ console statements polluting communication
 

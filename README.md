@@ -42,6 +42,23 @@ This starts our custom HTTP bridge on port 3025 for Chrome extension communicati
 
 The MCP server is already configured in `.claude/mcp.json` and auto-starts with Claude Code.
 
+### 4. Connect Chrome Extension
+
+After the three steps above:
+
+1. **Open Chrome Dev Tools** in the browser tab where you want to use browser tools
+2. **Navigate to the BrowserToolsMCP panel** in Dev Tools
+3. **Verify connection status** - should show "Connected" instead of "Searching..."
+
+#### Troubleshooting Connection Issues
+
+If the extension shows "Not connected to server. Searching..." try these steps:
+
+1. **Quit Chrome completely** - Not just the window but all of Chrome itself
+2. **Restart the local node server** (HTTP bridge server)
+3. **Ensure only ONE instance** of Chrome Dev Tools panel is open
+4. **Refresh the browser tab** and reopen Dev Tools
+
 Available tools:
 - `mcp__browser-tools__navigate` - Navigate to URL
 - `mcp__browser-tools__screenshot` - Capture screenshots
@@ -74,7 +91,11 @@ Our solution (`browser-tools-mcp-2025.js`):
 
 ## Configuration
 
-The MCP server configuration in `.claude/mcp.json`:
+### MCP Server Settings
+
+Your Claude Code project should include **browser-tools** configured in `.claude/mcp.json`:
+
+**Note**: `MCP_DEBUG` is optional - only include it if you want debug logging to stderr.
 
 ```json
 {
@@ -83,7 +104,7 @@ The MCP server configuration in `.claude/mcp.json`:
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/browser-tools-mcp-2025.js"
+        "scripts/browser-tools-mcp-2025.js"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3025",
@@ -93,6 +114,30 @@ The MCP server configuration in `.claude/mcp.json`:
   }
 }
 ```
+
+### MCP Server Description
+
+- **browser-tools**: Our custom implementation providing 9 browser automation tools
+- **BROWSER_TOOLS_PORT**: Port 3025 (required) - connects to HTTP bridge server
+- **MCP_DEBUG**: Optional debug logging to stderr (set to "1" to enable)
+
+### Configuration Guidelines
+
+1. **File Location**: Place `mcp.json` in `.claude/` directory in your project root
+2. **Server Types**: All servers use `"type": "stdio"` for JSON-RPC communication
+3. **Environment Variables**: Configure ports and debug modes in the `env` section
+4. **Path Requirements**: Use absolute paths for local scripts (e.g., our browser-tools-mcp-2025.js)
+5. **NPX Dependencies**: External packages can be run with `npx -y` for auto-installation
+
+### Customizing Settings
+
+To modify MCP server configurations:
+
+1. Edit `.claude/mcp.json`
+2. Restart Claude Code to apply changes
+3. Test server connectivity with debug mode: `MCP_DEBUG=1`
+
+**Note**: Keep `.claude/` directory in `.gitignore` to avoid committing local configurations.
 
 ## Project Structure
 
@@ -125,6 +170,135 @@ browser-tools-setup/
    ```bash
    MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js
    ```
+
+## 🛠️ Using Audit Tools
+
+### ✅ Before You Start
+Ensure you have:
+- An active tab in your browser
+- The BrowserTools extension enabled
+
+### ▶️ Running Audits
+
+**Headless Browser Automation:**
+Puppeteer automates a headless Chrome instance to load the page and collect audit data, ensuring accurate results even for SPAs or content loaded via JavaScript.
+
+The headless browser instance remains active for 60 seconds after the last audit call to efficiently handle consecutive audit requests.
+
+**Structured Results:**
+Each audit returns results in a structured JSON format, including overall scores and detailed issue lists. This makes it easy for MCP-compatible clients to interpret the findings and present actionable insights.
+
+The MCP server provides tools to run audits on the current page. Here are example queries you can use to trigger them:
+
+#### Accessibility Audit (runAccessibilityAudit)
+Ensures the page meets accessibility standards like WCAG.
+
+**Example Queries:**
+- "Are there any accessibility issues on this page?"
+- "Run an accessibility audit."
+- "Check if this page meets WCAG standards."
+
+#### Performance Audit (runPerformanceAudit)
+Identifies performance bottlenecks and loading issues.
+
+**Example Queries:**
+- "Why is this page loading so slowly?"
+- "Check the performance of this page."
+- "Run a performance audit."
+
+#### SEO Audit (runSEOAudit)
+Evaluates how well the page is optimized for search engines.
+
+**Example Queries:**
+- "How can I improve SEO for this page?"
+- "Run an SEO audit."
+- "Check SEO on this page."
+
+#### Best Practices Audit (runBestPracticesAudit)
+Checks for general best practices in web development.
+
+**Example Queries:**
+- "Run a best practices audit."
+- "Check best practices on this page."
+- "Are there any best practices issues on this page?"
+
+#### Audit Mode (runAuditMode)
+Runs all audits in a particular sequence. Will run a NextJS audit if the framework is detected.
+
+**Example Queries:**
+- "Run audit mode."
+- "Enter audit mode."
+
+#### NextJS Audits (runNextJSAudit)
+Checks for best practices and SEO improvements for NextJS applications
+
+**Example Queries:**
+- "Run a NextJS audit."
+- "Run a NextJS audit, I'm using app router."
+- "Run a NextJS audit, I'm using page router."
+
+#### Debugger Mode (runDebuggerMode)
+Runs all debugging tools in a particular sequence
+
+**Example Queries:**
+- "Enter debugger mode."
+
+## Architecture
+
+There are three core components all used to capture and analyze browser data:
+
+**Chrome Extension:** A browser extension that captures screenshots, console logs, network activity and DOM elements.
+**Node Server:** An intermediary server that facilitates communication between the Chrome extension and any instance of an MCP server.
+**MCP Server:** A Model Context Protocol server that provides standardized tools for AI clients to interact with the browser.
+
+```
+┌─────────────┐     ┌──────────────┐     ┌───────────────┐     ┌─────────────┐
+│  MCP Client │ ──► │  MCP Server  │ ──► │  Node Server  │ ──► │   Chrome    │
+│  (e.g.      │ ◄── │  (Protocol   │ ◄── │ (Middleware)  │ ◄── │  Extension  │
+│ ClaudeCode  │     │   Handler)   │     │               │     │             │
+└─────────────┘     └──────────────┘     └───────────────┘     └─────────────┘
+```
+
+Model Context Protocol (MCP) is a capability supported by Anthropic AI models that allow you to create custom tools for any compatible client. MCP clients like Claude Desktop, Cursor, Cline or Zed can run an MCP server which "teaches" these clients about a new tool that they can use.
+
+These tools can call out to external APIs but in our case, all logs are stored locally on your machine and NEVER sent out to any third-party service or API. BrowserTools MCP runs a local instance of a NodeJS API server which communicates with the BrowserTools Chrome Extension.
+
+All consumers of the BrowserTools MCP Server interface with the same NodeJS API and Chrome extension.
+
+### Chrome Extension
+- Monitors XHR requests/responses and console logs
+- Tracks selected DOM elements
+- Sends all logs and current element to the BrowserTools Connector
+- Connects to Websocket server to capture/send screenshots
+- Allows user to configure token/truncation limits + screenshot folder path
+
+### Node Server
+- Acts as middleware between the Chrome extension and MCP server
+- Receives logs and currently selected element from Chrome extension
+- Processes requests from MCP server to capture logs, screenshot or current element
+- Sends Websocket command to the Chrome extension for capturing a screenshot
+- Intelligently truncates strings and # of duplicate objects in logs to avoid token limits
+- Removes cookies and sensitive headers to avoid sending to LLMs in MCP clients
+
+### MCP Server
+- Implements the Model Context Protocol
+- Provides standardized tools for AI clients
+- Compatible with various MCP clients (Cursor, Cline, Zed, Claude Desktop, etc.)
+
+## Usage
+
+Once installed and configured, the system allows any compatible MCP client to:
+- Monitor browser console output
+- Capture network traffic
+- Take screenshots
+- Analyze selected elements
+- Wipe logs stored in our MCP server
+- Run accessibility, performance, SEO, and best practices audits
+
+## Compatibility
+
+- Works with Claude Code 
+- May work with other MCP-compatible clients e.g. Cursor IDE integration
 
 ## Documentation
 

@@ -12,8 +12,8 @@
  * Specification: https://modelcontextprotocol.io/specification/2025-03-26
  */
 
-const readline = require('readline');
-const http = require('http');
+import readline from 'readline';
+import http from 'http';
 
 // Server information following 2025-03-26 spec
 const serverInfo = {

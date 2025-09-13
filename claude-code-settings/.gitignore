@@ -1,14 +1,14 @@
-# Claude Code Files
+# Claude Code Files (retain if core to project)
 CLAUDE.md
 .claude/*
 
 # Memory Bank (keep private)
-memory-bank/
+/memory-bank/
 
 # Backups and archives
-.archive/
 backups/
 .backups/
+.archive/
 *.backup.*
 *.bak.*
 *.bak

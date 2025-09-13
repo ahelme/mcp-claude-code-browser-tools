@@ -68,7 +68,10 @@ app.get('/health', (req, res) => {
 
 // Identity endpoints (for MCP server discovery)
 app.get('/.identity', (req, res) => {
-    res.json({ name: 'browser-tools-http-bridge' });
+    res.json({
+        signature: "mcp-browser-connector-24x7",
+        version: "1.2.0"
+    });
 });
 
 app.get('/.port', (req, res) => {
