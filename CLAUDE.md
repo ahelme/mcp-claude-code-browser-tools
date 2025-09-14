@@ -19,24 +19,35 @@
 
 ## Available MCP Servers
 
-### 1. Browser-Tools MCP (Our Custom Implementation)
+### 1. Browser-Tools MCP (Our Custom Implementation) ✅ WORKING
 - **MCP Server**: `scripts/mcp-browser-tools-server.js`
-- **HTTP Bridge**: `scripts/mcp-http-bridge.js`
 - **Purpose**: Browser automation and testing
-- **Port**: 3025 (MCP HTTP bridge connection)
+- **Status**: ✅ FIXED - Path mismatch resolved (Sept 14, 2025)
+- **Configuration**: Both `.mcp.json` and `.claude/mcp.json`
 - **Features**:
-  - Nine browser control tools
+  - Nine browser control tools (verified working)
   - Screenshot capture
   - Lighthouse audits
   - Console monitoring
   - Element interaction
 
-### 2. Memory Bank MCP
+### 2. Memory Bank MCP ✅ WORKING
 - **Purpose**: Persistent memory across sessions
 - **Features**: Progress tracking, decision logging, context management
+- **Status**: ✅ Connected and functioning
 
-### 3. Sequential Thinking MCP
+### 3. Sequential Thinking MCP ✅ WORKING
 - **Purpose**: Step-by-step problem solving
+- **Status**: ✅ Connected and functioning
+
+### 4. Minimal Test MCP ✅ WORKING
+- **MCP Server**: `scripts/minimal_mcp_server_new_protocol_released_June_2025_for_browser_tools.js`
+- **Purpose**: MCP protocol testing and validation
+- **Status**: ✅ ADDED - Responds correctly to initialize messages
+
+### 5. Playwright MCP 🔄 READY
+- **Purpose**: Alternative browser automation
+- **Status**: 🔄 CONFIGURED - Ready for on-demand installation via npx -y
 
 ## How to Use Browser Tools
 
@@ -96,8 +107,16 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 - `scripts/start-direct-browser-tools.sh` - Start script for direct
 
 ### Configuration
-- `.claude/mcp.json` - MCP configuration
+- `.claude/mcp.json` - Primary MCP configuration (Claude Code)
+- `.mcp.json` - Project-level MCP configuration (team collaboration)
 - `.screenshots/` - Screenshot outputs
+
+**IMPORTANT**: Only edit project-level configs. Never modify user-level MCP configurations.
+
+**BREAKTHROUGH FIX (Sept 14, 2025):**
+- Fixed browser-tools path mismatch: `browser-tools-mcp-2025.js` → `mcp-browser-tools-server.js`
+- Updated .gitignore to track MCP configs for team collaboration
+- All servers now respond correctly to JSON-RPC initialize messages
 
 ## Why Custom Implementation?
 
