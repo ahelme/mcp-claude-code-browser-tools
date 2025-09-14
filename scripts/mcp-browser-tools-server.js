@@ -244,18 +244,38 @@ function sendNotification(method, params) {
 async function callBrowserTools(action, params) {
   return new Promise((resolve, reject) => {
     const port = process.env.MCP_HTTP_BRIDGE_PORT || "3025";
-    const data = JSON.stringify({
-      action: action,
-      params: params || {},
-    });
 
-    debugLog(`Calling browser-tools: ${action} on port ${port}`);
+    // Map actions to correct endpoints
+    const endpointMap = {
+      navigate: "/navigate",
+      screenshot: "/capture-screenshot",
+      click: "/click",
+      type: "/type",
+      evaluate: "/evaluate",
+      getContent: "/get-content",
+      audit: "/audit", // This might need to be implemented in HTTP bridge
+      wait: "/wait",
+      getConsole: "/console-logs",
+    };
+
+    const endpoint = endpointMap[action];
+    if (!endpoint) {
+      reject(new Error(`Unknown action: ${action}`));
+      return;
+    }
+
+    const data = JSON.stringify(params || {});
+
+    debugLog(`Calling browser-tools: ${action} -> ${endpoint} on port ${port}`);
 
     const options = {
       hostname: "localhost",
       port: parseInt(port),
-      path: "/api",
-      method: "POST",
+      path: endpoint,
+      method:
+        endpoint === "/console-logs" || endpoint === "/get-content"
+          ? "GET"
+          : "POST",
       headers: {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(data),
@@ -304,7 +324,10 @@ async function callBrowserTools(action, params) {
       reject(new Error("Browser-tools request timeout"));
     });
 
-    req.write(data);
+    // Only write data for POST requests
+    if (options.method === "POST") {
+      req.write(data);
+    }
     req.end();
   });
 }
@@ -333,6 +356,7 @@ async function handleRequest(request) {
           protocolVersion: serverInfo.protocolVersion,
           capabilities: {
             tools: {},
+            resources: {},
           },
           serverInfo: {
             name: serverInfo.name,

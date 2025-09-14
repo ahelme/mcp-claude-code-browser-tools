@@ -118,7 +118,7 @@ Claude Code <--[JSON-RPC/stdio]--> MCP Server <--[HTTP]--> Browser Tools Server 
       "type": "stdio",
       "command": "node",
       "args": [
-        "/path/to/browser-tools-mcp-2025.js"
+        "/path/to/mcp-browser-tools-server.js"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3025",
@@ -153,14 +153,14 @@ Claude Code <--[JSON-RPC/stdio]--> MCP Server <--[HTTP]--> Browser Tools Server 
 ```bash
 # Test initialization
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26"}}' | \
-  node browser-tools-mcp-2025.js
+  node mcp-browser-tools-server.js
 
 # Test tool listing
 echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | \
-  node browser-tools-mcp-2025.js
+  node mcp-browser-tools-server.js
 
 # Enable debug mode
-MCP_DEBUG=1 node browser-tools-mcp-2025.js
+MCP_DEBUG=1 node mcp-browser-tools-server.js
 ```
 
 ### Integration Testing

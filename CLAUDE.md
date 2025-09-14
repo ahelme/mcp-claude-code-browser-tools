@@ -114,7 +114,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 **IMPORTANT**: Only edit project-level configs. Never modify user-level MCP configurations.
 
 **BREAKTHROUGH FIX (Sept 14, 2025):**
-- Fixed browser-tools path mismatch: `browser-tools-mcp-2025.js` → `mcp-browser-tools-server.js`
+- Fixed browser-tools path mismatch: `mcp-browser-tools-server.js` → `mcp-browser-tools-server.js`
 - Updated .gitignore to track MCP configs for team collaboration
 - All servers now respond correctly to JSON-RPC initialize messages
 

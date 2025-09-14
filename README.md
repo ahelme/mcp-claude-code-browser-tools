@@ -115,7 +115,7 @@ Your Claude Code project should include **browser-tools** configured in `.claude
       "type": "stdio",
       "command": "node",
       "args": [
-        "scripts/browser-tools-mcp-2025.js"
+        "scripts/mcp-browser-tools-server.js"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3025",

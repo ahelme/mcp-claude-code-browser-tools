@@ -24,7 +24,7 @@ Our MCP server fails to load tools in Claude Code despite:
 - [ ] Compare with working MCP server examples from official repositories
 
 #### 1.2 Analyze Current Server Implementation
-**File**: `scripts/browser-tools-mcp-2025.js`
+**File**: `scripts/mcp-browser-tools-server.js`
 
 **Areas to Review**:
 - [ ] **Initialization handshake**: Does it follow current spec?
@@ -60,7 +60,7 @@ Create detailed list of:
 
 #### 3.1 Critical Issue #1: Initialize Response Format
 **Problem**: Outdated initialize response structure
-**Fix Applied**: Updated `scripts/browser-tools-mcp-2025.js` line 312-321
+**Fix Applied**: Updated `scripts/mcp-browser-tools-server.js` line 312-321
 ```javascript
 // OLD (non-compliant):
 {
@@ -114,7 +114,7 @@ Create detailed list of:
 
 ### Current MCP Server Structure Analysis
 
-**File**: `scripts/browser-tools-mcp-2025.js`
+**File**: `scripts/mcp-browser-tools-server.js`
 - **Line 22**: ✅ Protocol version updated to "2025-06-18"
 - **Lines 26-155**: Tool definitions - need schema compliance check
 - **Lines 157-503**: Message handlers - need format verification
