@@ -15,11 +15,11 @@
 import readline from 'readline';
 import http from 'http';
 
-// Server information following 2025-03-26 spec
+// Server information following 2025-06-18 spec
 const serverInfo = {
     name: "browser-tools-mcp",
     version: "2.0.0",
-    protocolVersion: "2025-03-26"
+    protocolVersion: "2025-06-18"
 };
 
 // Tool definitions with proper schemas per 2025 spec
@@ -312,12 +312,12 @@ async function handleRequest(request) {
                 sendResponse(id, {
                     protocolVersion: serverInfo.protocolVersion,
                     capabilities: {
-                        tools: {
-                            listSupported: true,
-                            callSupported: true
-                        }
+                        tools: {}
                     },
-                    serverInfo: serverInfo
+                    serverInfo: {
+                        name: serverInfo.name,
+                        version: serverInfo.version
+                    }
                 });
                 break;
                 
@@ -502,5 +502,5 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Ready
-debugLog('Browser Tools MCP Server v2.0.0 started (2025-03-26 spec)');
+debugLog('Browser Tools MCP Server v2.0.0 started (2025-06-18 spec)');
 debugLog(`Using browser-tools port: ${process.env.BROWSER_TOOLS_PORT || '3025'}`);

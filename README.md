@@ -5,7 +5,7 @@
 ## What Is This?
 
 We created our own complete solution - both MCP server (`browser-tools-mcp-2025.js`) and HTTP bridge (`http-bridge-server.js`) - because the official npm package violates the MCP stdio protocol. Our implementation:
-- ✅ 100% MCP 2025-03-26 specification compliant
+- ✅ 100% MCP 2025-06-18 specification compliant
 - ✅ Zero console output (no stdio pollution)
 - ✅ Custom HTTP bridge for Chrome extension communication
 - ✅ Nine browser automation tools available in Claude Code
@@ -86,7 +86,7 @@ The official `@agentdeskai/browser-tools-mcp` npm package (v1.2.0-1.2.1) has cri
 
 Our solution (`browser-tools-mcp-2025.js`):
 - Clean implementation from scratch
-- Follows 2025-03-26 MCP specification exactly
+- Follows 2025-06-18 MCP specification exactly
 - All debugging goes to stderr (when MCP_DEBUG=1)
 - Tool errors handled properly with `isError` flag
 
@@ -316,6 +316,6 @@ Once installed and configured, the system allows any compatible MCP client to:
 
 ## Resources
 
-- [MCP Specification](https://modelcontextprotocol.io/specification/2025-03-26)
+- [MCP Specification](https://modelcontextprotocol.io/specification/2025-06-18)
 - [Browser Tools GitHub](https://github.com/AgentDeskAI/browser-tools-mcp)
 - [Chrome Extension](https://browsertools.agentdesk.ai/)

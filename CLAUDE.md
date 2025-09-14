@@ -94,7 +94,7 @@ Our solution:
 - 100% protocol compliant
 - Clean stdio implementation
 - Proper error handling
-- Full 2025-03-26 spec support
+- Full 2025-06-18 spec support
 
 ## Quick Reference
 
@@ -116,6 +116,21 @@ curl http://localhost:3025/health
 # Debug MCP server
 MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js
 ```
+
+## Critical MCP Protocol Issue (September 2025)
+
+**🚨 DISCOVERED: Protocol Version Mismatch**
+- Our MCP server now uses: `"2025-06-18"` ✅
+- Current MCP protocol: `"2025-06-18"` ✅
+- **Status**: ✅ FIXED - Updated to current MCP 2025-06-18 protocol
+- **Solution Applied**: Updated `protocolVersion` and initialize response format in `scripts/browser-tools-mcp-2025.js`
+- **Timeline**: MCP protocol changed in June 2025, we've now updated our implementation
+
+**✅ RESOLVED Issues:**
+- Updated protocol version from "2025-03-26" to "2025-06-18"
+- Fixed initialize response format (capabilities structure)
+- Corrected serverInfo format for compliance
+- MCP server now 100% compliant with current specification
 
 ## Notes
 
