@@ -229,7 +229,7 @@ app.post('/capture-screenshot', async (req, res) => {
             
             const messageHandler = (data) => {
                 const message = JSON.parse(data);
-                if (message.type === 'screenshot') {
+                if (message.type === 'screenshot-data') {
                     clearTimeout(timeout);
                     wsConnection.off('message', messageHandler);
                     resolve(message.data);
@@ -239,11 +239,16 @@ app.post('/capture-screenshot', async (req, res) => {
             wsConnection.on('message', messageHandler);
         });
         
-        wsConnection.send(JSON.stringify({
-            action: 'screenshot',
+        // 🔍 DEBUG: Log outgoing WebSocket message
+        const outgoingMessage = JSON.stringify({
+            type: 'take-screenshot',
             selector,
-            fullPage
-        }));
+            fullPage,
+            requestId: Date.now().toString()
+        });
+        console.log('\n📤 [WEBSOCKET OUT]', new Date().toISOString());
+        console.log('Sending:', outgoingMessage);
+        wsConnection.send(outgoingMessage);
         
         const screenshotData = await screenshotPromise;
         
@@ -344,8 +349,13 @@ wss.on('connection', (ws) => {
     
     // Handle messages from Chrome extension
     ws.on('message', (data) => {
+        // 🔍 DEBUG: Log ALL incoming WebSocket messages
+        console.log('\n📨 [WEBSOCKET IN]', new Date().toISOString());
+        console.log('Raw data:', data.toString());
+
         try {
             const message = JSON.parse(data);
+            console.log('Parsed message:', JSON.stringify(message, null, 2));
             
             // Update state based on message type
             switch (message.type) {
@@ -431,5 +441,6 @@ process.on('unhandledRejection', (error) => {
 
 console.log('\n📌 Chrome Extension Setup:');
 console.log('1. Install extension from: https://browsertools.agentdesk.ai/');
-console.log('2. Extension will auto-connect to localhost:3025');
-console.log('3. Connection status shown in extension icon\n');
+console.log('2. Set Server Port: type "3025" into Browser Tools chrome ext. HIT RETURN <important');
+console.log('3. Connection status shown in extension icon');
+console.log('⚡ NOT CONNECTING? Close Chrome window (all tabs), re-open with Browser Tools activated\n');
