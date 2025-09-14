@@ -48,7 +48,8 @@ After the three steps above:
 
 1. **Open Chrome Dev Tools** in the browser tab where you want to use browser tools
 2. **Navigate to the BrowserToolsMCP panel** in Dev Tools
-3. **Verify connection status** - should show "Connected" instead of "Searching..."
+3. **Set Server Port**: Type "3025" into Browser Tools chrome extension under "Server Connection Settings > Server Port" & hit return
+4. **Verify connection status** - should show "Connected" instead of "Searching..."
 
 #### Troubleshooting Connection Issues
 
