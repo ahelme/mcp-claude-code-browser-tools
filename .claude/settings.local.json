@@ -1,0 +1,324 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__memory-bank-mcp__write_memory_bank_file",
+      "mcp__memory-bank-mcp__get_memory_bank_status",
+      "mcp__memory-bank-mcp__read_memory_bank_file",
+      "mcp__memory-bank-mcp__track_progress",
+      "mcp__memory-bank-mcp__update_active_context",
+      "mcp__memory-bank-mcp__log_decision",
+      "mcp__memory-bank-mcp__switch_mode",
+      "mcp__memory-bank-mcp__get_current_mode",
+      "mcp__memory-bank-mcp__process_umb_command",
+      "mcp__memory-bank-mcp__complete_umb",
+      "mcp__memory-bank-mcp__list_memory_bank_files",
+      "mcp__memory-bank-mcp__initialize_memory_bank",
+      "mcp__memory-bank-mcp__set_memory_bank_path",
+      "mcp__memory-bank-mcp__debug_mcp_config",
+      "mcp__memory-bank-mcp__migrate_file_naming",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__browser-tools__*",
+      "mcp__playwright__*",
+      "Read(//Users/lennox/.npm/_npx/**)",
+      "Bash(lsof:*)",
+      "Bash(./scripts/start-browser-tools.sh:*)",
+      "Bash(chmod:*)",
+      "Bash(node:*)",
+      "Bash(timeout:*)",
+      "Bash(MCP_DEBUG=1 node /Users/lennox/development/browser-tools-setup/scripts/browser-tools-mcp-2025.js)",
+      "WebSearch",
+      "Bash(test:*)",
+      "Bash(jq:*)",
+      "Bash(MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3025 node scripts/mcp-browser-tools-server.js)",
+      "Bash(npx:*)",
+      "WebFetch(domain:spec.modelcontextprotocol.io)",
+      "Bash(export MCP_HTTP_BRIDGE_PORT=3025 MCP_DEBUG=1)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "memory-bank-mcp",
+    "sequential-thinking",
+    "browser-tools",
+    "minimal-test",
+    "playwright"
+  ],
+  "disabledMcpjsonServers": [
+    "web-scraper",
+    "system-admin",
+    "fetch",
+    "network-tools",
+    "memory"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '\n🚀 BROWSER-TOOLS SETUP - MCP Server Manual Startup Guide 🚀\n\nIf you want to run MCP servers manually in separate terminal windows:\n\n📋 AVAILABLE MCP SERVERS:\n✅ browser-tools    - 9 browser automation tools\n✅ memory-bank-mcp  - Auto-starts (no action needed)\n✅ sequential-thinking - Auto-starts (no action needed)\n✅ minimal-test     - 1 test tool for MCP validation\n🔄 playwright       - Alternative browser automation\n\n🔧 MANUAL STARTUP COMMANDS (run each in separate terminal):\n\n1️⃣ Browser-Tools MCP Server:\n   cd /Users/lennox/development/browser-tools-setup\n   MCP_DEBUG=1 node scripts/mcp-browser-tools-server.js\n\n2️⃣ Minimal Test MCP Server:\n   cd /Users/lennox/development/browser-tools-setup\n   MCP_DEBUG=1 node scripts/minimal_mcp_server_new_protocol_released_June_2025_for_browser_tools.js\n\n3️⃣ Playwright MCP Server:\n   cd /Users/lennox/development/browser-tools-setup\n   npx -y @agentdeskai/playwright-mcp\n\n4️⃣ HTTP Bridge (for browser automation):\n   cd /Users/lennox/development/browser-tools-setup\n   ./scripts/start-mcp-browser-tools.sh\n\n💡 TIPS:\n- memory-bank-mcp and sequential-thinking auto-start with Claude Code\n- Browser-tools needs Chrome extension from https://browsertools.agentdesk.ai/\n- All servers use JSON-RPC stdio communication\n- Use MCP_DEBUG=1 for detailed logging\n\n🎯 QUICK TEST:\nOnce started, test with: echo \"{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"method\\\":\\\"initialize\\\",\\\"params\\\":{\\\"protocolVersion\\\":\\\"2025-06-18\\\",\\\"capabilities\\\":{},\\\"clientInfo\\\":{\\\"name\\\":\\\"test\\\",\\\"version\\\":\\\"1.0\\\"}},\\\"id\\\":1}\" | node scripts/mcp-browser-tools-server.js\n\n🔗 More info: See CLAUDE.md for complete documentation\n'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "source .claude/scripts/startup.sh"
+          },
+          {
+            "type": "command",
+            "command": "claude-statusline status"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // \"\"'); if [[ -f \"$FILE\" ]]; then cp \"$FILE\" \"$FILE.backup.$(date +%Y-%m-%d_%H-%M-%S.%N)\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TOOL=$(cat | jq -r '.tool_name // \"unknown\"'); FILE=$(cat | jq -r '.tool_input.file_path // \"no file\"'); echo \"[$(date)] Tool: $TOOL | File: $FILE\" >> ~/.claude/command-log.txt"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/check-js.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // \"\"'); if [[ \"$FILE\" == *.js || \"$FILE\" == *.ts ]] && [[ -f package.json ]]; then npm test 2>/dev/null || yarn test 2>/dev/null || true; elif [[ \"$FILE\" == *.py ]] && [[ -f pytest.ini || -f setup.cfg || -f pyproject.toml ]]; then pytest \"$FILE\" 2>/dev/null || python -m pytest \"$FILE\" 2>/dev/null || true; elif [[ \"$FILE\" == *.rb ]] && [[ -f Gemfile ]]; then bundle exec rspec \"$FILE\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // \"\"'); if [[ \"$FILE\" == *.js || \"$FILE\" == *.ts || \"$FILE\" == *.jsx || \"$FILE\" == *.tsx ]]; then npx eslint \"$FILE\" --fix 2>/dev/null || true; elif [[ \"$FILE\" == *.py ]]; then pylint \"$FILE\" 2>/dev/null || true; elif [[ \"$FILE\" == *.rb ]]; then rubocop \"$FILE\" --auto-correct 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // \"\"'); if [[ \"$FILE\" == *.js || \"$FILE\" == *.ts || \"$FILE\" == *.jsx || \"$FILE\" == *.tsx || \"$FILE\" == *.json || \"$FILE\" == *.css || \"$FILE\" == *.html ]]; then npx prettier --write \"$FILE\" 2>/dev/null || true; elif [[ \"$FILE\" == *.py ]]; then black \"$FILE\" 2>/dev/null || true; elif [[ \"$FILE\" == *.go ]]; then gofmt -w \"$FILE\" 2>/dev/null || true; elif [[ \"$FILE\" == *.rs ]]; then rustfmt \"$FILE\" 2>/dev/null || true; elif [[ \"$FILE\" == *.php ]]; then php-cs-fixer fix \"$FILE\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] File modified: $CLAUDE_FILE_PATHS\" >> ~/.claude/changes.log"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] File created: $CLAUDE_FILE_PATHS\" >> ~/.claude/changes.log"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.file_path // \"file\"' | xargs basename | xargs -I {} osascript -e 'display notification \"File created: {}\" with title \"Claude Code\" sound name \"Glass\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.pattern // \"search\"' | xargs -I {} osascript -e 'display notification \"Grep completed: {}\" with title \"Claude Code\" sound name \"Tink\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.file_path // \"file\"' | xargs basename | xargs -I {} osascript -e 'display notification \"File modified: {}\" with title \"Claude Code\" sound name \"Pop\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Glob search completed\" with title \"Claude Code\" sound name \"Ping\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Sub-Agent Task completed\" with title \"Claude Code\" sound name \"Hero\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.url // \"unknown URL\"' | awk -F'/' '{print $3}' | xargs -I {} osascript -e 'display notification \"WebFetch completed: {}\" with title \"Claude Code\" sound name \"Bottle\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "TodoWrite",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.file_path // \"todo file\"' | xargs basename | xargs -I {} osascript -e 'display notification \"Todo file updated: {}\" with title \"Claude Code\" sound name \"Purr\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "NotebookRead",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.file_path // \"notebook\"' | xargs basename | xargs -I {} osascript -e 'display notification \"Notebook read: {}\" with title \"Claude Code\" sound name \"Frog\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.file_path // \"notebook\"' | xargs basename | xargs -I {} osascript -e 'display notification \"Notebook edited: {}\" with title \"Claude Code\" sound name \"Funk\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.command // \"bash command\"' | head -c 50 | tr '\\n' ' ' | xargs -I {} osascript -e 'display notification \"Running: {}\" with title \"'\"$(basename \"$PWD\")\"'\" sound name \"Tink\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__context7__get-library-docs",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Context7: Library docs loaded\" with title \"Claude Code\" sound name \"Glass\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__sequential-thinking__sequentialthinking",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Sequential Thinking completed\" with title \"Claude Code\" sound name \"Purr\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat | jq -r '.tool_input.file_path // \"file\"' | xargs basename | xargs -I {} osascript -e 'display notification \"Read: {}\" with title \"Claude Code\" sound name \"Pop\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__memory-bank-mcp__track_progress",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Memory: Progress tracked\" with title \"Claude Code\" sound name \"Tink\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__memory-bank-mcp__log_decision",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Memory: Decision logged\" with title \"Claude Code\" sound name \"Bottle\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__memory-bank-mcp__update_active_context",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Memory: Context updated\" with title \"Claude Code\" sound name \"Ping\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__memory-bank-mcp__write_memory_bank_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Memory: File written\" with title \"Claude Code\" sound name \"Frog\"'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display alert \"Claude Code\" message \"Awaiting your input\" sound name \"Hero\"'"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "claude-statusline status"
+  },
+  "verbose": true
+}
