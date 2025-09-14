@@ -28,7 +28,8 @@ The installer will:
 - ⚡ **No manual server starting** needed
 - 🛑 **Graceful shutdown** when Claude exits
 - 🧹 **Automatic cleanup** - no orphaned processes
-- 🔧 **Port 3026** configured (avoids conflicts)
+- 🔧 **Port 3025** for MCP method (Claude Code)
+- 🔧 **Port 3026** for Direct method (API access)
 
 ## Example Commands for Claude
 
@@ -73,8 +74,8 @@ cp .claude/mcp-auto-start.json .claude/mcp.json
 
 If browser-tools isn't available after installation:
 1. Make sure Claude Code was restarted
-2. Check port 3026 isn't already in use
-3. Run `./scripts/start-browser-tools.sh` to test manually
+2. Check port 3025 isn't already in use
+3. Run `./scripts/start-mcp-browser-tools.sh` to test manually
 
 See [ERROR-RECOVERY.md](ERROR-RECOVERY.md) for complete troubleshooting guide.
 

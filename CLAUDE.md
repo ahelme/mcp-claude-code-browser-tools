@@ -4,7 +4,9 @@
 
 **Custom MCP Server Implementation** - We built our own browser-tools MCP server to fix critical protocol violations in the official npm package.
 
-**Current Status**: Using `browser-tools-mcp-2025.js` - our clean, 100% MCP-compliant implementation.
+**Current Status**: Using dual architecture with clean, 100% MCP-compliant implementation:
+- **MCP Method**: `mcp-browser-tools-server.js` + `mcp-http-bridge.js` (port 3025)
+- **Direct Method**: `direct-http-bridge.js` (port 3026)
 
 ## Features
 
@@ -18,9 +20,10 @@
 ## Available MCP Servers
 
 ### 1. Browser-Tools MCP (Our Custom Implementation)
-- **Location**: `scripts/browser-tools-mcp-2025.js`
+- **MCP Server**: `scripts/mcp-browser-tools-server.js`
+- **HTTP Bridge**: `scripts/mcp-http-bridge.js`
 - **Purpose**: Browser automation and testing
-- **Port**: 3025 (HTTP bridge server connection)
+- **Port**: 3025 (MCP HTTP bridge connection)
 - **Features**:
   - Nine browser control tools
   - Screenshot capture
@@ -43,11 +46,16 @@
 # First time only - install dependencies
 npm install
 
-# Start our custom HTTP bridge
-./scripts/start-browser-tools.sh
+# Start MCP HTTP bridge (for Claude Code)
+./scripts/start-mcp-browser-tools.sh
+# This starts the MCP HTTP bridge on port 3025
+
+# Alternative: Direct HTTP method (for other tools)
+./scripts/start-direct-browser-tools.sh
+# This starts the direct HTTP bridge on port 3026
 ```
 
-This starts our custom HTTP bridge server on port 3025 that connects our MCP server to Chrome.
+**IMPORTANT**: Use port 3025 for MCP method with Claude Code!
 
 ### Available Browser Tools in Claude Code
 
@@ -78,9 +86,16 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 
 ## Important Files
 
-- `scripts/browser-tools-mcp-2025.js` - Our custom MCP server
-- `scripts/http-bridge-server.js` - Our custom HTTP bridge
-- `scripts/start-browser-tools.sh` - Start script
+### MCP Method (Port 3025)
+- `scripts/mcp-browser-tools-server.js` - MCP server
+- `scripts/mcp-http-bridge.js` - MCP HTTP bridge
+- `scripts/start-mcp-browser-tools.sh` - Start script for MCP
+
+### Direct Method (Port 3026)
+- `scripts/direct-http-bridge.js` - Direct HTTP bridge
+- `scripts/start-direct-browser-tools.sh` - Start script for direct
+
+### Configuration
 - `.claude/mcp.json` - MCP configuration
 - `.screenshots/` - Screenshot outputs
 
@@ -98,10 +113,11 @@ Our solution:
 
 ## Quick Reference
 
-1. **Start HTTP bridge**: `./scripts/start-browser-tools.sh`
+1. **Start MCP HTTP bridge**: `./scripts/start-mcp-browser-tools.sh`
 2. **Chrome extension**: Required from https://browsertools.agentdesk.ai/
-3. **Port**: Always 3025 (hardcoded)
-4. **Debug mode**: Set `MCP_DEBUG=1` in environment
+3. **Port for MCP**: 3025 (for Claude Code)
+4. **Port for Direct**: 3026 (for other tools)
+5. **Debug mode**: Set `MCP_DEBUG=1` in environment
 
 ## Testing
 
@@ -110,32 +126,38 @@ Check if working:
 # See configured server
 cat .claude/mcp.json | grep browser-tools
 
-# Test HTTP bridge
+# Test MCP HTTP bridge (port 3025)
 curl http://localhost:3025/health
 
+# Test Direct HTTP bridge (port 3026)
+curl http://localhost:3026/health
+
 # Debug MCP server
-MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js
+MCP_DEBUG=1 node scripts/mcp-browser-tools-server.js
 ```
 
-## Critical MCP Protocol Issue (September 2025)
+## MCP Protocol Compliance (September 2025)
 
-**🚨 DISCOVERED: Protocol Version Mismatch**
-- Our MCP server now uses: `"2025-06-18"` ✅
+**✅ VERIFIED: Full 2025-06-18 Protocol Compliance**
+- Our MCP server uses: `"2025-06-18"` ✅
 - Current MCP protocol: `"2025-06-18"` ✅
-- **Status**: ✅ FIXED - Updated to current MCP 2025-06-18 protocol
-- **Solution Applied**: Updated `protocolVersion` and initialize response format in `scripts/browser-tools-mcp-2025.js`
-- **Timeline**: MCP protocol changed in June 2025, we've now updated our implementation
+- **Status**: ✅ COMPLIANT - Verified against official specification
+- **Implementation**: `scripts/mcp-browser-tools-server.js`
+- **Validation**: All initialize handshake, capabilities, and tool definitions match spec
 
-**✅ RESOLVED Issues:**
-- Updated protocol version from "2025-03-26" to "2025-06-18"
-- Fixed initialize response format (capabilities structure)
-- Corrected serverInfo format for compliance
-- MCP server now 100% compliant with current specification
+**✅ Compliance Checklist:**
+- Protocol version: "2025-06-18" ✅
+- Initialize response format ✅
+- ServerInfo structure ✅
+- Tool definitions with proper inputSchema ✅
+- JSON-RPC 2.0 error handling ✅
 
 ## Notes
 
 - MCP server auto-starts with Claude Code
-- HTTP bridge needs manual start (`./scripts/start-browser-tools.sh`)
-- Chrome extension must be installed for browser control
+- HTTP bridge needs manual start:
+  - For Claude Code: `./scripts/start-mcp-browser-tools.sh` (port 3025)
+  - For other tools: `./scripts/start-direct-browser-tools.sh` (port 3026)
+- Chrome extension must be installed and connected to the same port as your bridge
 - All debug output goes to stderr (never stdout)
 - We built our own HTTP bridge - no dependency on the broken npm package!

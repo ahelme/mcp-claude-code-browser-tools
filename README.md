@@ -4,7 +4,11 @@
 
 ## What Is This?
 
-We created our own complete solution - both MCP server (`browser-tools-mcp-2025.js`) and HTTP bridge (`http-bridge-server.js`) - because the official npm package violates the MCP stdio protocol. Our implementation:
+We created our own complete solution with dual architecture support:
+- **MCP Method**: `mcp-browser-tools-server.js` + `mcp-http-bridge.js` (port 3025)
+- **Direct Method**: `direct-http-bridge.js` (port 3026)
+
+Built because the official npm package violates the MCP stdio protocol. Our implementation:
 - ✅ 100% MCP 2025-06-18 specification compliant
 - ✅ Zero console output (no stdio pollution)
 - ✅ Custom HTTP bridge for Chrome extension communication
@@ -32,11 +36,14 @@ Download and install the BrowserToolsMCP extension from: https://browsertools.ag
 # First time only - install dependencies
 npm install
 
-# Start our custom HTTP bridge server
-./scripts/start-browser-tools.sh
+# For Claude Code (MCP Method) - Port 3025
+./scripts/start-mcp-browser-tools.sh
+
+# For Direct API Access - Port 3026 (optional)
+./scripts/start-direct-browser-tools.sh
 ```
 
-This starts our custom HTTP bridge on port 3025 for Chrome extension communication.
+**IMPORTANT**: Use port 3025 for Claude Code!
 
 ### 3. Use in Claude Code
 
@@ -48,7 +55,9 @@ After the three steps above:
 
 1. **Open Chrome Dev Tools** in the browser tab where you want to use browser tools
 2. **Navigate to the BrowserToolsMCP panel** in Dev Tools
-3. **Set Server Port**: Type "3025" into Browser Tools chrome extension under "Server Connection Settings > Server Port" & hit return
+3. **Set Server Port**:
+   - For Claude Code: Type "3025" into Browser Tools chrome extension
+   - For Direct API: Type "3026" (if using direct method)
 4. **Verify connection status** - should show "Connected" instead of "Searching..."
 
 #### Troubleshooting Connection Issues
@@ -74,7 +83,8 @@ Available tools:
 ## Architecture
 
 ```
-Claude Code <--[JSON-RPC/stdio]--> Our MCP Server <--[HTTP:3025]--> HTTP Bridge <--[WebSocket]--> Chrome Extension
+Method 1 (MCP): Claude Code <--[stdio]--> MCP Server <--[HTTP:3025]--> MCP Bridge <--[WebSocket]--> Chrome Extension
+Method 2 (Direct): External Tool <--[HTTP:3026]--> Direct Bridge <--[WebSocket]--> Chrome Extension
 ```
 
 ## Why Custom Implementation?
@@ -84,7 +94,7 @@ The official `@agentdeskai/browser-tools-mcp` npm package (v1.2.0-1.2.1) has cri
 - 18 console.error statements that break JSON-RPC
 - Violates MCP stdio protocol requirements
 
-Our solution (`browser-tools-mcp-2025.js`):
+Our solution (`mcp-browser-tools-server.js`):
 - Clean implementation from scratch
 - Follows 2025-06-18 MCP specification exactly
 - All debugging goes to stderr (when MCP_DEBUG=1)
@@ -145,9 +155,11 @@ To modify MCP server configurations:
 ```
 browser-tools-setup/
 ├── scripts/
-│   ├── browser-tools-mcp-2025.js    # Our custom MCP server
-│   ├── http-bridge-server.js        # Our custom HTTP bridge
-│   └── start-browser-tools.sh       # Start script
+│   ├── mcp-browser-tools-server.js  # MCP server
+│   ├── mcp-http-bridge.js          # MCP HTTP bridge (port 3025)
+│   ├── direct-http-bridge.js       # Direct HTTP bridge (port 3026)
+│   ├── start-mcp-browser-tools.sh  # Start MCP method
+│   └── start-direct-browser-tools.sh # Start direct method
 ├── .claude/
 │   └── mcp.json                     # MCP configuration
 ├── package.json                     # Project dependencies
@@ -159,17 +171,21 @@ browser-tools-setup/
 
 1. Check MCP server is configured:
    ```bash
-   cat .claude/mcp.json | grep browser-tools-mcp-2025
+   cat .claude/mcp.json | grep browser-tools
    ```
 
-2. Start HTTP bridge server:
+2. Start appropriate HTTP bridge:
    ```bash
-   ./scripts/start-browser-tools.sh
+   # For Claude Code (port 3025)
+   ./scripts/start-mcp-browser-tools.sh
+
+   # For Direct API (port 3026)
+   ./scripts/start-direct-browser-tools.sh
    ```
 
 3. Test with debug output:
    ```bash
-   MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js
+   MCP_DEBUG=1 node scripts/mcp-browser-tools-server.js
    ```
 
 ## 🛠️ Using Audit Tools
@@ -308,7 +324,8 @@ Once installed and configured, the system allows any compatible MCP client to:
 
 ## Important Notes
 
-- HTTP bridge server ALWAYS uses port 3025 (hardcoded)
+- MCP HTTP bridge uses port 3025 (for Claude Code)
+- Direct HTTP bridge uses port 3026 (for API access)
 - Chrome extension required for browser control
 - Our MCP server auto-starts with Claude Code
 - Debug output goes to stderr only (MCP_DEBUG=1)

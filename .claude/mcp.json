@@ -25,10 +25,10 @@
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/browser-tools-mcp-2025.js"
+"/Users/lennox/development/browser-tools-setup/scripts/mcp-browser-tools-server.js"
       ],
       "env": {
-        "BROWSER_TOOLS_PORT": "3025",
+        "MCP_HTTP_BRIDGE_PORT": "3025",
         "MCP_DEBUG": "1"
       }
     },
