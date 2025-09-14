@@ -1,6 +1,7 @@
 # Claude Code Files
 CLAUDE.md
-.claude/*
+# NOTE: .claude/ and .mcp.json are now tracked for team collaboration!
+.claude/settings.local.json
 
 # Memory Bank (keep private)
 memory-bank/

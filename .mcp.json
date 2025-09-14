@@ -3,12 +3,7 @@
     "memory-bank-mcp": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@movibe/memory-bank-mcp",
-        "--mode",
-        "code"
-      ],
+      "args": ["-y", "@movibe/memory-bank-mcp", "--mode", "code"],
       "env": {
         "MEMORY_BANK_ROOT": "/Users/lennox/development/browser-tools-setup/memory-bank"
       }
@@ -16,30 +11,23 @@
     "sequential-thinking": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     },
     "browser-tools": {
       "type": "stdio",
-      "command": "npx",
+      "command": "node",
       "args": [
-        "node",
         "/Users/lennox/development/browser-tools-setup/scripts/mcp-browser-tools-server.js"
       ],
       "env": {
-        "MCP_HTTP_BRIDGE_PORT": "3025",
+        "BROWSER_TOOLS_PORT": "3025",
         "MCP_DEBUG": "1"
       }
     },
     "playwright": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@agentdeskai/playwright-mcp"
-      ]
+      "args": ["-y", "@agentdeskai/playwright-mcp"]
     },
     "minimal-test": {
       "type": "stdio",
