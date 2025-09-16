@@ -29,7 +29,7 @@
       "WebSearch",
       "Bash(test:*)",
       "Bash(jq:*)",
-      "Bash(MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3025 node scripts/mcp-claude-code-browser-tools.js)",
+      "Bash(MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3025 node scripts/mcp-claude-code-browser-tools.mjs)",
       "Bash(npx:*)",
       "WebFetch(domain:spec.modelcontextprotocol.io)",
       "Bash(export MCP_HTTP_BRIDGE_PORT=3025 MCP_DEBUG=1)"

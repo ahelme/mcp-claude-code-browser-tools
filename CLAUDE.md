@@ -10,7 +10,7 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 ## IN-DEVELOPMENT: Current Status - Partially Working
 - FIVE out of NINE tools currently working (see below)
 - 100% June 2025 MCP-compliant implementation
-- **MCP Method**: `mcp-claude-code-browser-tools.js` + `mcp-http-bridge.js` (port 3025)
+- **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3025)
 
 ### ✅ WORKING (5 tools):
 
@@ -85,7 +85,7 @@ We built our own browser tools MCP server to address critical protocol violation
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.js"
+        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.mjs"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3025",
@@ -152,7 +152,7 @@ cat .mcp.json | grep browser-tools
 curl http://localhost:3025/health
 
 # Debug MCP server
-MCP_DEBUG=1 node scripts/mcp-claude-code-browser-tools.js
+MCP_DEBUG=1 node scripts/mcp-claude-code-browser-tools.mjs
 ```
 
 ### **Configure MCP Server to Debug Mode**: 
@@ -178,8 +178,8 @@ curl http://localhost:3026/health
 ```
 browser-tools-setup/
 ├── scripts/
-│   ├── mcp-claude-code-browser-tools.js   # MCP server
-│   ├── mcp-http-bridge.js            # MCP HTTP bridge (port 3025)
+│   ├── mcp-claude-code-browser-tools.mjs   # MCP server
+│   ├── mcp-http-bridge.mjs            # MCP HTTP bridge (port 3025)
 │   ├── direct-http-bridge.js         # Direct HTTP bridge (port 3026)
 │   ├── start-mcp-browser-tools.sh    # Start MCP method
 │   └── start-direct-browser-tools.sh # Start direct method
@@ -230,8 +230,8 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 ## Important Files
 
 ### MCP Method (Port 3025)
-- `scripts/mcp-claude-code-browser-tools.js` - MCP server
-- `scripts/mcp-http-bridge.js` - MCP HTTP bridge
+- `scripts/mcp-claude-code-browser-tools.mjs` - MCP server
+- `scripts/mcp-http-bridge.mjs` - MCP HTTP bridge
 - `scripts/start-mcp-browser-tools.sh` - Start script for MCP
 
 ### BACKUP: Direct Method (Port 3026)
@@ -256,7 +256,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 - Our MCP server uses: `"2025-06-18"` ✅
 - Current MCP protocol: `"2025-06-18"` ✅
 - **Status**: ✅ COMPLIANT - Verified against official specification
-- **Implementation**: `scripts/mcp-claude-code-browser-tools.js`
+- **Implementation**: `scripts/mcp-claude-code-browser-tools.mjs`
 - **Validation**: All initialize handshake, capabilities, and tool definitions match spec
 
 **✅ Compliance Checklist:**
@@ -269,7 +269,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 ## Available MCP Servers in 'browser-tools-setup' project/directory:
 
 ### 1. Browser-Tools MCP (Our Custom Implementation) - 5/9 Tools Currently Working
-- **MCP Server**: `scripts/mcp-claude-code-browser-tools.js`
+- **MCP Server**: `scripts/mcp-claude-code-browser-tools.mjs`
 - **Purpose**: Browser automation and testing
 - **Status**: PARTIALLY FIXED - Path mismatch resolved (Sept 14, 2025)
 - **Configuration**: Project level: `.claude/mcp.json`
