@@ -24,11 +24,6 @@
         "MCP_DEBUG": "1"
       }
     },
-    "playwright": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@agentdeskai/playwright-mcp"]
-    },
     "minimal-test": {
       "type": "stdio",
       "command": "node",

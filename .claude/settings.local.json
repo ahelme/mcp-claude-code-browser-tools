@@ -42,8 +42,7 @@
     "memory-bank-mcp",
     "sequential-thinking",
     "browser-tools",
-    "minimal-test",
-    "playwright"
+    "minimal-test"
   ],
   "disabledMcpjsonServers": [
     "web-scraper",
@@ -53,16 +52,6 @@
     "memory"
   ],
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '\n🚀 BROWSER-TOOLS SETUP - MCP Server Manual Startup Guide 🚀\n\nIf you want to run MCP servers manually in separate terminal windows:\n\n📋 AVAILABLE MCP SERVERS:\n✅ browser-tools    - 9 browser automation tools\n✅ memory-bank-mcp  - Auto-starts (no action needed)\n✅ sequential-thinking - Auto-starts (no action needed)\n✅ minimal-test     - 1 test tool for MCP validation\n🔄 playwright       - Alternative browser automation\n\n🔧 MANUAL STARTUP COMMANDS (run each in separate terminal):\n\n1️⃣ Browser-Tools MCP Server:\n   cd /Users/lennox/development/browser-tools-setup\n   MCP_DEBUG=1 node scripts/mcp-browser-tools-server.js\n\n2️⃣ Minimal Test MCP Server:\n   cd /Users/lennox/development/browser-tools-setup\n   MCP_DEBUG=1 node scripts/minimal_mcp_server_new_protocol_released_June_2025_for_browser_tools.js\n\n3️⃣ Playwright MCP Server:\n   cd /Users/lennox/development/browser-tools-setup\n   npx -y @agentdeskai/playwright-mcp\n\n4️⃣ HTTP Bridge (for browser automation):\n   cd /Users/lennox/development/browser-tools-setup\n   ./scripts/start-mcp-browser-tools.sh\n\n💡 TIPS:\n- memory-bank-mcp and sequential-thinking auto-start with Claude Code\n- Browser-tools needs Chrome extension from https://browsertools.agentdesk.ai/\n- All servers use JSON-RPC stdio communication\n- Use MCP_DEBUG=1 for detailed logging\n\n🎯 QUICK TEST:\nOnce started, test with: echo \"{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"method\\\":\\\"initialize\\\",\\\"params\\\":{\\\"protocolVersion\\\":\\\"2025-06-18\\\",\\\"capabilities\\\":{},\\\"clientInfo\\\":{\\\"name\\\":\\\"test\\\",\\\"version\\\":\\\"1.0\\\"}},\\\"id\\\":1}\" | node scripts/mcp-browser-tools-server.js\n\n🔗 More info: See CLAUDE.md for complete documentation\n'"
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "startup",
@@ -160,15 +149,16 @@
           }
         ]
       },
-      {
-        "matcher": "Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cat | jq -r '.tool_input.pattern // \"search\"' | xargs -I {} osascript -e 'display notification \"Grep completed: {}\" with title \"Claude Code\" sound name \"Tink\"'"
-          }
-        ]
-      },
+
+{
+  "matcher": "Grep",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "PATTERN=$(cat | jq -r '.tool_input.pattern // \"search\"'); osascript -e \"display notification \\\"Grep completed: $PATTERN\\\" with title \\\"Claude Code\\\" sound name \\\"Tink\\\"\""
+    }
+  ]
+},
       {
         "matcher": "Edit|MultiEdit",
         "hooks": [
@@ -232,15 +222,15 @@
           }
         ]
       },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cat | jq -r '.tool_input.command // \"bash command\"' | head -c 50 | tr '\\n' ' ' | xargs -I {} osascript -e 'display notification \"Running: {}\" with title \"'\"$(basename \"$PWD\")\"'\" sound name \"Tink\"'"
-          }
-        ]
-      },
+{
+  "matcher": "Bash",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "COMMAND=$(cat | jq -r '.tool_input.command // \"bash command\"' | head -c 50 | tr '\\n' ' '); osascript -e \"display notification \\\"Running: $COMMAND\\\" with title \\\"Claude Code\\\" sound name \\\"Tink\\\"\""
+    }
+  ]
+},
       {
         "matcher": "mcp__context7__get-library-docs",
         "hooks": [
@@ -305,16 +295,16 @@
         ]
       }
     ],
-    "Stop": [
+"Stop": [
+  {
+    "hooks": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "osascript -e 'display alert \"Claude Code\" message \"Awaiting your input\" sound name \"Hero\"'"
-          }
-        ]
+        "type": "command",
+        "command": "osascript -e 'display notification \"Awaiting your input\" with title \"Claude Code\" sound name \"Hero\"'"
       }
     ]
+  }
+]
   },
   "statusLine": {
     "type": "command",
