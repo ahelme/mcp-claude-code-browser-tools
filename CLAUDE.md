@@ -10,7 +10,7 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 ## IN-DEVELOPMENT: Current Status - Partially Working
 - FIVE out of NINE tools currently working (see below)
 - 100% June 2025 MCP-compliant implementation
-- **MCP Method**: `mcp-browser-tools-server.js` + `mcp-http-bridge.js` (port 3025)
+- **MCP Method**: `mcp-claude-code-browser-tools.js` + `mcp-http-bridge.js` (port 3025)
 
 ### ✅ WORKING (5 tools):
 
@@ -81,11 +81,11 @@ We built our own browser tools MCP server to address critical protocol violation
 ```
 {
   "mcpServers": {
-    "browser-tools": {
+    "mcp-claude-code-browser-tools": {
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/mcp-browser-tools-server.js"
+        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.js"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3025",
@@ -138,7 +138,7 @@ This will connect extension to Claude Code Browser Tools MCP Server (via http br
 1. **File Location**: Place `.mcp.json` in codebase root directory configured using latest MCP specification
 2. **Server Types**: All servers use `"type": "stdio"` for JSON-RPC communication
 3. **Environment Variables**: Configure ports and debug modes in the `env` section
-4. **Path Requirements**: Try absolute paths for local scripts (e.g., our mcp-browser-tools-server.js)
+4. **Path Requirements**: Try absolute paths for local scripts (e.g., our mcp-claude-code-browser-tools.js)
 5. **NPX Dependencies**: External packages can be run with `npx -y` for auto-installation
 
 ## Testing and Debugging 
@@ -152,7 +152,7 @@ cat .mcp.json | grep browser-tools
 curl http://localhost:3025/health
 
 # Debug MCP server
-MCP_DEBUG=1 node scripts/mcp-browser-tools-server.js
+MCP_DEBUG=1 node scripts/mcp-claude-code-browser-tools.js
 ```
 
 ### **Configure MCP Server to Debug Mode**: 
@@ -178,7 +178,7 @@ curl http://localhost:3026/health
 ```
 browser-tools-setup/
 ├── scripts/
-│   ├── mcp-browser-tools-server.js   # MCP server
+│   ├── mcp-claude-code-browser-tools.js   # MCP server
 │   ├── mcp-http-bridge.js            # MCP HTTP bridge (port 3025)
 │   ├── direct-http-bridge.js         # Direct HTTP bridge (port 3026)
 │   ├── start-mcp-browser-tools.sh    # Start MCP method
@@ -230,7 +230,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 ## Important Files
 
 ### MCP Method (Port 3025)
-- `scripts/mcp-browser-tools-server.js` - MCP server
+- `scripts/mcp-claude-code-browser-tools.js` - MCP server
 - `scripts/mcp-http-bridge.js` - MCP HTTP bridge
 - `scripts/start-mcp-browser-tools.sh` - Start script for MCP
 
@@ -246,7 +246,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 **IMPORTANT**: Only edit project-level configs. ==NEVER modify user-level ~/.claude.json==.
 
 **BREAKTHROUGH FIX (Sept 14, 2025):**
-- Updated browser-tools path ( `mcp-browser-tools-server.js`)
+- Updated browser-tools path ( `mcp-claude-code-browser-tools.js`)
 - Updated .gitignore to track MCP configs for versioning
 - All servers now respond correctly to JSON-RPC initialize messages
 
@@ -256,7 +256,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 - Our MCP server uses: `"2025-06-18"` ✅
 - Current MCP protocol: `"2025-06-18"` ✅
 - **Status**: ✅ COMPLIANT - Verified against official specification
-- **Implementation**: `scripts/mcp-browser-tools-server.js`
+- **Implementation**: `scripts/mcp-claude-code-browser-tools.js`
 - **Validation**: All initialize handshake, capabilities, and tool definitions match spec
 
 **✅ Compliance Checklist:**
@@ -269,7 +269,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 ## Available MCP Servers in 'browser-tools-setup' project/directory:
 
 ### 1. Browser-Tools MCP (Our Custom Implementation) - 5/9 Tools Currently Working
-- **MCP Server**: `scripts/mcp-browser-tools-server.js`
+- **MCP Server**: `scripts/mcp-claude-code-browser-tools.js`
 - **Purpose**: Browser automation and testing
 - **Status**: PARTIALLY FIXED - Path mismatch resolved (Sept 14, 2025)
 - **Configuration**: Project level: `.claude/mcp.json`

@@ -29,7 +29,7 @@
       "WebSearch",
       "Bash(test:*)",
       "Bash(jq:*)",
-      "Bash(MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3025 node scripts/mcp-browser-tools-server.js)",
+      "Bash(MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3025 node scripts/mcp-claude-code-browser-tools.js)",
       "Bash(npx:*)",
       "WebFetch(domain:spec.modelcontextprotocol.io)",
       "Bash(export MCP_HTTP_BRIDGE_PORT=3025 MCP_DEBUG=1)"
@@ -41,7 +41,7 @@
   "enabledMcpjsonServers": [
     "memory-bank-mcp",
     "sequential-thinking",
-    "browser-tools",
+    "mcp-claude-code-browser-tools",
     "minimal-test"
   ],
   "disabledMcpjsonServers": [
@@ -150,15 +150,15 @@
         ]
       },
 
-{
-  "matcher": "Grep",
-  "hooks": [
-    {
-      "type": "command",
-      "command": "PATTERN=$(cat | jq -r '.tool_input.pattern // \"search\"'); osascript -e \"display notification \\\"Grep completed: $PATTERN\\\" with title \\\"Claude Code\\\" sound name \\\"Tink\\\"\""
-    }
-  ]
-},
+      {
+        "matcher": "Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PATTERN=$(cat | jq -r '.tool_input.pattern // \"search\"'); osascript -e \"display notification \\\"Grep completed: $PATTERN\\\" with title \\\"Claude Code\\\" sound name \\\"Tink\\\"\""
+          }
+        ]
+      },
       {
         "matcher": "Edit|MultiEdit",
         "hooks": [
@@ -222,15 +222,15 @@
           }
         ]
       },
-{
-  "matcher": "Bash",
-  "hooks": [
-    {
-      "type": "command",
-      "command": "COMMAND=$(cat | jq -r '.tool_input.command // \"bash command\"' | head -c 50 | tr '\\n' ' '); osascript -e \"display notification \\\"Running: $COMMAND\\\" with title \\\"Claude Code\\\" sound name \\\"Tink\\\"\""
-    }
-  ]
-},
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "COMMAND=$(cat | jq -r '.tool_input.command // \"bash command\"' | head -c 50 | tr '\\n' ' '); osascript -e \"display notification \\\"Running: $COMMAND\\\" with title \\\"Claude Code\\\" sound name \\\"Tink\\\"\""
+          }
+        ]
+      },
       {
         "matcher": "mcp__context7__get-library-docs",
         "hooks": [
@@ -295,16 +295,16 @@
         ]
       }
     ],
-"Stop": [
-  {
-    "hooks": [
+    "Stop": [
       {
-        "type": "command",
-        "command": "osascript -e 'display notification \"Awaiting your input\" with title \"Claude Code\" sound name \"Hero\"'"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Awaiting your input\" with title \"Claude Code\" sound name \"Hero\"'"
+          }
+        ]
       }
     ]
-  }
-]
   },
   "statusLine": {
     "type": "command",

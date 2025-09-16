@@ -13,11 +13,11 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
     },
-    "browser-tools": {
+    "mcp-claude-code-browser-tools": {
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/mcp-browser-tools-server.js"
+        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.js"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3025",

@@ -10,7 +10,7 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 ## IN-DEVELOPMENT: Current Status - Partially Working
 - FIVE out of NINE tools currently working (see below)
 - 100% June 2025 MCP-compliant implementation
-- **MCP Method**: `mcp-browser-tools-server.js` + `mcp-http-bridge.js` (port 3025)
+- **MCP Method**: `mcp-claude-code-browser-tools.js` + `mcp-http-bridge.js` (port 3025)
 
 ### ✅ WORKING (5 tools):
 
@@ -81,11 +81,11 @@ We built our own browser tools MCP server to address critical protocol violation
 ```
 {
   "mcpServers": {
-    "browser-tools": {
+    "mcp-claude-code-browser-tools": {
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/mcp-browser-tools-server.js"
+        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.js"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3025",
@@ -144,7 +144,7 @@ cat .claude/mcp.json | grep browser-tools
 curl http://localhost:3025/health
 
 # Debug MCP server
-MCP_DEBUG=1 node scripts/mcp-browser-tools-server.js
+MCP_DEBUG=1 node scripts/mcp-claude-code-browser-tools.js
 ```
 
 ### **Configure MCP Server to Debug Mode**: 
@@ -200,7 +200,7 @@ Guide to usage of available tools: TOOLS_GUIDE.md
 ## Important Files
 
 ### MCP Method (Port 3025)
-- `scripts/mcp-browser-tools-server.js` - MCP server
+- `scripts/mcp-claude-code-browser-tools.js` - MCP server
 - `scripts/mcp-http-bridge.js` - MCP HTTP bridge
 - `scripts/start-mcp-browser-tools.sh` - Start script for MCP
 
