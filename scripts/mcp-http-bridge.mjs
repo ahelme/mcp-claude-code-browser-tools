@@ -13,7 +13,7 @@
  * - Screenshot capture with local file saving
  * - Page content retrieval
  *
- * Runs on port 3025 (dedicated MCP method port)
+ * Runs on port 3024 (dedicated MCP method port)
  */
 
 import express from "express";
@@ -28,7 +28,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configuration
-const PORT = 3025; // Dedicated port for MCP method
+const PORT = 3024; // Dedicated port for MCP method
 const HOST = "127.0.0.1";
 
 // State management
@@ -459,7 +459,7 @@ process.on("unhandledRejection", (error) => {
 console.log("\n📌 Chrome Extension Setup:");
 console.log("1. Install extension from: https://browsertools.agentdesk.ai/");
 console.log(
-  '2. Set Server Port: type "3025" into Browser Tools chrome ext. HIT RETURN <important',
+  '2. Set Server Port: type "3024" into Browser Tools chrome ext. HIT RETURN <important',
 );
 console.log("3. Connection status shown in extension icon");
 console.log(

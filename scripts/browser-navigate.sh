@@ -8,7 +8,7 @@ if [ -z "$URL" ]; then
     exit 1
 fi
 
-curl -X POST http://localhost:3025/navigate \
+curl -X POST http://localhost:3024/navigate \
     -H "Content-Type: application/json" \
     -d "{\"url\":\"$URL\"}" \
     2>/dev/null | jq .

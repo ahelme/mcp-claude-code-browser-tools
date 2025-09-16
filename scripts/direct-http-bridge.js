@@ -459,7 +459,7 @@ process.on("unhandledRejection", (error) => {
 console.log("\n📌 Chrome Extension Setup:");
 console.log("1. Install extension from: https://browsertools.agentdesk.ai/");
 console.log(
-  '2. Set Server Port: type "3025" into Browser Tools chrome ext. HIT RETURN <important',
+  '2. Set Server Port: type "3024" into Browser Tools chrome ext. HIT RETURN <important',
 );
 console.log("3. Connection status shown in extension icon");
 console.log(

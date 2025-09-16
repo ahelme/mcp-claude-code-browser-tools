@@ -20,7 +20,7 @@
         "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.mjs"
       ],
       "env": {
-        "BROWSER_TOOLS_PORT": "3025",
+        "BROWSER_TOOLS_PORT": "3024",
         "MCP_DEBUG": "1"
       }
     },

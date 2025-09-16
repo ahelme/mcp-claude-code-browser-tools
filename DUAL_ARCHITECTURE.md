@@ -6,7 +6,7 @@ This document clarifies the architecture with TWO separate middleware servers fo
 
 ### MCP Method Files (Prefix: `mcp-`)
 - `mcp-browser-tools-server.js` - MCP Server (stdio ↔ HTTP)
-- `mcp-http-bridge.js` - HTTP Bridge for MCP (port 3025)
+- `mcp-http-bridge.js` - HTTP Bridge for MCP (port 3024)
 
 ### Direct Method Files (Prefix: `direct-`)
 - `direct-http-bridge.js` - HTTP Bridge for direct access (port 3026)
@@ -21,14 +21,14 @@ This document clarifies the architecture with TWO separate middleware servers fo
 ```
 ┌─────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────┐
 │   Claude Code   │────▶│ MCP Browser Tools   │────▶│  MCP HTTP Bridge    │────▶│ Chrome Extension│
-│                 │◀────│ Server (stdio)      │◀────│   (Port: 3025)     │◀────│   (WebSocket)   │
+│                 │◀────│ Server (stdio)      │◀────│   (Port: 3024)     │◀────│   (WebSocket)   │
 │  JSON-RPC stdio │     │mcp-browser-tools-   │     │mcp-http-bridge.js  │     │    DOM/Screenshots│
 │                 │     │    server.js        │     │ HTTP ←→ WebSocket   │     │                 │
 └─────────────────┘     └─────────────────────┘     └─────────────────────┘     └─────────────────┘
       (Client)              (MCP Protocol)             (MCP HTTP Bridge)           (Browser Control)
 ```
 
-**Flow**: Claude Code → MCP Server → MCP HTTP Bridge (3025) → Chrome Extension
+**Flow**: Claude Code → MCP Server → MCP HTTP Bridge (3024) → Chrome Extension
 
 ### Method 2: Direct HTTP Architecture (Other Clients)
 
@@ -48,26 +48,26 @@ This document clarifies the architecture with TWO separate middleware servers fo
 
 | Component | Port | Method | File |
 |-----------|------|--------|------|
-| MCP HTTP Bridge | 3025 | MCP Server | `mcp-http-bridge.js` |
+| MCP HTTP Bridge | 3024 | MCP Server | `mcp-http-bridge.js` |
 | Direct HTTP Bridge | 3026 | Direct Access | `direct-http-bridge.js` |
 | MCP Browser Tools Server | stdio | MCP Server | `mcp-browser-tools-server.js` |
 
 ## Chrome Extension Configuration
 
 The Chrome Extension can connect to EITHER bridge:
-- **For MCP usage**: Set port 3025 in extension
+- **For MCP usage**: Set port 3024 in extension
 - **For Direct usage**: Set port 3026 in extension
 
 Extension will show:
-- "Connected to MCP HTTP Bridge v1.2.0" (port 3025)
+- "Connected to MCP HTTP Bridge v1.2.0" (port 3024)
 - "Connected to Direct HTTP Bridge v1.2.0" (port 3026)
 
 ## File Structure
 
 ```
 scripts/
-├── mcp-browser-tools-server.js    # MCP Server (stdio ↔ HTTP to port 3025)
-├── mcp-http-bridge.js             # HTTP Bridge for MCP (port 3025)
+├── mcp-browser-tools-server.js    # MCP Server (stdio ↔ HTTP to port 3024)
+├── mcp-http-bridge.js             # HTTP Bridge for MCP (port 3024)
 ├── direct-http-bridge.js          # HTTP Bridge for direct access (port 3026)
 └── start-mcp-browser-tools.sh     # Start MCP method components
 └── start-direct-browser-tools.sh  # Start direct method components
@@ -83,7 +83,7 @@ scripts/
     "command": "node",
     "args": ["scripts/mcp-browser-tools-server.js"],
     "env": {
-      "MCP_HTTP_BRIDGE_PORT": "3025"
+      "MCP_HTTP_BRIDGE_PORT": "3024"
     }
   }
 }
@@ -94,7 +94,7 @@ scripts/
 ### For MCP Method
 ```bash
 ./scripts/start-mcp-browser-tools.sh
-# Starts: mcp-http-bridge.js on port 3025
+# Starts: mcp-http-bridge.js on port 3024
 # Claude Code auto-starts: mcp-browser-tools-server.js
 ```
 
@@ -109,7 +109,7 @@ scripts/
 ### Test MCP Method
 ```bash
 # Test MCP HTTP Bridge
-curl http://localhost:3025/health
+curl http://localhost:3024/health
 
 # Test MCP Server
 echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node scripts/mcp-browser-tools-server.js

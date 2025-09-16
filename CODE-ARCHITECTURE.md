@@ -121,7 +121,7 @@ Claude Code <--[JSON-RPC/stdio]--> MCP Server <--[HTTP]--> Browser Tools Server 
         "/path/to/mcp-browser-tools-server.js"
       ],
       "env": {
-        "BROWSER_TOOLS_PORT": "3025",
+        "BROWSER_TOOLS_PORT": "3024",
         "MCP_DEBUG": "1"
       }
     }
@@ -131,7 +131,7 @@ Claude Code <--[JSON-RPC/stdio]--> MCP Server <--[HTTP]--> Browser Tools Server 
 
 ### Environment Variables
 
-- `BROWSER_TOOLS_PORT`: HTTP server port (default: 3025)
+- `BROWSER_TOOLS_PORT`: HTTP server port (default: 3024)
 - `MCP_DEBUG`: Enable debug logging to stderr (1 to enable)
 
 ## Advantages Over Original Package

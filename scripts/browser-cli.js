@@ -6,7 +6,7 @@
 
 import http from 'http';
 
-const API_BASE = 'http://localhost:3025';
+const API_BASE = 'http://localhost:3024';
 
 function makeRequest(endpoint, method = 'GET', data = null) {
     return new Promise((resolve, reject) => {

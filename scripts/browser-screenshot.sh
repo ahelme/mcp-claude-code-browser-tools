@@ -11,7 +11,7 @@ if [ -n "$SELECTOR" ]; then
 fi
 PAYLOAD="$PAYLOAD\"fullPage\":$FULLPAGE}"
 
-curl -X POST http://localhost:3025/capture-screenshot \
+curl -X POST http://localhost:3024/capture-screenshot \
     -H "Content-Type: application/json" \
     -d "$PAYLOAD" \
     2>/dev/null | jq .

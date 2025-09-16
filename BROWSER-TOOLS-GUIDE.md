@@ -205,7 +205,7 @@ See README.md
 ## Important Notes
 
 ### Port Configuration
-- Default port: 3025
+- Default port: 3024
 
 ### Session Management
 - Browser sessions timeout after 60 seconds

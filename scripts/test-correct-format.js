@@ -7,7 +7,7 @@
 
 import { WebSocket } from 'ws';
 
-const ws = new WebSocket('ws://localhost:3025/extension-ws');
+const ws = new WebSocket('ws://localhost:3024/extension-ws');
 
 ws.on('open', () => {
     console.log('🔌 Connected to debug server');

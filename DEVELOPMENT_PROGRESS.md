@@ -25,8 +25,8 @@
 - ✅ **Proper request body logic for different HTTP methods**
 
 ### Evidence of Complete Success
-- ✅ **Chrome Extension**: Connected to localhost:3025 ✅
-- ✅ **HTTP Bridge**: Running perfectly on port 3025 ✅
+- ✅ **Chrome Extension**: Connected to localhost:3024 ✅
+- ✅ **HTTP Bridge**: Running perfectly on port 3024 ✅
 - ✅ **MCP Server**: Manual testing shows perfect JSON responses ✅
 - ✅ **Full Chain Working**: Extension ↔ HTTP Bridge ↔ Fixed MCP Server ✅
 
@@ -89,7 +89,7 @@
 ## ✅ What's Working Perfectly
 
 ### 🔗 Connection & Authentication
-- ✅ Chrome extension connects to port 3025
+- ✅ Chrome extension connects to port 3024
 - ✅ HTTP bridge server operational and stable
 - ✅ Identity authentication with correct signature
 - ✅ WebSocket connection established
@@ -100,7 +100,7 @@
 - ✅ Multiple access methods:
   - Node.js CLI: `node scripts/browser-cli.js navigate <url>`
   - Bash scripts: `./scripts/browser-navigate.sh <url>`
-  - Direct HTTP API: `curl -X POST http://localhost:3025/navigate`
+  - Direct HTTP API: `curl -X POST http://localhost:3024/navigate`
 - ✅ Tested successfully with:
   - `https://example.com`
   - `https://httpbin.org/html`
@@ -180,7 +180,7 @@
 ```
 ┌─────────────────┐    ┌───────────────────┐    ┌─────────────────┐
 │   Claude Code   │    │   HTTP Bridge     │    │ Chrome Extension│
-│                 │◄──►│   (Port 3025)     │◄──►│   (Connected)   │
+│                 │◄──►│   (Port 3024)     │◄──►│   (Connected)   │
 │   Bash/Node     │    │                   │    │                 │
 │   Scripts       │    │   WebSocket       │    │   Dev Tools     │
 └─────────────────┘    └───────────────────┘    └─────────────────┘
@@ -204,7 +204,7 @@
       "command": "node",
       "args": ["scripts/browser-tools-mcp-2025.js"],
       "env": {
-        "BROWSER_TOOLS_PORT": "3025",
+        "BROWSER_TOOLS_PORT": "3024",
         "MCP_DEBUG": "1"
       }
     }
@@ -304,7 +304,7 @@ The evidence suggests:
 - ❌ **Path Mismatch**: Config files pointed to `browser-tools-mcp-2025.js` (wrong filename)
 - ✅ **Actual File**: `mcp-browser-tools-server.js` exists and works perfectly
 - ✅ **Protocol Compliance**: 100% compliant with 2025-06-18 specification
-- ✅ **HTTP Bridge**: Running successfully on port 3025
+- ✅ **HTTP Bridge**: Running successfully on port 3024
 - ✅ **Chrome Extension**: Connected and working
 
 ### Resolution Applied
@@ -367,7 +367,7 @@ The evidence suggests:
    ```bash
    # Simulate Claude Code communication
    echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"claude-code","version":"1.0"}}}' | \
-   MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3025 node scripts/mcp-browser-tools-server.js
+   MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3024 node scripts/mcp-browser-tools-server.js
    ```
 
 3. **Monitor real-time MCP communication**:
@@ -385,7 +385,7 @@ The evidence suggests:
    DEBUG=1 node scripts/mcp-http-bridge.js &
 
    # Test connection from MCP server
-   curl -X POST http://localhost:3025/api \
+   curl -X POST http://localhost:3024/api \
      -H "Content-Type: application/json" \
      -d '{"action":"navigate","params":{"url":"https://example.com"}}'
    ```
@@ -393,7 +393,7 @@ The evidence suggests:
 2. **Verify environment variable passing**:
    ```bash
    # Check if MCP_HTTP_BRIDGE_PORT is being set correctly
-   MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3025 node -e "console.log(process.env.MCP_HTTP_BRIDGE_PORT)"
+   MCP_DEBUG=1 MCP_HTTP_BRIDGE_PORT=3024 node -e "console.log(process.env.MCP_HTTP_BRIDGE_PORT)"
    ```
 
 3. **Test error handling in MCP server**:

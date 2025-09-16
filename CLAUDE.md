@@ -10,7 +10,7 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 ## IN-DEVELOPMENT: Current Status - Partially Working
 - FIVE out of NINE tools currently working (see below)
 - 100% June 2025 MCP-compliant implementation
-- **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3025)
+- **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3024)
 
 ### ✅ WORKING (5 tools):
 
@@ -88,7 +88,7 @@ We built our own browser tools MCP server to address critical protocol violation
         "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.mjs"
       ],
       "env": {
-        "BROWSER_TOOLS_PORT": "3025",
+        "BROWSER_TOOLS_PORT": "3024",
         "MCP_DEBUG": "1"
       }
     }
@@ -109,8 +109,8 @@ npm install
 chmod +x scripts/start-mcp-browser-tools.sh
 ```
 
-4. **Start the HTTP Bridge Server (port 3025) in NEW Terminal Tab/Window**
-starts on **Port 3025
+4. **Start the HTTP Bridge Server (port 3024) in NEW Terminal Tab/Window**
+starts on **Port 3024
 
 ```bash
 # Start MCP HTTP bridge (for Claude Code)
@@ -128,8 +128,8 @@ Open Developer Tools (F12) & select Browser Tools tab
 
 7. **Re/Start Claude Code in FIRST terminal window/tab**: `$ claude`
 
-8. **Configure Browser Tools Chrome Extension Port to 3025** 
-Set via UI form field "Server Connection Settings > Server Port to **3025**"
+8. **Configure Browser Tools Chrome Extension Port to 3024** 
+Set via UI form field "Server Connection Settings > Server Port to **3024**"
 
 This will connect extension to Claude Code Browser Tools MCP Server (via http bridge).
 
@@ -148,8 +148,8 @@ Check if working:
 # See configured server
 cat .mcp.json | grep browser-tools
 
-# Test MCP HTTP bridge (port 3025)
-curl http://localhost:3025/health
+# Test MCP HTTP bridge (port 3024)
+curl http://localhost:3024/health
 
 # Debug MCP server
 MCP_DEBUG=1 node scripts/mcp-claude-code-browser-tools.mjs
@@ -171,7 +171,7 @@ curl http://localhost:3026/health
 
 ```
 
-**IMPORTANT**: Port 3025 is reserved for MCP server method.
+**IMPORTANT**: Port 3024 is reserved for MCP server method.
 
 ## Project Structure
 
@@ -179,7 +179,7 @@ curl http://localhost:3026/health
 browser-tools-setup/
 ├── scripts/
 │   ├── mcp-claude-code-browser-tools.mjs   # MCP server
-│   ├── mcp-http-bridge.mjs            # MCP HTTP bridge (port 3025)
+│   ├── mcp-http-bridge.mjs            # MCP HTTP bridge (port 3024)
 │   ├── direct-http-bridge.js         # Direct HTTP bridge (port 3026)
 │   ├── start-mcp-browser-tools.sh    # Start MCP method
 │   └── start-direct-browser-tools.sh # Start direct method
@@ -229,7 +229,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 
 ## Important Files
 
-### MCP Method (Port 3025)
+### MCP Method (Port 3024)
 - `scripts/mcp-claude-code-browser-tools.mjs` - MCP server
 - `scripts/mcp-http-bridge.mjs` - MCP HTTP bridge
 - `scripts/start-mcp-browser-tools.sh` - Start script for MCP
@@ -299,7 +299,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 
 - MCP servers configured at project or user level auto-start with Claude Code
 - HTTP bridge needs manual start:
-  - For Claude Code: `./scripts/start-mcp-browser-tools.sh` (port 3025)
+  - For Claude Code: `./scripts/start-mcp-browser-tools.sh` (port 3024)
   - For other tools: `./scripts/start-direct-browser-tools.sh` (port 3026)
 - Chrome extension must be installed and connected to the same port as your bridge
 - All debug output goes to stderr (never stdout)

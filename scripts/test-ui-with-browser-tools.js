@@ -18,7 +18,7 @@ console.log('==========================================\n');
 
 // Test configuration
 const config = {
-  port: 3026,  // Using 3026 to avoid conflict with port 3025
+  port: 3026,  // Using 3026 to avoid conflict with port 3024
   defaultUrl: 'https://example.com',
   localUrl: 'http://localhost:3000',
   testPlaygroundUrl: 'https://the-internet.herokuapp.com/'

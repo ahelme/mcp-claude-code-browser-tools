@@ -5,7 +5,7 @@ Update our custom browser-tools MCP server from outdated protocol implementation
 
 ## 🚨 Current Issue
 Our MCP server fails to load tools in Claude Code despite:
-- ✅ HTTP bridge server running (port 3025)
+- ✅ HTTP bridge server running (port 3024)
 - ✅ Chrome extension connected
 - ✅ Protocol version updated to "2025-06-18"
 - ✅ Clean stdio implementation

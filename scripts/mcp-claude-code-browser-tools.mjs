@@ -7,7 +7,7 @@
  * - Uses JSON-RPC 2.0 over stdio transport
  * - NEVER writes to stdout except valid JSON-RPC messages
  * - Logs only to stderr for debugging
- * - Interfaces with MCP HTTP Bridge on port 3025
+ * - Interfaces with MCP HTTP Bridge on port 3024
  *
  * Specification: https://modelcontextprotocol.io/specification/2025-06-18
  */
@@ -243,7 +243,7 @@ function sendNotification(method, params) {
 // Call browser-tools HTTP server
 async function callBrowserTools(action, params) {
   return new Promise((resolve, reject) => {
-    const port = process.env.MCP_HTTP_BRIDGE_PORT || "3025";
+    const port = process.env.MCP_HTTP_BRIDGE_PORT || "3024";
 
     // Map actions to correct endpoints
     const endpointMap = {
@@ -549,5 +549,5 @@ process.on("unhandledRejection", (reason, promise) => {
 // Ready
 debugLog("Browser Tools MCP Server v2.0.0 started (2025-06-18 spec)");
 debugLog(
-  `Using MCP HTTP Bridge port: ${process.env.MCP_HTTP_BRIDGE_PORT || "3025"}`,
+  `Using MCP HTTP Bridge port: ${process.env.MCP_HTTP_BRIDGE_PORT || "3024"}`,
 );
