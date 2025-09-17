@@ -12,6 +12,14 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 - 100% June 2025 MCP-compliant implementation
 - **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3024)
 
+### 🦁 MANE ARCHITECTURE + Chrome Extension MVP
+**Revolutionary AI collaborative development with complete UI redesign!**
+- 🦁 **MANE Created**: Modular Agentic Non-linear Engineering - 3 deployment models
+- ✅ **UI Complete**: Responsive 4-panel layout, screenshot naming, scan indicators
+- 🤖 **8 GitHub Issues**: Ready for parallel AI agent development
+- 📋 **Implementation Ready**: [MANE Chrome Extension Plan](CHROME-EXTENSION-MANE-IMPLEMENTATION.md)
+- 🎯 **Analyzer Prompts**: [GitHub](MANE-GITHUB-ANALYZER-PROMPT.md) | [Worktree](MANE-WORKTREE-ANALYZER-PROMPT.md) | [Hybrid](MANE-HYBRID-ANALYZER-PROMPT.md)
+
 ### ✅ WORKING (5 tools):
 
   1. browser_navigate - Successfully navigates to URLs

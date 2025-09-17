@@ -12,6 +12,14 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 - 100% June 2025 MCP-compliant implementation
 - **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3024)
 
+### 🦁 MANE ARCHITECTURE BREAKTHROUGH + UI Complete!
+**Revolutionary multi-agent development system with responsive Chrome extension UI:**
+- 🦁 **MANE Invented**: Modular Agentic Non-linear Engineering (GitHub/Worktree/Hybrid)
+- ✅ **UI Perfect**: Responsive panels, aqua/magenta buttons, screenshot naming preview
+- 🤖 **8 Agent Issues**: [#5-8, #10-13](https://github.com/ahelme/mcp-claude-code-browser-tools/issues) ready for parallel dev
+- 📋 **Architecture Docs**: [MANE](MANE-ARCHITECTURE.md) | [Implementation](CHROME-EXTENSION-MANE-IMPLEMENTATION.md)
+- 🎯 **Auto-Analyzers**: Transform any roadmap into MANE agent assignments
+
 ### ✅ WORKING (5 tools):
 
   1. browser_navigate - Successfully navigates to URLs
