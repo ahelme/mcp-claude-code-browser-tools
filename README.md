@@ -165,6 +165,89 @@ curl http://localhost:3026/health
 
 **IMPORTANT**: Port 3024 is reserved for MCP server method.
 
+## 🚀 Multi-Project Usage
+
+**Run browser tools across multiple projects simultaneously without port conflicts!**
+
+The MCP server uses environment variables to allow custom port configuration, making it easy to run multiple instances.
+
+### Method 1: Per-Project .mcp.json Configuration
+
+Each project can specify its own port in `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "mcp-claude-code-browser-tools": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["path/to/scripts/mcp-claude-code-browser-tools.mjs"],
+      "env": {
+        "BROWSER_TOOLS_PORT": "3025",  // Custom port for this project
+        "MCP_DEBUG": "1"
+      }
+    }
+  }
+}
+```
+
+### Method 2: Environment Variable Override
+
+Start with custom ports using environment variables:
+
+```bash
+# Project A (default port)
+cd /path/to/project-a
+./scripts/start-mcp-browser-tools.sh
+# → Runs on port 3024
+
+# Project B (custom port)
+cd /path/to/project-b
+BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
+# → Runs on port 3025
+
+# Project C (another custom port)
+cd /path/to/project-c
+BROWSER_TOOLS_PORT=3026 ./scripts/start-mcp-browser-tools.sh
+# → Runs on port 3026
+```
+
+### Chrome Extension Setup for Multiple Projects
+
+1. **Install Browser Tools extension** once from https://browsertools.agentdesk.ai/
+2. **Switch between projects** by changing the port in extension settings:
+   - Project A: Set port to `3024`
+   - Project B: Set port to `3025`
+   - Project C: Set port to `3026`
+3. **Or use multiple Chrome profiles** - each with different port settings
+
+### Quick Multi-Project Example
+
+```bash
+# Terminal 1 - Project A (React app)
+cd ~/projects/my-react-app
+./scripts/start-mcp-browser-tools.sh  # port 3024
+claude  # Start Claude Code
+
+# Terminal 2 - Project B (Vue app)
+cd ~/projects/my-vue-app
+BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh  # port 3025
+claude  # Start Claude Code
+
+# Terminal 3 - Project C (Angular app)
+cd ~/projects/my-angular-app
+BROWSER_TOOLS_PORT=3026 ./scripts/start-mcp-browser-tools.sh  # port 3026
+claude  # Start Claude Code
+```
+
+Now you can work on multiple projects simultaneously! 🎉
+
+### Port Range Recommendations
+
+- **3024**: Default (Project A)
+- **3025-3030**: Additional projects
+- **3031+**: Available for other tools
+
 ## Tools and Examples 
 
 ### Individual Tools in Browser Tools MCP (NOT ALL WORKING YET)
@@ -213,6 +296,62 @@ Guide to usage of available tools: TOOLS_GUIDE.md
 - `.mcp.json` - Project-level MCP configuration (local config and team collaboration)
 - `.screenshots/` - Screenshot outputs
 
+## 🔧 Environment Variables
+
+The MCP server supports several environment variables for customization:
+
+### Core Configuration
+
+| Variable | Default | Description | Example |
+|----------|---------|-------------|---------|
+| `BROWSER_TOOLS_PORT` | `3024` | HTTP bridge port for MCP server | `3025` |
+| `MCP_HTTP_BRIDGE_PORT` | `3024` | Alternative name for same setting | `3026` |
+| `MCP_DEBUG` | `0` | Enable detailed debug logging | `1` |
+
+### Usage Examples
+
+```bash
+# Basic custom port
+BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
+
+# Debug mode with custom port
+BROWSER_TOOLS_PORT=3026 MCP_DEBUG=1 ./scripts/start-mcp-browser-tools.sh
+
+# Via .mcp.json configuration
+{
+  "mcpServers": {
+    "mcp-claude-code-browser-tools": {
+      "env": {
+        "BROWSER_TOOLS_PORT": "3027",
+        "MCP_DEBUG": "1"
+      }
+    }
+  }
+}
+```
+
+### Multi-Project Port Strategy
+
+**Systematic approach for teams:**
+
+```bash
+# Project naming convention: base-port + project-id = final-port
+
+# Project 1: E-commerce site
+BROWSER_TOOLS_PORT=3024
+
+# Project 2: Marketing site
+BROWSER_TOOLS_PORT=3025
+
+# Project 3: Admin dashboard
+BROWSER_TOOLS_PORT=3026
+
+# Project 4: Mobile app testing
+BROWSER_TOOLS_PORT=3027
+```
+
+**Chrome extension setup:** Switch port in extension settings when changing projects, or use separate Chrome profiles for seamless switching.
+
 ## Troubleshooting Connection Issues
 
 If the extension shows "Not connected to server. Searching..." try these steps:
@@ -221,6 +360,51 @@ If the extension shows "Not connected to server. Searching..." try these steps:
 2. **Restart the local node server** (HTTP bridge server)
 3. **Ensure only ONE instance** of Chrome Dev Tools panel is open
 4. **Refresh the browser tab** and reopen Dev Tools
+
+### Port Conflict Issues
+
+**Problem**: "Error: listen EADDRINUSE: address already in use :::3024"
+
+**Solutions:**
+
+```bash
+# 1. Check what's using the port
+lsof -i :3024
+
+# 2. Kill existing process
+pkill -f "mcp-http-bridge"
+
+# 3. Or use a different port
+BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
+```
+
+### Multi-Project Port Conflicts
+
+**Problem**: Running multiple projects simultaneously
+
+**Solution**: Use different ports per project
+
+```bash
+# Check active browser tools processes
+ps aux | grep mcp-http-bridge
+
+# See which ports are in use
+lsof -i :3024-3030
+
+# Start each project with unique port
+cd project-a && BROWSER_TOOLS_PORT=3024 ./scripts/start-mcp-browser-tools.sh
+cd project-b && BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
+```
+
+### Chrome Extension Port Switching
+
+**Problem**: Extension connected to wrong project
+
+**Solution**: Update port in extension settings
+1. Open Chrome DevTools → Browser Tools tab
+2. In "Server Connection Settings"
+3. Change "Server Port" to match your project's port
+4. Click "Connect" or refresh the page
 
 ## Full MCP Toolset
 - `mcp__browser-tools__navigate` - Navigate to URL

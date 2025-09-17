@@ -155,8 +155,52 @@ curl http://localhost:3024/health
 MCP_DEBUG=1 node scripts/mcp-claude-code-browser-tools.mjs
 ```
 
-### **Configure MCP Server to Debug Mode**: 
+### **Configure MCP Server to Debug Mode**:
 Set `MCP_DEBUG=1` in .mcp.json (see above).
+
+## 🔥 Multi-Project Usage (ADVANCED)
+
+**Work on multiple projects with browser tools simultaneously!**
+
+### Custom Ports via Environment Variables
+
+The `BROWSER_TOOLS_PORT` environment variable allows you to run multiple instances:
+
+```json
+{
+  "mcpServers": {
+    "mcp-claude-code-browser-tools": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.mjs"
+      ],
+      "env": {
+        "BROWSER_TOOLS_PORT": "3025",  // Custom port for this project
+        "MCP_DEBUG": "1"
+      }
+    }
+  }
+}
+```
+
+### Project-Specific Ports
+
+**Recommended port allocation:**
+- **Main project**: 3024 (default)
+- **Secondary projects**: 3025, 3026, 3027...
+- **Chrome extension**: Update port in settings when switching projects
+
+### Shell Commands for Multi-Project
+
+```bash
+# Start different instances
+BROWSER_TOOLS_PORT=3024 ./scripts/start-mcp-browser-tools.sh  # Project A
+BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh  # Project B
+BROWSER_TOOLS_PORT=3026 ./scripts/start-mcp-browser-tools.sh  # Project C
+```
+
+**Result**: Multiple Claude Code sessions can use browser tools on different projects without conflicts! 🚀
 
 ## Alternative Direct HTTP Method (backup option if MCP server fails)
 Option to run direct http connection via **Port 3026**
