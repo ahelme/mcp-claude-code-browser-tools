@@ -1,16 +1,14 @@
-# Claude Code Files
+# Claude Code Files (retain if core to project)
 CLAUDE.md
-# NOTE: .claude/ and .mcp.json are now tracked for team collaboration!
-# Override global gitignore - we want to track settings for this project
-!.claude/settings.local.json
+.claude/*
 
 # Memory Bank (keep private)
-memory-bank/
+/memory-bank/
 
 # Backups and archives
-.archive/
 backups/
 .backups/
+.archive/
 *.backup.*
 *.bak.*
 *.bak

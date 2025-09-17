@@ -1,0 +1,1 @@
+#!/bin/bashFILE=$(cat | jq -r '.tool_input.file_path // ""')if echo "$FILE" | grep -E '\.(ts|tsx|js|jsx)$' > /dev/null; then  npx tsc --noEmit --skipLibCheck 2>&1 | head -10  [ ${PIPESTATUS[0]} -ne 0 ] && exit 2fi

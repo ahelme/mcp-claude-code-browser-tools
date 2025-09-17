@@ -15,7 +15,7 @@ mkdir -p "$REGISTRY_DIR"
 if [ ! -f "$REGISTRY_FILE" ]; then
     echo '{
   "ports": {},
-  "nextAvailablePort": 3025,
+  "nextAvailablePort": 3024,
   "lastUpdated": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'"
 }' > "$REGISTRY_FILE"
 fi
@@ -73,7 +73,7 @@ import json
 
 with open('$REGISTRY_FILE', 'r') as f:
     data = json.load(f)
-    print(data.get('nextAvailablePort', 3025))
+    print(data.get('nextAvailablePort', 3024))
 ")
 
 # Find an actually available port starting from NEXT_PORT

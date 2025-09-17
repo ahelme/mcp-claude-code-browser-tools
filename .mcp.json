@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "memory-bank-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@movibe/memory-bank-mcp", "--mode", "code"],
+      "env": {
+        "MEMORY_BANK_ROOT": "/Users/lennox/development/browser-tools-setup/memory-bank"
+      }
+    },
+    "sequential-thinking": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "mcp-claude-code-browser-tools": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.mjs"
+      ],
+      "env": {
+        "BROWSER_TOOLS_PORT": "3024",
+        "MCP_DEBUG": "1"
+      }
+    },
+    "minimal-test": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/lennox/development/browser-tools-setup/scripts/minimal_mcp_server_new_protocol_released_June_2025_for_browser_tools.js"
+      ],
+      "env": {
+        "MCP_DEBUG": "1"
+      }
+    }
+  }
+}
