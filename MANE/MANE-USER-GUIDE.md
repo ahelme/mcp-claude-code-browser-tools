@@ -51,12 +51,29 @@ By the end of this guide, you'll have:
 
 ### 🤖 For AI Agent Users
 
+**MANE integrates with Claude Code's native sub-agent system:**
+- **📚 Sub-Agents Documentation**: [Claude Code Sub-Agents](https://docs.claude.com/en/docs/claude-code/sub-agents)
+- **🔧 GitHub Actions Integration**: [Claude Code GitHub Actions](https://docs.claude.com/en/docs/claude-code/github-actions)
+- **🦊 GitLab CI/CD Integration**: [Claude Code GitLab CI/CD](https://docs.claude.com/en/docs/claude-code/gitlab-ci-cd)
+- **⚙️ SDK Overview**: [Claude Code SDK](https://docs.claude.com/en/docs/claude-code/sdk/sdk-overview)
+
 **Agent Requirements:**
 - **Code Analysis**: Ability to understand existing codebases
 - **Interface Implementation**: Can implement predefined contracts
 - **Testing Capabilities**: Can write and run tests
 - **Git Operations**: Can perform git commands and workflows
 - **Problem Solving**: Autonomous debugging and optimization
+
+**Claude Code Sub-Agent Format:**
+MANE agents are defined as Claude Code sub-agents in `.claude/agents/` using YAML frontmatter:
+```yaml
+---
+name: mane-foundation-architect
+description: MANE Foundation Agent for core infrastructure and interface contracts
+tools: Read, Write, Edit, Bash, Git
+model: sonnet
+---
+```
 
 **Recommended Agent Capabilities:**
 - **Multiple Language Support**: JavaScript, TypeScript, Python, etc.
