@@ -1,0 +1,255 @@
+openapi: 3.0.3
+info:
+  title: Browser Tools MCP API
+  version: 1.0.0
+  description: Interface contracts for MANE Browser Tools agents
+
+servers:
+  - url: http://localhost:3024
+    description: MCP HTTP Bridge Server
+
+paths:
+  /tools/navigate:
+    post:
+      summary: Navigate to URL
+      operationId: browser_navigate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+              required: [url]
+      responses:
+        '200':
+          description: Navigation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /tools/screenshot:
+    post:
+      summary: Capture screenshot
+      operationId: browser_screenshot
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullPage:
+                  type: boolean
+                  default: false
+                selector:
+                  type: string
+      responses:
+        '200':
+          description: Screenshot captured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /tools/click:
+    post:
+      summary: Click element
+      operationId: browser_click
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selector:
+                  type: string
+              required: [selector]
+      responses:
+        '200':
+          description: Click executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /tools/type:
+    post:
+      summary: Type text into element
+      operationId: browser_type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selector:
+                  type: string
+                text:
+                  type: string
+                clear:
+                  type: boolean
+                  default: false
+              required: [selector, text]
+      responses:
+        '200':
+          description: Text typed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /tools/evaluate:
+    post:
+      summary: Execute JavaScript
+      operationId: browser_evaluate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                script:
+                  type: string
+              required: [script]
+      responses:
+        '200':
+          description: Script executed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /tools/content:
+    post:
+      summary: Get page content
+      operationId: browser_get_content
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selector:
+                  type: string
+                format:
+                  type: string
+                  enum: [html, text]
+                  default: html
+      responses:
+        '200':
+          description: Content retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /tools/audit:
+    post:
+      summary: Run Lighthouse audit
+      operationId: browser_audit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categories:
+                  type: array
+                  items:
+                    type: string
+                    enum: [performance, accessibility, seo, best-practices, pwa]
+                  default: [performance, accessibility, seo, best-practices]
+      responses:
+        '200':
+          description: Audit completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /tools/wait:
+    post:
+      summary: Wait for element
+      operationId: browser_wait
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selector:
+                  type: string
+                timeout:
+                  type: integer
+                  default: 30000
+                  maximum: 60000
+              required: [selector]
+      responses:
+        '200':
+          description: Element found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /tools/console:
+    post:
+      summary: Get console logs
+      operationId: browser_get_console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                level:
+                  type: string
+                  enum: [all, log, info, warn, error]
+                  default: all
+      responses:
+        '200':
+          description: Console logs retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolResult'
+
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+
+components:
+  schemas:
+    ToolResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        content:
+          oneOf:
+            - type: string
+            - type: object
+        error:
+          type: string
+        metadata:
+          type: object
+      required: [success]
