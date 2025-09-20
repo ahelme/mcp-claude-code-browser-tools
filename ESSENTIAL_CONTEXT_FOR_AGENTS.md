@@ -385,6 +385,11 @@ EXPECTED RESULT: Complete 9/9 browser tools suite working flawlessly
 - Implement proper error handling and user feedback
 - Test thoroughly with different websites and scenarios
 - **Follow the batch protocol - wait for your batch dependencies**
+- **🧪 CRITICAL: TEST IN REAL BROWSER** - Load extension and verify actual functionality
+- **🔧 VERIFY ENDPOINTS** - Test actual HTTP bridge communication, not just code logic
+- **📱 TEST USER WORKFLOWS** - Click buttons, enter data, verify UI responses
+- **🛡️ VALIDATE SECURITY** - Ensure CSP policies, permissions, and sandboxing work
+- **📊 PROVIDE DETAILED TESTING RESULTS** - Report what works, what fails, with specific steps
 
 ### ❌ **DON'T:**
 - Copy broken functionality from the old extension
@@ -406,6 +411,116 @@ If you encounter:
 - Chrome Extension development questions
 
 **→ STOP and ask the user for guidance before proceeding!**
+
+---
+
+## 🧪 **MANDATORY REAL-WORLD TESTING PROTOCOL**
+
+### 🚨 **CRITICAL: Every Agent Must Test in Real Browser**
+
+**Based on Batch 2 learning: Agents must verify their work actually functions in Chrome!**
+
+### 📋 **Testing Methodology for All Agents:**
+
+#### **1. 🔧 Setup Verification**
+```bash
+# Ensure HTTP bridge is running
+./scripts/start-mcp-browser-tools.sh
+# Should see: "HTTP Bridge Server running on port 3024"
+
+# Check extension files exist
+ls chrome-extension-mvp/
+# Should see: manifest.json, background.js, panel.js, etc.
+```
+
+#### **1.5. 🔄 Extension Development Workflow**
+**For most changes (JS, CSS, HTML)**:
+- Go to `chrome://extensions/`
+- Click 🔄 reload button next to your extension
+- Refresh DevTools (close/reopen Browser Tools tab)
+
+**For manifest.json changes or when stuck**:
+- Click "Remove" on extension
+- Click "Load unpacked" → Select `chrome-extension-mvp/` folder
+- Reopen DevTools Browser Tools tab
+
+**💡 Pro tip**: Keep `chrome://extensions/` in pinned tab for quick access!
+
+#### **2. 📱 Extension Installation Testing**
+- Open Chrome → `chrome://extensions/`
+- Enable "Developer mode"
+- Click "Load unpacked" → Select `chrome-extension-mvp/` folder
+- **VERIFY**: Extension appears in list without errors
+- **CHECK**: No red error messages in extension details
+
+#### **3. 🎯 Browser Tools Panel Testing**
+- Navigate to any website (e.g., https://example.com)
+- Open Developer Tools (F12)
+- **VERIFY**: "Browser Tools" tab appears
+- Click on "Browser Tools" tab
+- **VERIFY**: Panel loads with 4-panel responsive layout
+- **VERIFY**: Aqua/magenta theme displays correctly
+
+#### **4. 🔌 Connection Testing**
+- **VERIFY**: Extension auto-detects port 3024
+- **VERIFY**: Green "Connected" status indicator appears
+- **VERIFY**: No console errors in DevTools Console tab
+- **TEST**: Manual disconnect/reconnect functionality
+
+#### **5. 🛠️ Tool-Specific Testing**
+**Each agent must test their specific tool:**
+- **Agent G**: Test navigation to different URLs
+- **Agent H**: Test screenshot capture (full page + elements)
+- **Agent I**: Test click, type, wait operations
+- **Agent B**: Test JavaScript evaluation with simple scripts
+- **Agent C**: Test Lighthouse audit execution
+- **Agent D**: Test console log monitoring
+- **Agent E**: Test content extraction from various pages
+
+#### **6. 📊 Error Testing**
+- Test with invalid inputs
+- Test with network disconnection
+- Test with malformed data
+- **VERIFY**: Graceful error handling and user feedback
+
+### 🎯 **Reporting Template for All Agents:**
+
+```
+## 🧪 REAL-WORLD TESTING RESULTS
+
+### ✅ SETUP VERIFICATION:
+- [ ] HTTP bridge running on port 3024
+- [ ] Extension files properly created
+- [ ] No file system errors
+
+### ✅ EXTENSION INSTALLATION:
+- [ ] Extension loads without errors
+- [ ] Browser Tools tab appears
+- [ ] UI renders correctly
+- [ ] Theme applied properly
+
+### ✅ CONNECTION TESTING:
+- [ ] Auto-connects to port 3024
+- [ ] Green status indicator appears
+- [ ] No console errors
+- [ ] Manual reconnection works
+
+### ✅ TOOL FUNCTIONALITY:
+- [ ] [Tool-specific tests pass]
+- [ ] Error handling works
+- [ ] User feedback clear
+- [ ] Performance acceptable
+
+### ❌ ISSUES FOUND:
+- Issue 1: [Description + steps to reproduce]
+- Issue 2: [Description + steps to reproduce]
+
+### 🔧 FIXES APPLIED:
+- Fix 1: [What was changed + verification]
+- Fix 2: [What was changed + verification]
+
+### 🎯 FINAL STATUS: [WORKING/NEEDS_FIXES]
+```
 
 ---
 
