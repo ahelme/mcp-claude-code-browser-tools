@@ -1,0 +1,975 @@
+# 🦁 MANE HTTP API Contracts v2.0.0
+#
+# This contract defines the HTTP API interfaces that all MANE agents must
+# follow when implementing browser tools and UI components.
+#
+# Built by: Foundation Architect (Agent A)
+# For: MANE (Modular Agentic Non-linear Engineering)
+
+openapi: 3.0.3
+info:
+  title: MANE Browser Tools API
+  description: |
+    HTTP API contracts for MANE browser tools and Chrome extension communication.
+
+    This API enables:
+    - Browser automation tools (navigate, screenshot, click, type, etc.)
+    - Chrome extension WebSocket communication
+    - Registry-based tool discovery and routing
+    - Real-time console and network monitoring
+
+    All tools must implement these contracts to ensure compatibility
+    with the MANE architecture and Claude Code integration.
+  version: 2.0.0
+  contact:
+    name: MANE Foundation Architect
+    email: foundation@mane.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3024
+    description: Default MCP HTTP Bridge (for Claude Code)
+  - url: http://localhost:3025-3030
+    description: Multi-project ports (custom configurations)
+
+# ============================================================================
+# Core Tool Endpoints
+# ============================================================================
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Get server health status and connection information
+      operationId: getHealth
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Server is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /.identity:
+    get:
+      summary: Service Identity
+      description: Get service identification and capabilities
+      operationId: getIdentity
+      responses:
+        '200':
+          description: Service identity information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityResponse'
+
+  /tools:
+    get:
+      summary: List Available Tools
+      description: Discover all registered browser tools
+      operationId: listTools
+      responses:
+        '200':
+          description: List of available tools
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolListResponse'
+
+  /tools/{toolName}:
+    post:
+      summary: Execute Tool
+      description: Execute a specific browser tool by name
+      operationId: executeTool
+      parameters:
+        - name: toolName
+          in: path
+          required: true
+          description: Name of the tool to execute
+          schema:
+            type: string
+            example: browser_navigate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolExecutionRequest'
+      responses:
+        '200':
+          description: Tool execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolExecutionResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Tool not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Tool execution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /execute:
+    post:
+      summary: Generic Tool Execution
+      description: Execute any tool by name with parameters
+      operationId: executeGeneric
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tool
+              properties:
+                tool:
+                  type: string
+                  description: Name of the tool to execute
+                  example: browser_screenshot
+                params:
+                  type: object
+                  description: Tool-specific parameters
+                  example:
+                    fullPage: true
+      responses:
+        '200':
+          description: Tool execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolExecutionResponse'
+
+# ============================================================================
+# Browser Navigation Endpoints
+# ============================================================================
+
+  /navigate:
+    post:
+      summary: Navigate Browser
+      description: Navigate the browser to a specified URL
+      operationId: navigate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL to navigate to
+                  example: https://example.com
+      responses:
+        '200':
+          description: Navigation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrowserActionResponse'
+        '503':
+          description: Chrome extension not connected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /current-url:
+    get:
+      summary: Get Current URL
+      description: Get the current URL of the active browser tab
+      operationId: getCurrentUrl
+      responses:
+        '200':
+          description: Current URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Current browser URL
+                    example: https://example.com
+
+# ============================================================================
+# Browser Interaction Endpoints
+# ============================================================================
+
+  /click:
+    post:
+      summary: Click Element
+      description: Click an element on the page using CSS selector
+      operationId: clickElement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - selector
+              properties:
+                selector:
+                  type: string
+                  description: CSS selector of element to click
+                  example: "#submit-button"
+      responses:
+        '200':
+          description: Click successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrowserActionResponse'
+
+  /type:
+    post:
+      summary: Type Text
+      description: Type text into an input field
+      operationId: typeText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - selector
+                - text
+              properties:
+                selector:
+                  type: string
+                  description: CSS selector of input field
+                  example: "input[name='email']"
+                text:
+                  type: string
+                  description: Text to type
+                  example: "user@example.com"
+                clear:
+                  type: boolean
+                  description: Clear field before typing
+                  default: false
+      responses:
+        '200':
+          description: Text input successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrowserActionResponse'
+
+  /wait:
+    post:
+      summary: Wait for Element
+      description: Wait for an element to appear on the page
+      operationId: waitForElement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - selector
+              properties:
+                selector:
+                  type: string
+                  description: CSS selector to wait for
+                  example: ".loading-complete"
+                timeout:
+                  type: integer
+                  description: Maximum wait time in milliseconds
+                  default: 30000
+                  minimum: 0
+                  maximum: 60000
+      responses:
+        '200':
+          description: Element found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrowserActionResponse'
+
+# ============================================================================
+# Screenshot and Visual Endpoints
+# ============================================================================
+
+  /capture-screenshot:
+    post:
+      summary: Capture Screenshot
+      description: Take a screenshot of the current page or specific element
+      operationId: captureScreenshot
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                selector:
+                  type: string
+                  description: CSS selector for specific element screenshot
+                  example: "#main-content"
+                fullPage:
+                  type: boolean
+                  description: Capture full page screenshot
+                  default: false
+                format:
+                  type: string
+                  enum: [png, jpeg]
+                  description: Screenshot format
+                  default: png
+                quality:
+                  type: integer
+                  description: JPEG quality (0-100)
+                  minimum: 0
+                  maximum: 100
+                  default: 90
+      responses:
+        '200':
+          description: Screenshot captured successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  path:
+                    type: string
+                    description: Local file path to screenshot
+                    example: "/path/to/screenshot-2025-01-20T12-30-45.png"
+                  filename:
+                    type: string
+                    description: Screenshot filename
+                    example: "screenshot-2025-01-20T12-30-45.png"
+                  data:
+                    type: string
+                    description: Base64 encoded screenshot data
+                    example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+
+# ============================================================================
+# Content and JavaScript Endpoints
+# ============================================================================
+
+  /get-content:
+    get:
+      summary: Get Page Content
+      description: Retrieve HTML content of the current page or specific element
+      operationId: getPageContent
+      parameters:
+        - name: selector
+          in: query
+          description: CSS selector for specific element content
+          schema:
+            type: string
+            example: "#main-content"
+        - name: format
+          in: query
+          description: Content format
+          schema:
+            type: string
+            enum: [html, text]
+            default: html
+      responses:
+        '200':
+          description: Page content retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+                    description: Page or element content
+                  format:
+                    type: string
+                    description: Content format used
+                    example: html
+
+  /evaluate:
+    post:
+      summary: Execute JavaScript
+      description: Execute JavaScript code in the browser context
+      operationId: evaluateJavaScript
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - script
+              properties:
+                script:
+                  type: string
+                  description: JavaScript code to execute
+                  example: "document.title"
+      responses:
+        '200':
+          description: JavaScript execution result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    description: Execution result (any type)
+                    example: "Example Page Title"
+        '400':
+          description: JavaScript execution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# ============================================================================
+# Console and Monitoring Endpoints
+# ============================================================================
+
+  /console-logs:
+    get:
+      summary: Get Console Logs
+      description: Retrieve browser console logs
+      operationId: getConsoleLogs
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of logs to return
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+        - name: level
+          in: query
+          description: Filter by log level
+          schema:
+            type: string
+            enum: [all, log, info, warn, error]
+            default: all
+      responses:
+        '200':
+          description: Console logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsoleLog'
+
+  /console-errors:
+    get:
+      summary: Get Console Errors
+      description: Retrieve browser console errors
+      operationId: getConsoleErrors
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of errors to return
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+      responses:
+        '200':
+          description: Console errors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsoleError'
+
+  /network-errors:
+    get:
+      summary: Get Network Errors
+      description: Retrieve network request errors
+      operationId: getNetworkErrors
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of errors to return
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+      responses:
+        '200':
+          description: Network errors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NetworkError'
+
+  /clear-console-logs:
+    post:
+      summary: Clear Console Logs
+      description: Clear all stored console logs
+      operationId: clearConsoleLogs
+      responses:
+        '200':
+          description: Console logs cleared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /clear-console-errors:
+    post:
+      summary: Clear Console Errors
+      description: Clear all stored console errors
+      operationId: clearConsoleErrors
+      responses:
+        '200':
+          description: Console errors cleared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+# ============================================================================
+# Audit and Performance Endpoints
+# ============================================================================
+
+  /audit:
+    post:
+      summary: Run Lighthouse Audit
+      description: Execute Lighthouse performance audit on current page
+      operationId: runLighthouseAudit
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categories:
+                  type: array
+                  description: Audit categories to run
+                  items:
+                    type: string
+                    enum: [performance, accessibility, seo, best-practices, pwa]
+                  default: [performance, accessibility, seo, best-practices]
+                  example: ["performance", "accessibility"]
+      responses:
+        '200':
+          description: Audit results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditResponse'
+        '503':
+          description: Chrome extension not connected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# ============================================================================
+# Data Schemas
+# ============================================================================
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - connected
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, error]
+          description: Overall service status
+        connected:
+          type: boolean
+          description: Chrome extension connection status
+        currentUrl:
+          type: string
+          format: uri
+          description: Current browser URL
+        uptime:
+          type: integer
+          description: Server uptime in milliseconds
+        requestCount:
+          type: integer
+          description: Total number of requests processed
+        timestamp:
+          type: string
+          format: date-time
+          description: Response timestamp
+
+    IdentityResponse:
+      type: object
+      required:
+        - signature
+        - version
+        - name
+      properties:
+        signature:
+          type: string
+          example: "mane-service-worker"
+          description: Service signature for identification
+        version:
+          type: string
+          example: "2.0.0"
+          description: Service version
+        name:
+          type: string
+          example: "MANE Service Worker"
+          description: Human-readable service name
+        capabilities:
+          type: array
+          items:
+            type: string
+          example: ["tools", "websocket", "monitoring"]
+          description: Service capabilities
+
+    ToolListResponse:
+      type: object
+      required:
+        - tools
+      properties:
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToolInfo'
+
+    ToolInfo:
+      type: object
+      required:
+        - name
+        - endpoint
+        - description
+        - capabilities
+      properties:
+        name:
+          type: string
+          example: "browser_navigate"
+          description: Tool name
+        endpoint:
+          type: string
+          example: "/tools/browser_navigate"
+          description: Tool endpoint path
+        description:
+          type: string
+          example: "Navigate the browser to a specified URL"
+          description: Tool description
+        capabilities:
+          $ref: '#/components/schemas/ToolCapabilities'
+
+    ToolCapabilities:
+      type: object
+      properties:
+        async:
+          type: boolean
+          description: Tool supports async execution
+        timeout:
+          type: integer
+          description: Default timeout in milliseconds
+        retryable:
+          type: boolean
+          description: Tool supports retry on failure
+        batchable:
+          type: boolean
+          description: Tool supports batch execution
+        requiresAuth:
+          type: boolean
+          description: Tool requires authentication
+
+    ToolExecutionRequest:
+      type: object
+      description: Tool-specific parameters (varies by tool)
+      example:
+        url: "https://example.com"
+
+    ToolExecutionResponse:
+      type: object
+      required:
+        - success
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Whether tool execution succeeded
+        data:
+          description: Tool execution result data (varies by tool)
+        error:
+          type: string
+          description: Error message if execution failed
+        metadata:
+          type: object
+          description: Additional execution metadata
+          properties:
+            executionTime:
+              type: integer
+              description: Execution time in milliseconds
+            toolName:
+              type: string
+              description: Name of executed tool
+            timestamp:
+              type: integer
+              description: Execution timestamp
+        timestamp:
+          type: integer
+          description: Response timestamp
+
+    BrowserActionResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Whether action succeeded
+        message:
+          type: string
+          description: Human-readable result message
+        data:
+          description: Action-specific result data
+
+    ConsoleLog:
+      type: object
+      required:
+        - timestamp
+        - level
+        - message
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Log timestamp
+        level:
+          type: string
+          enum: [log, info, warn, error]
+          description: Log level
+        message:
+          type: string
+          description: Log message
+        source:
+          type: string
+          description: Log source/file
+        line:
+          type: integer
+          description: Source line number
+
+    ConsoleError:
+      type: object
+      required:
+        - timestamp
+        - message
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        message:
+          type: string
+          description: Error message
+        stack:
+          type: string
+          description: Error stack trace
+        source:
+          type: string
+          description: Error source/file
+        line:
+          type: integer
+          description: Source line number
+
+    NetworkError:
+      type: object
+      required:
+        - timestamp
+        - url
+        - status
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        url:
+          type: string
+          format: uri
+          description: Failed request URL
+        status:
+          type: integer
+          description: HTTP status code
+        statusText:
+          type: string
+          description: HTTP status text
+        method:
+          type: string
+          description: HTTP method
+        error:
+          type: string
+          description: Error message
+
+    AuditResponse:
+      type: object
+      required:
+        - success
+        - results
+      properties:
+        success:
+          type: boolean
+          description: Whether audit completed successfully
+        results:
+          type: object
+          description: Lighthouse audit results
+          properties:
+            performance:
+              $ref: '#/components/schemas/AuditCategory'
+            accessibility:
+              $ref: '#/components/schemas/AuditCategory'
+            seo:
+              $ref: '#/components/schemas/AuditCategory'
+            best-practices:
+              $ref: '#/components/schemas/AuditCategory'
+            pwa:
+              $ref: '#/components/schemas/AuditCategory'
+
+    AuditCategory:
+      type: object
+      required:
+        - score
+        - title
+      properties:
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Audit score (0-1)
+        title:
+          type: string
+          description: Category title
+        description:
+          type: string
+          description: Category description
+        auditRefs:
+          type: array
+          items:
+            type: object
+          description: Individual audit references
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type or code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+
+# ============================================================================
+# WebSocket Events (for documentation)
+# ============================================================================
+
+  # WebSocket communication is not REST API but documented here for reference
+
+  # Outgoing events (server to extension):
+  # - ping: Health check ping
+  # - take-screenshot: Request screenshot capture
+  # - navigate: Navigate to URL
+  # - click: Click element
+  # - type: Type text
+  # - evaluate: Execute JavaScript
+  # - wait: Wait for element
+  # - getContent: Get page content
+
+  # Incoming events (extension to server):
+  # - pong: Response to ping
+  # - url: Current URL update
+  # - tabId: Active tab ID update
+  # - consoleLog: Console log entry
+  # - consoleError: Console error entry
+  # - networkError: Network error entry
+  # - screenshot-data: Screenshot capture result
+  # - evaluateResult: JavaScript execution result
+  # - pageContent: Page content result
+
+# ============================================================================
+# Security and Rate Limiting
+# ============================================================================
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Optional API key for authentication
+
+# Rate limiting (implemented at server level):
+# - 1000 requests per minute per IP
+# - 100 screenshot requests per minute per IP
+# - 50 JavaScript executions per minute per IP
+
+# ============================================================================
+# Contract Compliance Notes
+# ============================================================================
+
+# All MANE agents implementing browser tools must:
+# 1. Implement the HTTP endpoints defined in this contract
+# 2. Return responses matching the defined schemas
+# 3. Handle errors according to the specified status codes
+# 4. Support WebSocket communication for Chrome extension
+# 5. Follow the naming conventions for tools and endpoints
+# 6. Implement proper parameter validation
+# 7. Provide health check and identity endpoints
+# 8. Support the registry auto-discovery pattern
+
+# Contract version: 2.0.0
+# Last updated: 2025-01-20
+# Next review: 2025-04-20

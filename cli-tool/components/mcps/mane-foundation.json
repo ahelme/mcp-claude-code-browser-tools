@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "MANE Foundation Architecture": {
+      "command": "node",
+      "args": [
+        "/Users/lennox/development/mane-universes/agent-a-foundation/scripts/mcp-mane-foundation.mjs"
+      ],
+      "env": {
+        "MANE_DEBUG": "1",
+        "MANE_REGISTRY_PORT": "3030",
+        "MANE_QUALITY_GATES": "true",
+        "MANE_AUTO_DISCOVERY": "true"
+      }
+    }
+  }
+}
