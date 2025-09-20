@@ -1,226 +1,403 @@
-# MANE Quality Gates
+# 🦁 MANE Quality Gate Requirements v2.0.0
 
-## Service Level Objectives (SLOs)
+**Foundation Standards for MANE Agent Development**
 
-All agents must meet these quality gates before promotion to integration universe.
+This document defines the quality gates that all MANE agent implementations must pass to ensure system reliability, security, and performance. These gates are enforced automatically by the quality framework.
 
-## Performance SLOs
+---
 
-### Response Time
-- **P95 Latency**: < 2000ms for all browser tool operations
-- **P99 Latency**: < 5000ms for all browser tool operations
-- **Timeout Threshold**: 30 seconds (hard limit)
+## 🎯 Overview
 
-### Reliability
-- **Error Rate**: < 2% for successful tool executions
-- **Success Rate**: > 98% for all browser operations
-- **Retry Success Rate**: > 90% after first retry
+The MANE quality gate system consists of three primary gates:
 
-### Availability
-- **Uptime**: > 99.5% during development sessions
-- **Health Check**: Must respond within 500ms
-- **Recovery Time**: < 30 seconds after failure
+1. **Interface Compliance** (≥90% pass rate required)
+2. **Performance** (≥80% pass rate required)
+3. **Security** (≥95% pass rate required)
 
-## Functional Quality Gates
+All components must pass all quality gates before being integrated into the system.
 
-### Contract Compliance
-- **API Schema**: 100% compliance with `contracts/http.yaml`
-- **Config Schema**: 100% compliance with `contracts/config.schema.json`
-- **Interface Implementation**: All `IBrowserTool` methods implemented
+---
 
-### Test Coverage
-- **Unit Tests**: > 80% code coverage
-- **Integration Tests**: All happy path scenarios covered
-- **E2E Tests**: Critical user journeys validated
+## 🔍 Interface Compliance Gate
 
-### Code Quality
-- **Linting**: Zero eslint/pylint violations
-- **Type Safety**: 100% TypeScript/type hints coverage (where applicable)
-- **Security**: No critical vulnerabilities (audit scan)
+**Purpose**: Ensures all tools and panels properly implement their required interfaces.
 
-## Browser-Specific Quality Gates
+### Browser Tool Requirements
 
-### Tool-Specific SLOs
+#### ✅ Required Properties
+- [x] `name: string` - Unique tool identifier
+- [x] `endpoint: string` - HTTP endpoint path (must start with `/`)
+- [x] `description: string` - Human-readable tool description
+- [x] `schema: JSONSchema` - Parameter validation schema
+- [x] `capabilities: IToolCapabilities` - Tool capability metadata
 
-#### browser_navigate
-- **Navigation Time**: < 3000ms for standard pages
-- **Success Rate**: > 99% for valid URLs
-- **Error Handling**: Graceful failure for invalid URLs
+#### ✅ Required Methods
+- [x] `execute(params: unknown): Promise<IToolResult>`
+- [x] `validate(params: unknown): IValidationResult`
+- [x] `getStatus(): Promise<IToolStatus>`
 
-#### browser_screenshot
-- **Capture Time**: < 2000ms for full page
-- **File Size**: < 2MB for standard screenshots
-- **Format**: PNG with proper metadata
+#### ✅ Method Functionality Tests
+- [x] `getStatus()` returns valid status object with `healthy` property
+- [x] `validate()` returns validation result with `valid` property
+- [x] Tool can be registered and discovered through registry
+- [x] Tool handles parameter validation correctly
+- [x] Tool execution returns proper result format
 
-#### browser_click
-- **Click Execution**: < 500ms response time
-- **Element Detection**: 100% success for visible elements
-- **Error Messages**: Clear feedback for missing elements
+### UI Panel Requirements
 
-#### browser_type
-- **Typing Speed**: < 100ms per character
-- **Input Validation**: Proper handling of special characters
-- **Clear Function**: Reliable field clearing before typing
+#### ✅ Required Properties
+- [x] `id: string` - Unique panel identifier
+- [x] `selector: string` - CSS selector for panel container
+- [x] `title: string` - Human-readable panel title
 
-#### browser_evaluate
-- **Script Execution**: < 5000ms for standard scripts
-- **Security**: No XSS vulnerabilities
-- **Error Handling**: Safe script failure containment
+#### ✅ Required Methods
+- [x] `initialize(): Promise<void>`
+- [x] `render(): Promise<HTMLElement>`
+- [x] `handleEvents(): void`
+- [x] `updateState(state: any): Promise<void>`
+- [x] `destroy(): Promise<void>`
 
-#### browser_get_content
-- **Content Retrieval**: < 3000ms for standard pages
-- **Format Options**: Both HTML and text formats working
-- **Selector Support**: CSS selectors properly implemented
+#### ✅ Method Functionality Tests
+- [x] Panel initializes without errors
+- [x] Panel renders valid HTML element
+- [x] Panel handles state updates correctly
+- [x] Panel cleans up resources on destroy
 
-#### browser_audit
-- **Audit Completion**: < 30000ms for full audit
-- **Report Format**: Valid JSON lighthouse format
-- **Categories**: All audit categories functional
+### Registry Requirements
 
-#### browser_wait
-- **Element Detection**: < configured timeout
-- **Polling Interval**: 100ms maximum
-- **Timeout Handling**: Clean timeout error messages
+#### ✅ Required Methods
+- [x] `registerTool(tool: IBrowserTool): Promise<void>`
+- [x] `discoverTools(filter?: IToolFilter): IBrowserTool[]`
+- [x] `routeRequest(endpoint: string, params: unknown): Promise<IToolResult>`
+- [x] `getHealth(): Promise<IRegistryHealth>`
+- [x] `unregisterTool(name: string): Promise<void>`
 
-#### browser_get_console
-- **Log Retrieval**: < 1000ms for console logs
-- **Filtering**: All log levels properly filtered
-- **Format**: Structured log output
+#### ✅ Functionality Tests
+- [x] Registry health check returns valid data structure
+- [x] Tool discovery returns array of tools
+- [x] Tool registration and unregistration work correctly
+- [x] Request routing functions properly
 
-## Quality Validation Commands
+---
 
-### Automated Checks
-```bash
-# Contract validation
-make contract-check
+## ⚡ Performance Gate
 
-# Environment validation
-make env-validate
+**Purpose**: Ensures components meet performance requirements for production use.
 
-# Test suite
-make test-all
+### Browser Tool Performance
 
-# Performance benchmarks
-make benchmark
+#### ✅ Response Time Requirements
+- [x] Tool execution completes within **5 seconds**
+- [x] Parameter validation completes within **100ms**
+- [x] Status check completes within **500ms**
 
-# Security scan
-make security-audit
-```
+#### ✅ Concurrency Requirements
+- [x] Tool handles **5 concurrent requests** within **10 seconds**
+- [x] No performance degradation under concurrent load
+- [x] Proper resource cleanup after execution
 
-### Quality Gate Pipeline
-```bash
-# Full quality gate check
-make quality-gate
+#### ✅ Memory Usage Requirements
+- [x] Memory increase per execution ≤ **10MB**
+- [x] Total memory increase for 10 executions ≤ **50MB**
+- [x] No memory leaks detected
 
-# Individual checks
-make lint
-make type-check
-make unit-test
-make integration-test
-make e2e-test
-make performance-test
-```
+### UI Panel Performance
 
-## Promotion Checklist
+#### ✅ Initialization Requirements
+- [x] Panel initialization completes within **2 seconds**
+- [x] Panel render completes within **1 second**
+- [x] State updates complete within **500ms**
 
-Before promoting agent work to integration universe:
+#### ✅ User Experience Requirements
+- [x] Event handlers respond within **100ms**
+- [x] No blocking operations in UI thread
+- [x] Smooth animations and transitions
 
-### 📋 Pre-Promotion Checklist
+### Service Worker Performance
 
-- [ ] **Contract Compliance**
-  - [ ] OpenAPI diff shows no breaking changes
-  - [ ] Config schema validation passes
-  - [ ] All interface contracts implemented
+#### ✅ HTTP Bridge Requirements
+- [x] Request handling ≤ **200ms** average response time
+- [x] WebSocket message processing ≤ **50ms**
+- [x] Health check endpoint responds within **100ms**
 
-- [ ] **Tests & Quality**
-  - [ ] All tests pass (unit, integration, e2e)
-  - [ ] Code coverage > 80%
-  - [ ] Linting passes with zero violations
-  - [ ] Security scan shows no critical issues
+#### ✅ Throughput Requirements
+- [x] Handle **100 concurrent connections**
+- [x] Process **1000 requests per minute**
+- [x] Maintain performance under sustained load
 
-- [ ] **Performance SLOs**
-  - [ ] P95 latency < 2000ms
-  - [ ] Error rate < 2%
-  - [ ] All tool-specific SLOs met
+---
 
-- [ ] **Functional Validation**
-  - [ ] Happy path user journey works end-to-end
-  - [ ] Error scenarios handled gracefully
-  - [ ] Chrome extension integration functional
+## 🔒 Security Gate
 
-- [ ] **Documentation**
-  - [ ] API changes documented
-  - [ ] README updated if needed
-  - [ ] Breaking changes clearly marked
+**Purpose**: Ensures components follow security best practices and prevent vulnerabilities.
 
-### 🚨 Blocking Issues
+### Input Validation & Sanitization
 
-Work CANNOT be promoted if any of these conditions exist:
+#### ✅ Parameter Validation
+- [x] All tools implement parameter validation
+- [x] Validation rejects dangerous inputs:
+  - Script tags: `<script>alert("xss")</script>`
+  - SQL injection: `"; DROP TABLE users; --`
+  - Path traversal: `../../etc/passwd`
+  - JavaScript URLs: `javascript:alert("xss")`
+  - Template injection: `${7*7}`, `{{7*7}}`
 
-- ❌ Critical test failures
-- ❌ P95 latency > 5000ms
-- ❌ Error rate > 5%
-- ❌ Contract violations
-- ❌ Security vulnerabilities (high/critical)
-- ❌ Chrome extension cannot connect
-- ❌ Core browser tools non-functional
+#### ✅ Schema Security
+- [x] JSON schemas set `additionalProperties: false`
+- [x] Required properties are properly validated
+- [x] Type validation prevents type confusion attacks
 
-## Monitoring & Alerting
+### UI Panel Security
 
-### Real-time Metrics
+#### ✅ XSS Prevention
+- [x] Panel properly escapes user input in rendering
+- [x] No direct insertion of unvalidated HTML
+- [x] Script tags are properly escaped or stripped
+- [x] Event handlers validate input before processing
+
+#### ✅ State Management Security
+- [x] State updates validate input data
+- [x] Sensitive data is not logged or exposed
+- [x] Proper cleanup of sensitive information
+
+### Tool Execution Security
+
+#### ✅ Safe Capabilities
+- [x] Tools do not expose dangerous capabilities
+- [x] No `allowUnsafeOperations` flags enabled
+- [x] Proper sandboxing for JavaScript execution
+
+#### ✅ Error Handling Security
+- [x] Error messages don't expose sensitive information
+- [x] Stack traces filtered in production
+- [x] Proper logging without sensitive data exposure
+
+### Network Security
+
+#### ✅ HTTP Security
+- [x] CORS headers properly configured
+- [x] No sensitive data in URL parameters
+- [x] Proper content-type validation
+
+#### ✅ WebSocket Security
+- [x] Message validation on all incoming data
+- [x] Proper authentication for sensitive operations
+- [x] Rate limiting on WebSocket connections
+
+---
+
+## 🧪 Testing Requirements
+
+### Unit Test Coverage
+
+#### ✅ Minimum Coverage Requirements
+- [x] **95% code coverage** for all core functionality
+- [x] **100% coverage** for security-critical code paths
+- [x] **90% coverage** for error handling paths
+
+#### ✅ Test Categories
+- [x] **Happy path tests** - Normal operation scenarios
+- [x] **Error handling tests** - Failure scenario coverage
+- [x] **Edge case tests** - Boundary condition testing
+- [x] **Security tests** - Attack scenario validation
+- [x] **Performance tests** - Load and stress testing
+
+### Integration Tests
+
+#### ✅ Registry Integration
+- [x] Tool registration and discovery
+- [x] Request routing functionality
+- [x] Health monitoring integration
+
+#### ✅ HTTP Bridge Integration
+- [x] Endpoint registration and routing
+- [x] WebSocket communication
+- [x] Error handling and recovery
+
+#### ✅ Chrome Extension Integration
+- [x] Message passing functionality
+- [x] Screenshot capture flow
+- [x] Console log aggregation
+
+---
+
+## 📊 Quality Metrics
+
+### Automated Metrics Collection
+
+#### ✅ Performance Metrics
 - Response time percentiles (P50, P95, P99)
-- Error rates by tool and error type
-- Success rates and retry patterns
-- Resource utilization (memory, CPU)
+- Throughput (requests per second)
+- Error rates and failure modes
+- Resource utilization (CPU, memory)
 
-### Alert Thresholds
-- **Warning**: P95 > 1500ms or error rate > 1%
-- **Critical**: P95 > 3000ms or error rate > 3%
-- **Emergency**: Any tool completely non-functional
+#### ✅ Reliability Metrics
+- Uptime and availability
+- Mean Time To Recovery (MTTR)
+- Error rate and distribution
+- Health check success rates
 
-### Dashboard Requirements
-- Real-time tool performance metrics
-- Historical trend analysis
-- Agent-specific quality gate status
-- Integration pipeline health
+#### ✅ Security Metrics
+- Input validation success rates
+- Security test pass rates
+- Vulnerability scan results
+- Compliance audit scores
 
-## Quality Gate Automation
+---
 
-### Pre-commit Hooks
+## 🚀 Quality Gate Execution
+
+### Automated Gate Execution
+
 ```bash
-#!/bin/bash
-# .git/hooks/pre-commit
-make contract-check || exit 1
-make env-validate || exit 1
-make lint || exit 1
-make type-check || exit 1
+# Run all quality gates
+npm run quality-gate
+
+# Run specific gates
+npm run quality-gate:compliance
+npm run quality-gate:performance
+npm run quality-gate:security
+
+# Run with specific target
+npm run quality-gate -- --target=MyBrowserTool
 ```
 
-### CI/CD Pipeline
-```yaml
-quality_gates:
-  stage: test
-  script:
-    - make quality-gate
-  artifacts:
-    reports:
-      junit: test-results.xml
-      coverage: coverage.xml
-    paths:
-      - performance-report.json
-  only:
-    - merge_requests
-    - universe-integration
+### Continuous Integration
+
+#### ✅ Pre-merge Requirements
+- [x] All quality gates must pass at ≥ required thresholds
+- [x] No security vulnerabilities detected
+- [x] Performance regression tests pass
+- [x] Interface compliance verified
+
+#### ✅ Release Requirements
+- [x] Full test suite passes with 100% success
+- [x] Performance benchmarks meet production requirements
+- [x] Security audit completed and approved
+- [x] Documentation updated and validated
+
+---
+
+## 📋 Quality Gate Checklist
+
+### For Browser Tools
+
+- [ ] Implements `IBrowserTool` interface correctly
+- [ ] Parameter validation rejects dangerous inputs
+- [ ] Execution completes within performance requirements
+- [ ] Memory usage stays within limits
+- [ ] Error handling is secure and informative
+- [ ] Registry integration works correctly
+- [ ] Schema follows security best practices
+- [ ] Unit tests achieve required coverage
+
+### For UI Panels
+
+- [ ] Implements `IUIPanel` interface correctly
+- [ ] Prevents XSS in rendering and state management
+- [ ] Initialization and rendering meet performance requirements
+- [ ] Event handling is secure and responsive
+- [ ] State validation prevents injection attacks
+- [ ] Resource cleanup is complete and secure
+- [ ] Unit tests achieve required coverage
+
+### For Service Workers
+
+- [ ] Implements `IHTTPBridge` interface correctly
+- [ ] HTTP endpoints meet performance requirements
+- [ ] WebSocket handling is secure and efficient
+- [ ] CORS configuration follows security best practices
+- [ ] Request routing works correctly
+- [ ] Health monitoring provides accurate data
+- [ ] Error handling doesn't expose sensitive information
+
+---
+
+## 🔧 Quality Gate Configuration
+
+### Environment Variables
+
+```bash
+# Quality gate thresholds
+MANE_QG_INTERFACE_THRESHOLD=90    # Interface compliance %
+MANE_QG_PERFORMANCE_THRESHOLD=80  # Performance %
+MANE_QG_SECURITY_THRESHOLD=95     # Security %
+
+# Performance limits
+MANE_QG_MAX_RESPONSE_TIME=5000    # Max response time (ms)
+MANE_QG_MAX_MEMORY_INCREASE=50    # Max memory increase (MB)
+MANE_QG_MAX_CONCURRENT=5          # Concurrent request test count
+
+# Security settings
+MANE_QG_SECURITY_STRICT=true      # Enable strict security checks
+MANE_QG_XSS_PROTECTION=true       # Enable XSS protection tests
+MANE_QG_SQL_INJECTION=true        # Enable SQL injection tests
 ```
 
-## Continuous Improvement
+### Custom Gate Configuration
 
-### Quality Metrics Review
-- Weekly review of SLO adherence
-- Monthly adjustment of thresholds based on data
-- Quarterly assessment of quality gate effectiveness
+```typescript
+// custom-quality-config.ts
+export const customQualityConfig = {
+  interfaceCompliance: {
+    threshold: 95, // Stricter than default
+    requiredMethods: ['execute', 'validate', 'getStatus'],
+    optionalMethods: ['healthCheck', 'cleanup'],
+  },
+  performance: {
+    threshold: 85, // Stricter than default
+    maxResponseTime: 3000, // Faster than default
+    maxMemoryIncrease: 30, // Lower than default
+  },
+  security: {
+    threshold: 98, // Stricter than default
+    strictValidation: true,
+    enableAllSecurityTests: true,
+  },
+};
+```
 
-### Feedback Loop
-- Failed promotions analyzed for root cause
-- Quality gate refinements based on actual friction
-- Agent-specific optimizations identified and shared
+---
+
+## 📈 Quality Improvement Process
+
+### Continuous Improvement
+
+1. **Weekly Quality Reviews** - Analyze quality gate metrics
+2. **Monthly Threshold Updates** - Adjust requirements based on performance data
+3. **Quarterly Security Audits** - Deep security analysis and updates
+4. **Annual Architecture Review** - Comprehensive system evaluation
+
+### Quality Gate Evolution
+
+- **Version 2.0.0** (Current) - Initial MANE implementation
+- **Version 2.1.0** (Planned) - Enhanced performance testing
+- **Version 2.2.0** (Planned) - Advanced security validation
+- **Version 3.0.0** (Future) - AI-powered quality analysis
+
+---
+
+## 📚 Resources & Documentation
+
+### Quality Gate Documentation
+- [Interface Compliance Guide](./docs/interface-compliance.md)
+- [Performance Testing Guide](./docs/performance-testing.md)
+- [Security Validation Guide](./docs/security-validation.md)
+
+### Code Examples
+- [Sample Browser Tool](./examples/sample-browser-tool.ts)
+- [Sample UI Panel](./examples/sample-ui-panel.ts)
+- [Quality Gate Integration](./examples/quality-gate-usage.ts)
+
+### Support
+- **Foundation Team**: foundation@mane.dev
+- **Security Issues**: security@mane.dev
+- **Performance Issues**: performance@mane.dev
+
+---
+
+**Built with MANE** 🦁 - *The future of AI-collaborative development*
+
+*Last updated: 2025-01-20*
+*Contract version: 2.0.0*
+*Next review: 2025-04-20*
