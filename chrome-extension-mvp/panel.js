@@ -30,6 +30,7 @@ let wsManager = null;
 let isConnected = false;
 let isDiscoveryInProgress = false;
 let discoveryController = null;
+let navigationHandler = null;
 
 // DOM elements (will be initialized when DOM loads)
 let elements = {};
@@ -41,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeDOM();
   loadSettings();
   initializeWebSocket();
+  initializeNavigationHandler();
   setupEventListeners();
 
   console.log("✅ Browser Tools Panel initialized");
@@ -156,6 +158,17 @@ function initializeWebSocket() {
 
   // Start connection
   wsManager.connect();
+}
+
+function initializeNavigationHandler() {
+  if (window.NavigationHandler) {
+    navigationHandler = new window.NavigationHandler();
+    console.log("🧭 Navigation handler initialized");
+  } else {
+    console.warn(
+      "⚠️ NavigationHandler class not available - navigation functionality disabled",
+    );
+  }
 }
 
 function setupEventListeners() {
@@ -531,8 +544,41 @@ function clearLogs() {
 function handleWebSocketMessage(message) {
   console.log("📨 Handling WebSocket message:", message);
 
-  // Handle different message types
-  switch (message.type) {
+  // Handle different message types and actions
+  switch (message.type || message.action) {
+    case "navigate":
+      // Navigation request from MCP server
+      if (navigationHandler) {
+        navigationHandler.handleNavigationRequest(message, (response) => {
+          // Send response back via WebSocket
+          if (wsManager) {
+            wsManager.send({
+              type: "navigationResult",
+              ...response,
+            });
+          }
+        });
+      } else {
+        console.error("❌ Navigation handler not available");
+        addLogEntry("error", "Navigation handler not available");
+      }
+      break;
+
+    case "click":
+      // Click request from MCP server
+      handleInteractionRequest("BROWSER_CLICK", message, "clickResult");
+      break;
+
+    case "type":
+      // Type request from MCP server
+      handleInteractionRequest("BROWSER_TYPE", message, "typeResult");
+      break;
+
+    case "wait":
+      // Wait request from MCP server
+      handleInteractionRequest("BROWSER_WAIT", message, "waitResult");
+      break;
+
     case "screenshot-data":
       addLogEntry("info", "Screenshot data received");
       break;
@@ -550,7 +596,10 @@ function handleWebSocketMessage(message) {
       break;
 
     default:
-      console.log("🤔 Unknown message type:", message.type);
+      console.log(
+        "🤔 Unknown message type/action:",
+        message.type || message.action,
+      );
   }
 }
 
@@ -566,6 +615,55 @@ function addLogEntry(level, message) {
   elements.logsDisplay.scrollTop = elements.logsDisplay.scrollHeight;
 
   console.log(`📝 Log entry [${level}]: ${message}`);
+}
+
+// Make addLogEntry globally accessible for navigation handler
+window.addLogEntry = addLogEntry;
+
+// Handle interaction requests from MCP server via WebSocket
+function handleInteractionRequest(messageType, message, responseType) {
+  console.log(`🖱️ Handling ${messageType} request:`, message);
+
+  addLogEntry("info", `${messageType} request: ${message.selector || "N/A"}`);
+
+  // Send request to background script
+  chrome.runtime.sendMessage(
+    {
+      type: messageType,
+      tabId: chrome.devtools.inspectedWindow.tabId,
+      ...message,
+    },
+    (response) => {
+      console.log(`🖱️ ${messageType} response:`, response);
+
+      if (response && response.success) {
+        addLogEntry("info", `${messageType} completed successfully`);
+
+        // Send success response back via WebSocket
+        if (wsManager) {
+          wsManager.send({
+            type: responseType,
+            success: true,
+            result: response,
+            requestId: message.requestId || Date.now(),
+          });
+        }
+      } else {
+        const errorMessage = response?.error || "Unknown error";
+        addLogEntry("error", `${messageType} failed: ${errorMessage}`);
+
+        // Send error response back via WebSocket
+        if (wsManager) {
+          wsManager.send({
+            type: responseType,
+            success: false,
+            error: errorMessage,
+            requestId: message.requestId || Date.now(),
+          });
+        }
+      }
+    },
+  );
 }
 
 // Diagnostic function to help troubleshoot connection issues

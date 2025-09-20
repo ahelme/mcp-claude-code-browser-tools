@@ -145,14 +145,40 @@ app.post("/click", async (req, res) => {
   }
 
   try {
+    // Create a promise to wait for the result
+    const resultPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Click operation timeout"));
+      }, 10000);
+
+      const messageHandler = (data) => {
+        const message = JSON.parse(data);
+        if (message.type === "clickResult") {
+          clearTimeout(timeout);
+          wsConnection.off("message", messageHandler);
+          resolve(message);
+        }
+      };
+
+      wsConnection.on("message", messageHandler);
+    });
+
+    const requestId = Date.now().toString();
     wsConnection.send(
       JSON.stringify({
         action: "click",
         selector,
+        requestId,
       }),
     );
 
-    res.json({ success: true });
+    const result = await resultPromise;
+
+    if (result.success) {
+      res.json({ success: true, result: result.result });
+    } else {
+      res.status(400).json({ success: false, error: result.error });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -160,22 +186,49 @@ app.post("/click", async (req, res) => {
 
 // Type endpoint
 app.post("/type", async (req, res) => {
-  const { selector, text } = req.body;
+  const { selector, text, clear = false } = req.body;
 
   if (!wsConnection) {
     return res.status(503).json({ error: "Chrome extension not connected" });
   }
 
   try {
+    // Create a promise to wait for the result
+    const resultPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Type operation timeout"));
+      }, 10000);
+
+      const messageHandler = (data) => {
+        const message = JSON.parse(data);
+        if (message.type === "typeResult") {
+          clearTimeout(timeout);
+          wsConnection.off("message", messageHandler);
+          resolve(message);
+        }
+      };
+
+      wsConnection.on("message", messageHandler);
+    });
+
+    const requestId = Date.now().toString();
     wsConnection.send(
       JSON.stringify({
         action: "type",
         selector,
         text,
+        clear,
+        requestId,
       }),
     );
 
-    res.json({ success: true });
+    const result = await resultPromise;
+
+    if (result.success) {
+      res.json({ success: true, result: result.result });
+    } else {
+      res.status(400).json({ success: false, error: result.error });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -295,15 +348,42 @@ app.post("/wait", async (req, res) => {
   }
 
   try {
+    // Create a promise to wait for the result
+    const maxTimeout = Math.min(timeout, 60000); // Max 60 seconds
+    const resultPromise = new Promise((resolve, reject) => {
+      const operationTimeout = setTimeout(() => {
+        reject(new Error("Wait operation timeout"));
+      }, maxTimeout + 5000); // Add 5 seconds buffer
+
+      const messageHandler = (data) => {
+        const message = JSON.parse(data);
+        if (message.type === "waitResult") {
+          clearTimeout(operationTimeout);
+          wsConnection.off("message", messageHandler);
+          resolve(message);
+        }
+      };
+
+      wsConnection.on("message", messageHandler);
+    });
+
+    const requestId = Date.now().toString();
     wsConnection.send(
       JSON.stringify({
         action: "wait",
         selector,
-        timeout,
+        timeout: maxTimeout,
+        requestId,
       }),
     );
 
-    res.json({ success: true });
+    const result = await resultPromise;
+
+    if (result.success) {
+      res.json({ success: true, result: result.result });
+    } else {
+      res.status(400).json({ success: false, error: result.error });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

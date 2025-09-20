@@ -1,0 +1,389 @@
+/**
+ * Navigation Handler for Browser Tools MCP Extension
+ *
+ * Implements browser_navigate functionality for Agent G (Navigation Specialist).
+ * Handles URL navigation requests from the MCP server via WebSocket communication.
+ *
+ * Features:
+ * - URL validation and normalization
+ * - Navigation with proper error handling
+ * - Loading state management
+ * - Integration with Configuration Panel UI
+ * - Real-time status updates
+ */
+
+class NavigationHandler {
+  constructor() {
+    this.isNavigating = false;
+    this.navigationTimeout = 10000; // 10 second timeout
+    this.currentNavigationController = null;
+
+    // Bind methods to preserve context
+    this.handleNavigationRequest = this.handleNavigationRequest.bind(this);
+    this.validateUrl = this.validateUrl.bind(this);
+    this.normalizeUrl = this.normalizeUrl.bind(this);
+    this.navigateToUrl = this.navigateToUrl.bind(this);
+    this.updateNavigationStatus = this.updateNavigationStatus.bind(this);
+
+    console.log("🧭 Navigation Handler initialized");
+  }
+
+  /**
+   * Handle navigation request from WebSocket
+   * @param {Object} message - WebSocket message with navigation data
+   * @param {Function} sendResponse - Response callback function
+   */
+  async handleNavigationRequest(message, sendResponse) {
+    const { url } = message;
+
+    console.log("🧭 Navigation request received:", url);
+
+    // Validate input
+    if (!url) {
+      const error = "URL is required for navigation";
+      console.error("❌ Navigation error:", error);
+      this.addLogEntry("error", error);
+      sendResponse({ success: false, error });
+      return;
+    }
+
+    // Check if already navigating
+    if (this.isNavigating) {
+      const error = "Navigation already in progress";
+      console.warn("⚠️ Navigation warning:", error);
+      this.addLogEntry("error", error);
+      sendResponse({ success: false, error });
+      return;
+    }
+
+    try {
+      // Validate and normalize URL
+      const validationResult = this.validateUrl(url);
+      if (!validationResult.isValid) {
+        console.error("❌ URL validation failed:", validationResult.error);
+        this.addLogEntry("error", `Invalid URL: ${validationResult.error}`);
+        sendResponse({ success: false, error: validationResult.error });
+        return;
+      }
+
+      const normalizedUrl = this.normalizeUrl(validationResult.url);
+      console.log("🔄 Normalized URL:", normalizedUrl);
+
+      // Start navigation
+      this.isNavigating = true;
+      this.updateNavigationStatus("navigating", `Navigating to ${normalizedUrl}...`);
+      this.addLogEntry("info", `Navigating to: ${normalizedUrl}`);
+
+      // Perform navigation
+      const result = await this.navigateToUrl(normalizedUrl);
+
+      if (result.success) {
+        console.log("✅ Navigation successful");
+        this.addLogEntry("info", `Successfully navigated to: ${normalizedUrl}`);
+        this.updateNavigationStatus("success", `Loaded: ${normalizedUrl}`);
+        sendResponse({
+          success: true,
+          url: normalizedUrl,
+          finalUrl: result.finalUrl,
+          title: result.title,
+          loadTime: result.loadTime
+        });
+      } else {
+        console.error("❌ Navigation failed:", result.error);
+        this.addLogEntry("error", `Navigation failed: ${result.error}`);
+        this.updateNavigationStatus("error", `Failed: ${result.error}`);
+        sendResponse({ success: false, error: result.error });
+      }
+    } catch (error) {
+      console.error("❌ Navigation error:", error);
+      this.addLogEntry("error", `Navigation error: ${error.message}`);
+      this.updateNavigationStatus("error", error.message);
+      sendResponse({ success: false, error: error.message });
+    } finally {
+      this.isNavigating = false;
+      // Clear status after delay
+      setTimeout(() => {
+        this.updateNavigationStatus("ready", "Ready for navigation");
+      }, 3000);
+    }
+  }
+
+  /**
+   * Validate URL format and accessibility
+   * @param {string} url - URL to validate
+   * @returns {Object} Validation result with isValid boolean and error message
+   */
+  validateUrl(url) {
+    // Basic validation
+    if (typeof url !== "string" || url.trim().length === 0) {
+      return { isValid: false, error: "URL must be a non-empty string" };
+    }
+
+    const trimmedUrl = url.trim();
+
+    // Check for blocked protocols
+    const blockedProtocols = ["file:", "chrome:", "chrome-extension:", "moz-extension:"];
+    for (const protocol of blockedProtocols) {
+      if (trimmedUrl.toLowerCase().startsWith(protocol)) {
+        return {
+          isValid: false,
+          error: `Protocol ${protocol} not allowed for security reasons`
+        };
+      }
+    }
+
+    // Check for data URLs (can be dangerous)
+    if (trimmedUrl.toLowerCase().startsWith("data:")) {
+      return {
+        isValid: false,
+        error: "Data URLs not allowed for security reasons"
+      };
+    }
+
+    // Basic URL format validation
+    try {
+      // Try to create URL object for validation
+      let testUrl;
+
+      // If no protocol specified, assume https
+      if (!trimmedUrl.includes("://")) {
+        testUrl = new URL(`https://${trimmedUrl}`);
+      } else {
+        testUrl = new URL(trimmedUrl);
+      }
+
+      // Validate protocol
+      const allowedProtocols = ["http:", "https:"];
+      if (!allowedProtocols.includes(testUrl.protocol)) {
+        return {
+          isValid: false,
+          error: `Protocol ${testUrl.protocol} not supported. Use http: or https:`
+        };
+      }
+
+      // Validate hostname
+      if (!testUrl.hostname || testUrl.hostname.length === 0) {
+        return {
+          isValid: false,
+          error: "Invalid hostname"
+        };
+      }
+
+      return { isValid: true, url: testUrl.href };
+    } catch (error) {
+      return {
+        isValid: false,
+        error: `Invalid URL format: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Normalize URL for consistent handling
+   * @param {string} url - URL to normalize
+   * @returns {string} Normalized URL
+   */
+  normalizeUrl(url) {
+    try {
+      // If no protocol specified, assume https
+      if (!url.includes("://")) {
+        url = `https://${url}`;
+      }
+
+      const urlObj = new URL(url);
+
+      // Remove trailing slash for consistency (except for root)
+      if (urlObj.pathname === "/" && urlObj.search === "" && urlObj.hash === "") {
+        return urlObj.href;
+      } else if (urlObj.href.endsWith("/") && urlObj.search === "" && urlObj.hash === "") {
+        return urlObj.href.slice(0, -1);
+      }
+
+      return urlObj.href;
+    } catch (error) {
+      console.warn("🔄 URL normalization failed, using original:", error.message);
+      return url;
+    }
+  }
+
+  /**
+   * Perform the actual navigation
+   * @param {string} url - Normalized URL to navigate to
+   * @returns {Promise<Object>} Navigation result
+   */
+  async navigateToUrl(url) {
+    const startTime = Date.now();
+
+    try {
+      // Get current tab ID
+      const tabId = chrome.devtools?.inspectedWindow?.tabId;
+      if (!tabId) {
+        throw new Error("No active tab found");
+      }
+
+      console.log(`🧭 Navigating tab ${tabId} to: ${url}`);
+
+      // Create abort controller for timeout
+      this.currentNavigationController = new AbortController();
+
+      // Set up timeout
+      const timeoutId = setTimeout(() => {
+        if (this.currentNavigationController) {
+          this.currentNavigationController.abort();
+        }
+      }, this.navigationTimeout);
+
+      // Perform navigation using Chrome APIs
+      return new Promise((resolve, reject) => {
+        // Listen for navigation completion
+        const updateListener = (updatedTabId, changeInfo, tab) => {
+          if (updatedTabId !== tabId) return;
+
+          // Check for loading complete
+          if (changeInfo.status === "complete" && tab.url) {
+            clearTimeout(timeoutId);
+            chrome.tabs.onUpdated.removeListener(updateListener);
+
+            const loadTime = Date.now() - startTime;
+            console.log(`✅ Navigation completed in ${loadTime}ms`);
+
+            resolve({
+              success: true,
+              finalUrl: tab.url,
+              title: tab.title,
+              loadTime
+            });
+          }
+
+          // Check for navigation errors
+          if (changeInfo.status === "complete" && !tab.url) {
+            clearTimeout(timeoutId);
+            chrome.tabs.onUpdated.removeListener(updateListener);
+            reject(new Error("Navigation completed but no URL available"));
+          }
+        };
+
+        // Set up timeout rejection
+        this.currentNavigationController.signal.addEventListener("abort", () => {
+          chrome.tabs.onUpdated.removeListener(updateListener);
+          reject(new Error(`Navigation timeout after ${this.navigationTimeout}ms`));
+        });
+
+        // Start listening for updates
+        chrome.tabs.onUpdated.addListener(updateListener);
+
+        // Perform the navigation
+        chrome.tabs.update(tabId, { url }, (tab) => {
+          if (chrome.runtime.lastError) {
+            clearTimeout(timeoutId);
+            chrome.tabs.onUpdated.removeListener(updateListener);
+            reject(new Error(`Navigation failed: ${chrome.runtime.lastError.message}`));
+            return;
+          }
+
+          console.log("🔄 Navigation started successfully");
+        });
+      });
+
+    } catch (error) {
+      const loadTime = Date.now() - startTime;
+      console.error(`❌ Navigation failed after ${loadTime}ms:`, error);
+      return {
+        success: false,
+        error: error.message,
+        loadTime
+      };
+    } finally {
+      this.currentNavigationController = null;
+    }
+  }
+
+  /**
+   * Update navigation status in the UI
+   * @param {string} state - Navigation state (ready, navigating, success, error)
+   * @param {string} message - Status message
+   */
+  updateNavigationStatus(state, message) {
+    // Update scan status indicator (reusing existing UI element)
+    const scanIndicator = document.getElementById("scan-indicator");
+    const scanText = document.getElementById("scan-text");
+
+    if (scanIndicator && scanText) {
+      // Map navigation states to scan indicator states
+      const stateMapping = {
+        ready: "ready-state",
+        navigating: "scanning",
+        success: "connected",
+        error: "failed"
+      };
+
+      const indicatorState = stateMapping[state] || "ready-state";
+      scanIndicator.className = `scan-indicator ${indicatorState}`;
+      scanText.textContent = message;
+    }
+
+    console.log(`🧭 Navigation status: ${state} - ${message}`);
+  }
+
+  /**
+   * Add log entry to the logs display
+   * @param {string} level - Log level (info, error, warning)
+   * @param {string} message - Log message
+   */
+  addLogEntry(level, message) {
+    // Use the existing panel.js addLogEntry function if available
+    if (window.addLogEntry && typeof window.addLogEntry === "function") {
+      window.addLogEntry(level, `[NAV] ${message}`);
+      return;
+    }
+
+    // Fallback: direct DOM manipulation
+    const logsDisplay = document.getElementById("logs-display");
+    if (logsDisplay) {
+      const timestamp = new Date().toLocaleTimeString();
+      const logClass = level === "error" ? "log-error" : "log-info";
+
+      const logEntry = document.createElement("div");
+      logEntry.className = `log-entry ${logClass}`;
+      logEntry.textContent = `[${timestamp}] [NAV] ${message}`;
+
+      logsDisplay.appendChild(logEntry);
+      logsDisplay.scrollTop = logsDisplay.scrollHeight;
+    }
+  }
+
+  /**
+   * Cancel any ongoing navigation
+   */
+  cancelNavigation() {
+    if (this.currentNavigationController) {
+      console.log("🛑 Cancelling ongoing navigation");
+      this.currentNavigationController.abort();
+      this.currentNavigationController = null;
+    }
+
+    this.isNavigating = false;
+    this.updateNavigationStatus("ready", "Navigation cancelled");
+  }
+
+  /**
+   * Get current navigation state
+   * @returns {Object} Current navigation state
+   */
+  getNavigationState() {
+    return {
+      isNavigating: this.isNavigating,
+      hasActiveController: this.currentNavigationController !== null
+    };
+  }
+}
+
+// Create global navigation handler instance
+window.NavigationHandler = NavigationHandler;
+
+// Export for module usage
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = NavigationHandler;
+}
+
+console.log("🧭 Navigation module loaded successfully");
