@@ -83,6 +83,49 @@ model: sonnet
 
 ---
 
+## ⚡ MANE Integration Expert
+
+### 🤖 **Revolutionary AI-Powered Integration System**
+
+The **MANE-BATCH-INTEGRATION-EXPERT** provides intelligent, automated integration of parallel agent work with zero-conflict resolution:
+
+#### **🎯 Core Features**
+- **Intelligent Batch Resolution**: Automatically maps batch numbers to agent universes
+- **Smart Integration Strategies**: Registry-based, smart-merge, cherry-pick, validation-first
+- **Quality Assurance**: Comprehensive validation before integration with rollback capability
+- **User Testing Automation**: Generates specific testing checklists with debug guidance
+
+#### **🔧 Integration Commands**
+
+```bash
+# Standard batch integration with validation
+/mane-integrate batch=3
+
+# Analyze integration without executing
+/mane-integrate batch=3 --dry-run --verbose
+
+# Integrate specific agents with testing
+/mane-integrate agents=G,H,I --test-universes --create-backup
+
+# Emergency rollback
+/mane-integrate --rollback
+```
+
+#### **🗺️ Standard MANE Batch Mappings**
+- **Batch 1**: Agent A (Foundation) → `agent-a-foundation`
+- **Batch 2**: Agent F (Framework) → `agent-f-framework`/`agent-f-ui-panels`
+- **Batch 3**: Agents G,H,I (Core Tools) → `agent-g-navigation`, `agent-h-screenshot`, `agent-i-interaction`
+- **Batch 4**: Agents B,C,D,E (Advanced Tools) → `agent-b-evaluate`, `agent-c-audit`, `agent-d-console`, `agent-e-content`
+
+#### **📋 Integration Workflow**
+1. **Discovery**: Scans for MANE agent universes and catalogs changes
+2. **Planning**: Selects optimal strategy with risk assessment
+3. **Execution**: Integrates with conflict resolution and registry coordination
+4. **Validation**: Runs comprehensive tests and quality gates
+5. **Reporting**: Generates integration report and user testing checklist
+
+---
+
 ## 🚀 Quick Start: 15-Minute MANE Setup
 
 ### 1. 🏗️ Choose Your Starting Point
@@ -178,8 +221,8 @@ npx mane agent status
 # Navigate to your project
 cd browser-tools-setup
 
-# Create MANE worktree structure
-mkdir -p ../mane-universes
+# Create project-specific MANE universes structure
+mkdir -p ~/development/mane-universes/browser-tools
 
 # Initialize worktree management
 git config worktree.guessRemote true
@@ -190,46 +233,46 @@ git config push.autoSetupRemote true
 
 ```bash
 # Foundation Universe - The Architect
-git worktree add ../mane-universes/agent-a-foundation agent-a-foundation
-cd ../mane-universes/agent-a-foundation
+git worktree add ~/development/mane-universes/browser-tools/agent-a-foundation agent-a-foundation
+cd ~/development/mane-universes/browser-tools/agent-a-foundation
 echo "🏗️ Foundation Universe - The Architect" > AGENT_IDENTITY.md
 mkdir -p core tests/foundation docs/foundation
 
 # Feature Agent Universes - Parallel Development
-git worktree add ../mane-universes/agent-b-evaluate agent-b-evaluate
-cd ../mane-universes/agent-b-evaluate
+git worktree add ~/development/mane-universes/browser-tools/agent-b-evaluate agent-b-evaluate
+cd ~/development/mane-universes/browser-tools/agent-b-evaluate
 echo "🧪 Evaluation Universe - The Scientist" > AGENT_IDENTITY.md
 mkdir -p tools/evaluate tests/evaluate demos/evaluate
 
-git worktree add ../mane-universes/agent-c-audit agent-c-audit
-cd ../mane-universes/agent-c-audit
+git worktree add ~/development/mane-universes/browser-tools/agent-c-audit agent-c-audit
+cd ~/development/mane-universes/browser-tools/agent-c-audit
 echo "📊 Audit Universe - The Analyst" > AGENT_IDENTITY.md
 mkdir -p tools/audit tests/audit reports/audit
 
-git worktree add ../mane-universes/agent-d-console agent-d-console
-cd ../mane-universes/agent-d-console
+git worktree add ~/development/mane-universes/browser-tools/agent-d-console agent-d-console
+cd ~/development/mane-universes/browser-tools/agent-d-console
 echo "🎮 Console Universe - The Detective" > AGENT_IDENTITY.md
 mkdir -p tools/console tests/console demos/console
 
-git worktree add ../mane-universes/agent-e-content agent-e-content
-cd ../mane-universes/agent-e-content
+git worktree add ~/development/mane-universes/browser-tools/agent-e-content agent-e-content
+cd ~/development/mane-universes/browser-tools/agent-e-content
 echo "📄 Content Universe - The Extractor" > AGENT_IDENTITY.md
 mkdir -p tools/content tests/content demos/content
 
 # UI and Feature Enhancement Universes
-git worktree add ../mane-universes/agent-f-ui-panels agent-f-ui-panels
-cd ../mane-universes/agent-f-ui-panels
+git worktree add ~/development/mane-universes/browser-tools/agent-f-ui-panels agent-f-ui-panels
+cd ~/development/mane-universes/browser-tools/agent-f-ui-panels
 echo "🎨 UI Universe - The Designer" > AGENT_IDENTITY.md
 mkdir -p ui-panels tests/ui demos/ui
 
-git worktree add ../mane-universes/agent-g-screenshot agent-g-screenshot
-cd ../mane-universes/agent-g-screenshot
+git worktree add ~/development/mane-universes/browser-tools/agent-g-screenshot agent-g-screenshot
+cd ~/development/mane-universes/browser-tools/agent-g-screenshot
 echo "📸 Screenshot Universe - The Visualizer" > AGENT_IDENTITY.md
 mkdir -p features/screenshot tests/screenshot demos/screenshot
 
 # Integration Universe - Final Convergence
-git worktree add ../mane-universes/integration integration
-cd ../mane-universes/integration
+git worktree add ~/development/mane-universes/browser-tools/integration integration
+cd ~/development/mane-universes/browser-tools/integration
 echo "⚗️ Integration Universe - The Orchestrator" > AGENT_IDENTITY.md
 mkdir -p integration-tests performance-tests e2e-tests
 ```
@@ -238,7 +281,7 @@ mkdir -p integration-tests performance-tests e2e-tests
 
 ```bash
 # Create agent startup script
-cat > ../mane-universes/start-all-agents.sh << 'EOF'
+cat > ~/development/mane-universes/browser-tools/start-all-agents.sh << 'EOF'
 #!/bin/bash
 
 echo "🚀 Starting MANE Agent Universes..."
@@ -268,14 +311,14 @@ echo "✅ All agent universes started!"
 echo "🌌 Welcome to the MANE multiverse!"
 EOF
 
-chmod +x ../mane-universes/start-all-agents.sh
+chmod +x ~/development/mane-universes/browser-tools/start-all-agents.sh
 ```
 
 #### **Step 4: Configure Agent Package Scripts**
 
 ```bash
 # In each agent universe, setup package.json scripts
-cd ../mane-universes/agent-a-foundation
+cd ~/development/mane-universes/browser-tools/agent-a-foundation
 
 cat > package.json << 'EOF'
 {
@@ -316,13 +359,13 @@ npm install
 cd browser-tools-setup
 
 # Start all agent universes
-../mane-universes/start-all-agents.sh
+~/development/mane-universes/browser-tools/start-all-agents.sh
 
 # Monitor agent progress
 watch -n 5 './scripts/mane-universe-status.sh'
 
 # Integration testing
-cd ../mane-universes/integration
+cd ~/development/mane-universes/browser-tools/integration
 npm run test:integration
 ```
 
@@ -330,19 +373,19 @@ npm run test:integration
 
 ```bash
 # Switch between agent universes instantly
-alias go-foundation="cd ../mane-universes/agent-a-foundation"
-alias go-evaluate="cd ../mane-universes/agent-b-evaluate"
-alias go-audit="cd ../mane-universes/agent-c-audit"
-alias go-console="cd ../mane-universes/agent-d-console"
-alias go-content="cd ../mane-universes/agent-e-content"
-alias go-ui="cd ../mane-universes/agent-f-ui-panels"
-alias go-screenshot="cd ../mane-universes/agent-g-screenshot"
-alias go-integration="cd ../mane-universes/integration"
+alias go-foundation="cd ~/development/mane-universes/browser-tools/agent-a-foundation"
+alias go-evaluate="cd ~/development/mane-universes/browser-tools/agent-b-evaluate"
+alias go-audit="cd ~/development/mane-universes/browser-tools/agent-c-audit"
+alias go-console="cd ~/development/mane-universes/browser-tools/agent-d-console"
+alias go-content="cd ~/development/mane-universes/browser-tools/agent-e-content"
+alias go-ui="cd ~/development/mane-universes/browser-tools/agent-f-ui-panels"
+alias go-screenshot="cd ~/development/mane-universes/browser-tools/agent-g-screenshot"
+alias go-integration="cd ~/development/mane-universes/browser-tools/integration"
 
 # Agent universe management
 alias list-universes="git worktree list"
-alias universe-status="../mane-universes/check-all-status.sh"
-alias merge-universes="../mane-universes/merge-all.sh"
+alias universe-status="~/development/mane-universes/browser-tools/check-all-status.sh"
+alias merge-universes="~/development/mane-universes/browser-tools/merge-all.sh"
 ```
 
 ---
