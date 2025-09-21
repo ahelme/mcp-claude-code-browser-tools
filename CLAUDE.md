@@ -116,8 +116,13 @@ Each agent can now work **independently** in their dedicated universe, building 
 
 **Current Implementation Focus:**
 - **Branch**: `MANE_CORE` - Primary MANE development branch (renamed from MANE_WORKTREE)
+- **XML Configuration**:
+  - `<development-branch>MANE_CORE</development-branch>`
+  - `<agent-source-branch>MANE_CORE</agent-source-branch>`
+  - `<working-branch>MANE_CORE</working-branch>`
 - **Agent Organization**: 9 agents in 4 logical batches with mandatory user workflow enforcement
 - **Foundation**: Agent A COMPLETED and MERGED - Foundation infrastructure operational
+- **Follow-up**: Issue #20 created for TypeScript import path fixes
 - **Goal**: Demonstrate world's first complete XML-driven AI collaborative development system
 
 ### ✅ WORKING (5 tools):

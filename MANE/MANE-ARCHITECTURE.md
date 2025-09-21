@@ -209,6 +209,23 @@ make quality-gate      # Full quality pipeline
 make universe-doctor   # Monitor universe health
 ```
 
+### XML-Driven Branch Configuration
+
+MANE projects use XML configuration to specify source branches for agent development:
+
+```xml
+<repositories>
+  <development-branch>MANE_CORE</development-branch>
+  <agent-source-branch>MANE_CORE</agent-source-branch>
+  <working-branch>MANE_CORE</working-branch>
+</repositories>
+```
+
+**Benefits:**
+- **Centralized branch strategy** - All agents pull from consistent source
+- **XML-configurable** - Change branch strategy project-wide via configuration
+- **Version controlled** - Branch strategy documented in project XML
+
 ---
 
 **Built with MANE** 🦁 - *The future of AI-collaborative development*

@@ -63,6 +63,9 @@ The **MANE XML Schema** provides a standardized, declarative format for defining
     <universe-structure>project-specific</universe-structure>
     <universe-parent>/Users/lennox/development/mane-universes</universe-parent>
     <integration-branch>integration</integration-branch>
+    <development-branch>MANE_CORE</development-branch>
+    <agent-source-branch>MANE_CORE</agent-source-branch>
+    <working-branch>MANE_CORE</working-branch>
   </repositories>
 </metadata>
 ```

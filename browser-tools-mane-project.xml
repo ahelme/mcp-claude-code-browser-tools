@@ -25,11 +25,13 @@
       <github-owner>anthropics</github-owner>
       <github-repo>browser-tools-setup</github-repo>
       <main-branch>main</main-branch>
+      <development-branch>MANE_CORE</development-branch>
+      <agent-source-branch>MANE_CORE</agent-source-branch>
       <universe-path>/Users/lennox/development/mane-universes/browser-tools</universe-path>
       <universe-structure>project-specific</universe-structure>
       <universe-parent>/Users/lennox/development/mane-universes</universe-parent>
       <integration-branch>integration</integration-branch>
-      <working-branch>MANE_WORKTREE</working-branch>
+      <working-branch>MANE_CORE</working-branch>
     </repositories>
 
     <ports>
