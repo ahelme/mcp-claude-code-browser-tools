@@ -1,0 +1,1559 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 🦁 MANE Project Configuration: Browser Tools for Claude Code -->
+<mane-project version="1.0" xmlns="https://mane-methodology.dev/schema/v1">
+
+  <!-- 📋 Project Metadata -->
+  <metadata>
+    <name>Browser Tools for Claude Code</name>
+    <description>Complete re-write of AgentDesk's sophisticated Browser Tools MCP server for AI agents</description>
+    <version>2.0.0</version>
+    <created>2025-09-20</created>
+    <methodology>MANE-Worktrees</methodology>
+    <deployment-model>hybrid</deployment-model>
+
+    <technologies>
+      <primary>JavaScript</primary>
+      <secondary>Chrome Extensions</secondary>
+      <secondary>Node.js</secondary>
+      <secondary>WebSocket</secondary>
+      <secondary>MCP Protocol</secondary>
+    </technologies>
+
+    <repositories>
+      <main-repo>browser-tools-setup</main-repo>
+      <github-url>https://github.com/anthropics/browser-tools-setup</github-url>
+      <github-owner>anthropics</github-owner>
+      <github-repo>browser-tools-setup</github-repo>
+      <main-branch>main</main-branch>
+      <universe-path>/Users/lennox/development/mane-universes/browser-tools</universe-path>
+      <universe-structure>project-specific</universe-structure>
+      <universe-parent>/Users/lennox/development/mane-universes</universe-parent>
+      <integration-branch>integration</integration-branch>
+      <working-branch>MANE_WORKTREE</working-branch>
+    </repositories>
+
+    <ports>
+      <mcp-http-bridge>3024</mcp-http-bridge>
+      <direct-http-bridge>3026</direct-http-bridge>
+      <websocket-communication>dynamic</websocket-communication>
+    </ports>
+  </metadata>
+
+  <!-- 📚 Essential Context for All Agents -->
+  <essential-context>
+    <project-overview>
+      <purpose>Complete re-write of AgentDesk's Browser Tools MCP server to optimise browser-testing and front-end development with AI agents - now updated to June 2025 MCP specification</purpose>
+
+      <goals>
+        <goal priority="critical" id="fix-broken-tools">
+          Fix 4 broken browser tools (browser_evaluate, browser_get_content, browser_audit, browser_get_console)
+        </goal>
+        <goal priority="high" id="maintain-working-tools">
+          Maintain 5 working tools (browser_navigate, browser_screenshot, browser_click, browser_type, browser_wait)
+        </goal>
+        <goal priority="medium" id="enhance-ui">
+          Enhance UI responsiveness with modular components and real-time status indicators
+        </goal>
+        <goal priority="medium" id="performance-optimization">
+          Optimize WebSocket communication and eliminate timeout issues
+        </goal>
+      </goals>
+
+      <constraints>
+        <constraint type="compatibility">Must maintain compatibility with existing AgentDesk Chrome extension</constraint>
+        <constraint type="protocol">Must use June 2025 MCP specification (2025-06-18)</constraint>
+        <constraint type="integration">Must support port 3024 for Claude Code MCP integration</constraint>
+        <constraint type="security">Must implement security validation for all browser operations</constraint>
+        <constraint type="performance">Must handle headless browser operations without interfering with user</constraint>
+      </constraints>
+
+      <success-metrics>
+        <metric>All 9 browser tools working correctly (100%)</metric>
+        <metric>Integration tests passing for all tools (100%)</metric>
+        <metric>User testing checklist validated (100%)</metric>
+        <metric>Performance benchmarks within acceptable limits (&lt;5s per operation)</metric>
+        <metric>Zero security vulnerabilities in production</metric>
+      </success-metrics>
+    </project-overview>
+
+    <technical-architecture>
+      <communication-flow>
+        <step>Claude Code ↔ MCP Server (stdio JSON-RPC)</step>
+        <step>MCP Server ↔ HTTP Bridge (HTTP on port 3024)</step>
+        <step>HTTP Bridge ↔ Chrome Extension (WebSocket)</step>
+        <step>Chrome Extension ↔ Browser APIs (Chrome DevTools Protocol)</step>
+      </communication-flow>
+
+      <key-files>
+        <file path="scripts/mcp-claude-code-browser-tools.mjs" role="MCP Server Implementation"/>
+        <file path="scripts/mcp-http-bridge.mjs" role="HTTP Bridge for WebSocket Communication"/>
+        <file path="chrome-extension-mvp/" role="Chrome Extension Implementation"/>
+        <file path=".mcp.json" role="Claude Code MCP Configuration"/>
+        <file path=".screenshots/" role="Screenshot Output Directory"/>
+      </key-files>
+
+      <key-contracts>
+        <contract name="IBrowserTool">
+          <description>Standard interface for all browser tools</description>
+          <required-methods>
+            <method>execute(params): Promise&lt;ToolResult&gt;</method>
+            <method>validate(params): ValidationResult</method>
+            <method>getSchema(): JSONSchema</method>
+          </required-methods>
+          <standard-response>
+            <field name="success" type="boolean" required="true"/>
+            <field name="result" type="any" required="false"/>
+            <field name="error" type="string" required="false"/>
+            <field name="metadata" type="object" required="false"/>
+          </standard-response>
+        </contract>
+
+        <contract name="IWebSocketHandler">
+          <description>WebSocket communication interface for Chrome extension</description>
+          <required-methods>
+            <method>handleMessage(message): Promise&lt;Response&gt;</method>
+            <method>sendResponse(response): void</method>
+            <method>registerHandler(messageType, handler): void</method>
+          </required-methods>
+          <message-format>
+            <field name="type" type="string" required="true"/>
+            <field name="params" type="object" required="true"/>
+            <field name="requestId" type="string" required="true"/>
+          </message-format>
+        </contract>
+      </key-contracts>
+
+      <quality-gates>
+        <gate name="interface-compliance" required="true">
+          <description>All tools must implement IBrowserTool interface</description>
+          <validation-command>npm run validate:interfaces</validation-command>
+        </gate>
+
+        <gate name="test-coverage" required="true">
+          <description>Minimum 90% test coverage required</description>
+          <validation-command>npm run test:coverage</validation-command>
+          <minimum-threshold>90</minimum-threshold>
+        </gate>
+
+        <gate name="security-scan" required="true">
+          <description>Security vulnerability scan</description>
+          <validation-command>npm audit --audit-level high</validation-command>
+        </gate>
+
+        <gate name="mcp-compliance" required="true">
+          <description>MCP protocol 2025-06-18 compliance validation</description>
+          <validation-command>npm run validate:mcp-protocol</validation-command>
+        </gate>
+
+        <gate name="chrome-extension-validation" required="true">
+          <description>Chrome extension manifest and permissions validation</description>
+          <validation-command>npm run validate:chrome-extension</validation-command>
+        </gate>
+      </quality-gates>
+    </technical-architecture>
+
+    <development-context>
+      <current-status>
+        <working-tools count="5">
+          <tool name="browser_navigate" status="working" agent="agent-g-navigation"/>
+          <tool name="browser_screenshot" status="working" agent="agent-h-screenshot"/>
+          <tool name="browser_click" status="working" agent="agent-i-interaction"/>
+          <tool name="browser_type" status="working" agent="agent-i-interaction"/>
+          <tool name="browser_wait" status="working" agent="agent-i-interaction"/>
+        </working-tools>
+
+        <broken-tools count="4">
+          <tool name="browser_evaluate" status="broken" severity="critical" agent="agent-b-evaluate"/>
+          <tool name="browser_get_content" status="broken" severity="high" agent="agent-e-content"/>
+          <tool name="browser_audit" status="broken" severity="medium" agent="agent-c-audit"/>
+          <tool name="browser_get_console" status="broken" severity="medium" agent="agent-d-console"/>
+        </broken-tools>
+
+        <completion-percentage>55</completion-percentage>
+      </current-status>
+
+      <known-issues>
+        <issue severity="critical" tool="browser_evaluate" agent="agent-b-evaluate">
+          Timeout errors during JavaScript execution - requires security sandbox implementation
+        </issue>
+        <issue severity="high" tool="browser_get_content" agent="agent-e-content">
+          Request timeout issues - WebSocket communication optimization needed
+        </issue>
+        <issue severity="medium" tool="browser_audit" agent="agent-c-audit">
+          Returns HTML instead of JSON (parsing error) - Lighthouse integration fix required
+        </issue>
+        <issue severity="medium" tool="browser_get_console" agent="agent-d-console">
+          Request timeout - Console monitoring implementation needs debugging
+        </issue>
+        <issue severity="low" tool="browser_screenshot" agent="agent-h-screenshot">
+          Occasional timeout during capture - WebSocket optimization needed
+        </issue>
+        <issue severity="low" tool="browser_interactions" agent="agent-i-interaction">
+          "Unknown message type" errors - Message format validation needed
+        </issue>
+      </known-issues>
+
+      <architectural-decisions>
+        <decision date="2025-09-20" importance="critical">
+          <title>MCP Protocol Version</title>
+          <context>Need to ensure compatibility with Claude Code's latest MCP implementation</context>
+          <decision>Use MCP protocol version "2025-06-18" for full compliance</decision>
+          <consequences>
+            <consequence>All existing code must be updated to new protocol format</consequence>
+            <consequence>Enables integration with latest Claude Code features</consequence>
+            <consequence>Future-proofs the implementation</consequence>
+          </consequences>
+        </decision>
+
+        <decision date="2025-09-20" importance="high">
+          <title>MANE Deployment Model</title>
+          <context>Need efficient parallel agent development for fixing broken tools</context>
+          <decision>Use MANE-Worktrees for isolated agent development</decision>
+          <consequences>
+            <consequence>Each agent works in isolated universe</consequence>
+            <consequence>Zero coordination overhead between agents</consequence>
+            <consequence>Parallel development of all 4 broken tools</consequence>
+          </consequences>
+        </decision>
+      </architectural-decisions>
+
+      <integration-readiness>
+        <batch id="batch-1" status="completed" confidence="high">
+          <description>Foundation infrastructure established</description>
+        </batch>
+        <batch id="batch-2" status="completed" confidence="high">
+          <description>Framework enhancements completed</description>
+        </batch>
+        <batch id="batch-3" status="partial" confidence="medium">
+          <description>Core tools implemented but need debugging</description>
+          <issues>
+            <issue>Screenshot timeout optimization needed</issue>
+            <issue>Interaction message format debugging required</issue>
+          </issues>
+        </batch>
+        <batch id="batch-4" status="pending" confidence="low">
+          <description>Advanced tools broken and require significant debugging</description>
+          <critical-blockers>
+            <blocker>JavaScript execution security sandbox</blocker>
+            <blocker>Lighthouse integration parsing</blocker>
+            <blocker>WebSocket timeout handling</blocker>
+          </critical-blockers>
+        </batch>
+      </integration-readiness>
+    </development-context>
+  </essential-context>
+
+  <!-- 🤖 Agent Universe Definitions -->
+  <agent-universes>
+
+    <!-- 🏗️ Agent A: Foundation Architect (Batch 1) -->
+    <agent-universe id="agent-a-foundation" batch="1">
+      <metadata>
+        <name>Foundation Architect</name>
+        <emoji>🏗️</emoji>
+        <specialization>System Architecture &amp; Interface Contracts</specialization>
+        <priority>critical</priority>
+        <status>completed</status>
+        <completion-date>2025-09-20</completion-date>
+      </metadata>
+
+      <capabilities>
+        <capability>Interface contract definition (IBrowserTool, IWebSocketHandler)</capability>
+        <capability>Registry system implementation for auto-discovery</capability>
+        <capability>Base class library creation for tool inheritance</capability>
+        <capability>Quality gates pipeline establishment</capability>
+        <capability>MCP protocol compliance framework</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-a-foundation</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-a-foundation</universe-directory>
+        <branch-name>agent-a-foundation</branch-name>
+        <github-branch>agent-a-foundation</github-branch>
+        <agent-definition-file>.claude/agents/mane-foundation-architect.md</agent-definition-file>
+        <directories>
+          <directory>core</directory>
+          <directory>contracts</directory>
+          <directory>tests/foundation</directory>
+          <directory>docs/foundation</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="deploy-foundation" description="Deploy foundation infrastructure" file=".claude/commands/deploy-foundation.md"/>
+        <command name="validate-contracts" description="Validate interface contracts" file=".claude/commands/validate-contracts.md"/>
+        <command name="commit-foundation" description="Stage and commit foundation work" file=".claude/commands/commit-foundation.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>🏗️ Foundation: {feature} implementation complete</message-template>
+          <include-files>
+            <pattern>core/**</pattern>
+            <pattern>contracts/**</pattern>
+            <pattern>tests/foundation/**</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate foundation changes</step>
+            <step order="6">Next batch agents' worktrees MUST be created AFTER merge</step>
+            <step order="7">New worktrees inherit merged foundation code automatically</step>
+          </steps>
+          <halt-condition>PR merge required before creating next batch worktrees</halt-condition>
+          <user-prompt-template>
+🚨 **CRITICAL: USER ACTION REQUIRED**
+
+Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
+
+**MANDATORY WORKFLOW:**
+1. ✅ Code committed to `{branch-name}` branch
+2. ✅ Branch pushed to remote repository
+3. ✅ Pull Request created: {pr-url}
+4. ⏳ **USER MUST MERGE PR BEFORE PROCEEDING**
+
+**Why this is critical:**
+- Foundation work MUST be merged before other agents can build on it
+- Next batch worktrees must be created AFTER merge to inherit foundation
+- Ensures proper dependency chain and code inheritance
+- Prevents integration conflicts and broken agent development
+
+**Next Steps:**
+1. Review PR: {pr-url}
+2. Merge PR to main branch
+3. Confirm merge completion
+4. **THEN create new worktrees for next batch** (they will inherit merged code)
+5. Deploy next batch agents on updated foundation
+
+**⚠️ DO NOT CREATE NEXT BATCH WORKTREES UNTIL PR IS MERGED ⚠️**
+          </user-prompt-template>
+        </mandatory-user-workflow>
+      </commit-workflow>
+
+      <responsibilities>
+        <responsibility priority="critical">Design and implement IBrowserTool interface</responsibility>
+        <responsibility priority="critical">Create auto-discovery registry system</responsibility>
+        <responsibility priority="high">Establish base classes for tool inheritance</responsibility>
+        <responsibility priority="high">Implement quality validation pipeline</responsibility>
+        <responsibility priority="medium">Document architectural patterns</responsibility>
+      </responsibilities>
+
+      <deliverables>
+        <deliverable status="completed">contracts/IBrowserTool.ts - Standard tool interface</deliverable>
+        <deliverable status="completed">contracts/IWebSocketHandler.ts - WebSocket communication interface</deliverable>
+        <deliverable status="completed">core/RegistrySystem.js - Auto-discovery registry</deliverable>
+        <deliverable status="completed">core/BaseToolClass.js - Base tool implementation</deliverable>
+        <deliverable status="completed">core/QualityGatesPipeline.js - Validation framework</deliverable>
+      </deliverables>
+    </agent-universe>
+
+    <!-- 🎨 Agent B: Framework Specialist (Batch 2) -->
+    <agent-universe id="agent-b-framework" batch="2">
+      <metadata>
+        <name>Framework Specialist</name>
+        <emoji>🎨</emoji>
+        <specialization>UI Framework &amp; Component System</specialization>
+        <priority>high</priority>
+        <status>pending</status>
+        <completion-date></completion-date>
+      </metadata>
+
+      <capabilities>
+        <capability>UI component modularization and responsive design</capability>
+        <capability>Real-time status indicators and progress visualization</capability>
+        <capability>Configuration panel enhancement and user experience</capability>
+        <capability>WebSocket communication status display</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-b-framework</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-b-framework</universe-directory>
+        <branch-name>agent-b-framework</branch-name>
+        <github-branch>agent-b-framework</github-branch>
+        <agent-definition-file>.claude/agents/mane-framework-specialist.md</agent-definition-file>
+        <directories>
+          <directory>ui-components</directory>
+          <directory>css</directory>
+          <directory>tests/ui</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="deploy-ui-framework" description="Deploy UI framework enhancements" file=".claude/commands/deploy-ui-framework.md"/>
+        <command name="test-ui-components" description="Test UI component functionality" file=".claude/commands/test-ui-components.md"/>
+        <command name="commit-framework" description="Stage and commit framework work" file=".claude/commands/commit-framework.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>🎨 Framework: {feature} enhancement complete</message-template>
+          <include-files>
+            <pattern>ui-components/**</pattern>
+            <pattern>css/**</pattern>
+            <pattern>tests/ui/**</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate framework changes</step>
+            <step order="6">Next batch agents' worktrees MUST be created AFTER merge</step>
+            <step order="7">New worktrees inherit merged foundation and framework code</step>
+          </steps>
+          <halt-condition>PR merge required before creating next batch worktrees</halt-condition>
+          <user-prompt-template>
+🚨 **CRITICAL: USER ACTION REQUIRED**
+
+Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
+
+**MANDATORY WORKFLOW:**
+1. ✅ Code committed to `{branch-name}` branch
+2. ✅ Branch pushed to remote repository
+3. ✅ Pull Request created: {pr-url}
+4. ⏳ **USER MUST MERGE PR BEFORE PROCEEDING**
+
+**Why this is critical:**
+- Framework work MUST be merged before core tools agents can build on it
+- Next batch worktrees must be created AFTER merge to inherit foundation + framework
+- Ensures proper dependency chain and code inheritance
+- Prevents integration conflicts and broken agent development
+
+**Next Steps:**
+1. Review PR: {pr-url}
+2. Merge PR to main branch
+3. Confirm merge completion
+4. **THEN create new worktrees for next batch** (they will inherit merged code)
+5. Deploy next batch agents on updated foundation + framework
+
+**⚠️ DO NOT CREATE NEXT BATCH WORKTREES UNTIL PR IS MERGED ⚠️**
+          </user-prompt-template>
+        </mandatory-user-workflow>
+      </commit-workflow>
+
+      <responsibilities>
+        <responsibility>Modularize existing UI components for reusability</responsibility>
+        <responsibility>Enhance responsive design and visual polish</responsibility>
+        <responsibility>Implement real-time status indicator system</responsibility>
+        <responsibility>Create configuration panel improvements</responsibility>
+      </responsibilities>
+    </agent-universe>
+
+    <!-- 🧭 Agent C: Navigation Specialist (Batch 3) -->
+    <agent-universe id="agent-c-navigation" batch="3">
+      <metadata>
+        <name>Navigation Specialist</name>
+        <emoji>🧭</emoji>
+        <specialization>browser_navigate Tool Implementation</specialization>
+        <priority>high</priority>
+        <status>pending</status>
+        <completion-date></completion-date>
+      </metadata>
+
+      <target-tools>
+        <tool name="browser_navigate" status="pending" test-status="pending">
+          <description>Navigate browser to specified URLs with security validation</description>
+          <implementation-file>chrome-extension-mvp/navigation.js</implementation-file>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_navigate</mcp-tool-name>
+          <features>
+            <feature>URL validation and normalization</feature>
+            <feature>Security protocol filtering (blocks file:, chrome:, data: URLs)</feature>
+            <feature>Navigation timeout handling (10s configurable)</feature>
+            <feature>Real-time navigation status updates</feature>
+            <feature>Error handling and user feedback</feature>
+          </features>
+        </tool>
+      </target-tools>
+
+      <capabilities>
+        <capability>URL validation and normalization with security checks</capability>
+        <capability>Navigation timeout handling with AbortController</capability>
+        <capability>Security protocol filtering to prevent dangerous navigation</capability>
+        <capability>Real-time navigation status updates in UI</capability>
+        <capability>Comprehensive error handling and logging</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-c-navigation</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-c-navigation</universe-directory>
+        <branch-name>agent-c-navigation</branch-name>
+        <github-branch>agent-c-navigation</github-branch>
+        <agent-definition-file>.claude/agents/mane-navigation-specialist.md</agent-definition-file>
+        <implementation-location>chrome-extension-mvp/navigation.js</implementation-location>
+        <directories>
+          <directory>tools/navigation</directory>
+          <directory>tests/navigation</directory>
+          <directory>demos/navigation</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="test-navigation" description="Test browser navigation functionality" file=".claude/commands/test-navigation.md"/>
+        <command name="deploy-navigation" description="Deploy navigation tool to integration" file=".claude/commands/deploy-navigation.md"/>
+        <command name="commit-navigation" description="Stage and commit navigation work" file=".claude/commands/commit-navigation.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>🧭 Navigation: {feature} implementation complete</message-template>
+          <include-files>
+            <pattern>tools/navigation/**</pattern>
+            <pattern>tests/navigation/**</pattern>
+            <pattern>chrome-extension-mvp/navigation.js</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate navigation tool</step>
+          </steps>
+          <halt-condition>PR merge required for proper tool integration</halt-condition>
+        </mandatory-user-workflow>
+      </commit-workflow>
+    </agent-universe>
+
+    <!-- 📸 Agent D: Screenshot Specialist (Batch 3) -->
+    <agent-universe id="agent-d-screenshot" batch="3">
+      <metadata>
+        <name>Screenshot Specialist</name>
+        <emoji>📸</emoji>
+        <specialization>browser_screenshot Tool Implementation</specialization>
+        <priority>high</priority>
+        <status>pending</status>
+        <completion-percentage>0</completion-percentage>
+      </metadata>
+
+      <target-tools>
+        <tool name="browser_screenshot" status="pending" test-status="pending">
+          <description>Capture page and element screenshots with smart naming</description>
+          <implementation-file>chrome-extension-mvp/screenshot.js</implementation-file>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_screenshot</mcp-tool-name>
+          <features>
+            <feature>Full page screenshot capture</feature>
+            <feature>Element-specific screenshots using CSS selectors</feature>
+            <feature>Smart filename generation based on page content</feature>
+            <feature>WebSocket communication for real-time capture</feature>
+          </features>
+        </tool>
+      </target-tools>
+
+      <capabilities>
+        <capability>Full page and element-specific screenshot capture</capability>
+        <capability>Smart filename generation with timestamp and page context</capability>
+        <capability>WebSocket communication for real-time capture coordination</capability>
+        <capability>Error handling and user feedback for capture operations</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-d-screenshot</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-d-screenshot</universe-directory>
+        <branch-name>agent-d-screenshot</branch-name>
+        <github-branch>agent-d-screenshot</github-branch>
+        <agent-definition-file>.claude/agents/mane-screenshot-specialist.md</agent-definition-file>
+        <implementation-location>chrome-extension-mvp/screenshot.js</implementation-location>
+        <directories>
+          <directory>tools/screenshot</directory>
+          <directory>tests/screenshot</directory>
+          <directory>demos/screenshot</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="test-screenshot" description="Test screenshot capture functionality" file=".claude/commands/test-screenshot.md"/>
+        <command name="optimize-screenshot" description="Optimize screenshot performance" file=".claude/commands/optimize-screenshot.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>📸 Screenshot: {feature} implementation complete</message-template>
+          <include-files>
+            <pattern>tools/screenshot/**</pattern>
+            <pattern>tests/screenshot/**</pattern>
+            <pattern>chrome-extension-mvp/screenshot.js</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate screenshot tool</step>
+          </steps>
+          <halt-condition>PR merge required for proper tool integration</halt-condition>
+        </mandatory-user-workflow>
+      </commit-workflow>
+    </agent-universe>
+
+    <!-- 🖱️ Agent E: Interaction Specialist (Batch 3) -->
+    <agent-universe id="agent-e-interaction" batch="3">
+      <metadata>
+        <name>Interaction Specialist</name>
+        <emoji>🖱️</emoji>
+        <specialization>browser_click, browser_type, browser_wait Tools</specialization>
+        <priority>high</priority>
+        <status>pending</status>
+        <completion-percentage>0</completion-percentage>
+      </metadata>
+
+      <target-tools>
+        <tool name="browser_click" status="pending" test-status="pending">
+          <description>Click elements using CSS selectors</description>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_click</mcp-tool-name>
+        </tool>
+        <tool name="browser_type" status="pending" test-status="pending">
+          <description>Type text into input fields with clear option</description>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_type</mcp-tool-name>
+        </tool>
+        <tool name="browser_wait" status="pending" test-status="pending">
+          <description>Wait for elements to appear with timeout handling</description>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_wait</mcp-tool-name>
+        </tool>
+      </target-tools>
+
+      <capabilities>
+        <capability>CSS selector-based element interaction (click, type, wait)</capability>
+        <capability>Input field text entry with optional clear functionality</capability>
+        <capability>Element waiting with configurable timeout handling</capability>
+        <capability>Structured error code system for consistent responses</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-e-interaction</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-e-interaction</universe-directory>
+        <branch-name>agent-e-interaction</branch-name>
+        <github-branch>agent-e-interaction</github-branch>
+        <agent-definition-file>.claude/agents/mane-interaction-specialist.md</agent-definition-file>
+        <implementation-location>chrome-extension-mvp/interactions.js</implementation-location>
+        <directories>
+          <directory>tools/interaction</directory>
+          <directory>tests/interaction</directory>
+          <directory>demos/interaction</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="test-interactions" description="Test browser interaction functionality" file=".claude/commands/test-interactions.md"/>
+        <command name="debug-websocket" description="Debug WebSocket message format issues" file=".claude/commands/debug-websocket.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>🖱️ Interaction: {feature} implementation complete</message-template>
+          <include-files>
+            <pattern>tools/interaction/**</pattern>
+            <pattern>tests/interaction/**</pattern>
+            <pattern>chrome-extension-mvp/interactions.js</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate interaction tools</step>
+          </steps>
+          <halt-condition>PR merge required for proper tool integration</halt-condition>
+        </mandatory-user-workflow>
+      </commit-workflow>
+    </agent-universe>
+
+    <!-- 🧪 Agent F: Evaluation Specialist (Batch 4) -->
+    <agent-universe id="agent-f-evaluate" batch="4">
+      <metadata>
+        <name>Evaluation Specialist</name>
+        <emoji>🧪</emoji>
+        <specialization>browser_evaluate Tool (JavaScript Execution)</specialization>
+        <priority>critical</priority>
+        <status>pending</status>
+        <blocking-issues>4</blocking-issues>
+      </metadata>
+
+      <target-tools>
+        <tool name="browser_evaluate" status="broken" severity="critical">
+          <description>Execute JavaScript in browser context with security sandboxing</description>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_evaluate</mcp-tool-name>
+          <critical-issues>
+            <issue severity="critical">Timeout errors during JavaScript execution</issue>
+            <issue severity="critical">Security sandboxing needed for untrusted code</issue>
+            <issue severity="high">Error handling incomplete for script failures</issue>
+            <issue severity="medium">Result serialization for complex objects</issue>
+          </critical-issues>
+        </tool>
+      </target-tools>
+
+      <capabilities>
+        <capability>JavaScript execution in browser context with timeout protection</capability>
+        <capability>Security sandboxing for untrusted code execution</capability>
+        <capability>Result serialization and error handling for script execution</capability>
+        <capability>Performance monitoring for long-running scripts</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-f-evaluate</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-f-evaluate</universe-directory>
+        <branch-name>agent-f-evaluate</branch-name>
+        <github-branch>agent-f-evaluate</github-branch>
+        <agent-definition-file>.claude/agents/mane-evaluation-specialist.md</agent-definition-file>
+        <directories>
+          <directory>tools/evaluate</directory>
+          <directory>tests/evaluate</directory>
+          <directory>security/sandbox</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="fix-evaluate" description="Fix browser_evaluate tool issues" file=".claude/commands/fix-evaluate.md"/>
+        <command name="implement-sandbox" description="Implement JavaScript security sandbox" file=".claude/commands/implement-sandbox.md"/>
+        <command name="test-evaluate" description="Test JavaScript execution functionality" file=".claude/commands/test-evaluate.md"/>
+        <command name="commit-evaluate" description="Stage and commit evaluation work" file=".claude/commands/commit-evaluate.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>🧪 Evaluate: {feature} implementation complete - browser_evaluate tool fixed</message-template>
+          <include-files>
+            <pattern>tools/evaluate/**</pattern>
+            <pattern>tests/evaluate/**</pattern>
+            <pattern>security/sandbox/**</pattern>
+            <pattern>chrome-extension-mvp/evaluate.js</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate evaluation tool</step>
+          </steps>
+          <halt-condition>PR merge required for proper tool integration</halt-condition>
+        </mandatory-user-workflow>
+      </commit-workflow>
+
+      <critical-requirements>
+        <requirement>Implement secure JavaScript execution sandbox</requirement>
+        <requirement>Fix timeout handling for long-running scripts</requirement>
+        <requirement>Comprehensive error handling and result serialization</requirement>
+        <requirement>Performance monitoring and optimization</requirement>
+      </critical-requirements>
+    </agent-universe>
+
+    <!-- 📊 Agent G: Audit Specialist (Batch 4) -->
+    <agent-universe id="agent-g-audit" batch="4">
+      <metadata>
+        <name>Audit Specialist</name>
+        <emoji>📊</emoji>
+        <specialization>browser_audit Tool (Lighthouse Integration)</specialization>
+        <priority>high</priority>
+        <status>pending</status>
+        <blocking-issues>2</blocking-issues>
+      </metadata>
+
+      <target-tools>
+        <tool name="browser_audit" status="broken" severity="medium">
+          <description>Run Lighthouse performance, accessibility, and SEO audits</description>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_audit</mcp-tool-name>
+          <critical-issues>
+            <issue severity="high">Returns HTML instead of JSON (parsing error)</issue>
+            <issue severity="medium">Lighthouse integration configuration needs debugging</issue>
+          </critical-issues>
+        </tool>
+      </target-tools>
+
+      <capabilities>
+        <capability>Lighthouse performance audits with detailed metrics</capability>
+        <capability>Accessibility compliance checking and recommendations</capability>
+        <capability>SEO analysis and optimization suggestions</capability>
+        <capability>JSON result formatting and proper parsing</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-g-audit</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-g-audit</universe-directory>
+        <branch-name>agent-g-audit</branch-name>
+        <github-branch>agent-g-audit</github-branch>
+        <agent-definition-file>.claude/agents/mane-audit-specialist.md</agent-definition-file>
+        <directories>
+          <directory>tools/audit</directory>
+          <directory>tests/audit</directory>
+          <directory>lighthouse-config</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="fix-audit" description="Fix browser_audit tool JSON parsing" file=".claude/commands/fix-audit.md"/>
+        <command name="test-lighthouse" description="Test Lighthouse integration" file=".claude/commands/test-lighthouse.md"/>
+        <command name="commit-audit" description="Stage and commit audit work" file=".claude/commands/commit-audit.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>📊 Audit: {feature} implementation complete - browser_audit tool fixed</message-template>
+          <include-files>
+            <pattern>tools/audit/**</pattern>
+            <pattern>tests/audit/**</pattern>
+            <pattern>lighthouse-config/**</pattern>
+            <pattern>chrome-extension-mvp/audit.js</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate audit tool</step>
+          </steps>
+          <halt-condition>PR merge required for proper tool integration</halt-condition>
+        </mandatory-user-workflow>
+      </commit-workflow>
+
+      <fix-requirements>
+        <requirement>Debug and fix JSON parsing for Lighthouse results</requirement>
+        <requirement>Optimize Lighthouse integration configuration</requirement>
+        <requirement>Implement comprehensive audit result processing</requirement>
+      </fix-requirements>
+    </agent-universe>
+
+    <!-- 🎮 Agent H: Console Detective (Batch 4) -->
+    <agent-universe id="agent-h-console" batch="4">
+      <metadata>
+        <name>Console Detective</name>
+        <emoji>🎮</emoji>
+        <specialization>browser_get_console Tool (Console Monitoring)</specialization>
+        <priority>high</priority>
+        <status>pending</status>
+        <blocking-issues>2</blocking-issues>
+      </metadata>
+
+      <target-tools>
+        <tool name="browser_get_console" status="broken" severity="medium">
+          <description>Retrieve browser console logs and errors for debugging</description>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_get_console</mcp-tool-name>
+          <critical-issues>
+            <issue severity="high">Request timeout issues in console monitoring</issue>
+            <issue severity="medium">Console log filtering and formatting optimization</issue>
+          </critical-issues>
+        </tool>
+      </target-tools>
+
+      <capabilities>
+        <capability>Real-time console log monitoring and collection</capability>
+        <capability>Error detection and filtering by severity levels</capability>
+        <capability>Log level categorization (info, warn, error, debug)</capability>
+        <capability>Performance monitoring integration with console metrics</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-h-console</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-h-console</universe-directory>
+        <branch-name>agent-h-console</branch-name>
+        <github-branch>agent-h-console</github-branch>
+        <agent-definition-file>.claude/agents/mane-console-detective.md</agent-definition-file>
+        <directories>
+          <directory>tools/console</directory>
+          <directory>tests/console</directory>
+          <directory>monitoring</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="fix-console" description="Fix browser_get_console tool timeout issues" file=".claude/commands/fix-console.md"/>
+        <command name="test-console-monitoring" description="Test console monitoring functionality" file=".claude/commands/test-console-monitoring.md"/>
+        <command name="commit-console" description="Stage and commit console work" file=".claude/commands/commit-console.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>🎮 Console: {feature} implementation complete - browser_get_console tool fixed</message-template>
+          <include-files>
+            <pattern>tools/console/**</pattern>
+            <pattern>tests/console/**</pattern>
+            <pattern>monitoring/**</pattern>
+            <pattern>chrome-extension-mvp/console.js</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate console tool</step>
+          </steps>
+          <halt-condition>PR merge required for proper tool integration</halt-condition>
+        </mandatory-user-workflow>
+      </commit-workflow>
+
+      <fix-requirements>
+        <requirement>Debug and fix request timeout issues</requirement>
+        <requirement>Optimize console log filtering and formatting</requirement>
+        <requirement>Implement real-time console monitoring</requirement>
+      </fix-requirements>
+    </agent-universe>
+
+    <!-- 📄 Agent I: Content Extractor (Batch 4) -->
+    <agent-universe id="agent-i-content" batch="4">
+      <metadata>
+        <name>Content Extractor</name>
+        <emoji>📄</emoji>
+        <specialization>browser_get_content Tool (DOM Extraction)</specialization>
+        <priority>high</priority>
+        <status>pending</status>
+        <blocking-issues>2</blocking-issues>
+      </metadata>
+
+      <target-tools>
+        <tool name="browser_get_content" status="broken" severity="high">
+          <description>Extract HTML content from page or specific elements</description>
+          <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_get_content</mcp-tool-name>
+          <critical-issues>
+            <issue severity="high">Request timeout issues during content extraction</issue>
+            <issue severity="medium">Content formatting and extraction optimization needed</issue>
+          </critical-issues>
+        </tool>
+      </target-tools>
+
+      <capabilities>
+        <capability>Full page HTML extraction with proper formatting</capability>
+        <capability>Element-specific content retrieval using CSS selectors</capability>
+        <capability>Content formatting options (HTML/text modes)</capability>
+        <capability>Large content handling and intelligent truncation</capability>
+      </capabilities>
+
+      <workspace>
+        <universe-path>agent-i-content</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-i-content</universe-directory>
+        <branch-name>agent-i-content</branch-name>
+        <github-branch>agent-i-content</github-branch>
+        <agent-definition-file>.claude/agents/mane-content-extractor.md</agent-definition-file>
+        <directories>
+          <directory>tools/content</directory>
+          <directory>tests/content</directory>
+          <directory>extraction-utils</directory>
+        </directories>
+      </workspace>
+
+      <slash-commands>
+        <command name="fix-content" description="Fix browser_get_content tool timeout issues" file=".claude/commands/fix-content.md"/>
+        <command name="test-content-extraction" description="Test content extraction functionality" file=".claude/commands/test-content-extraction.md"/>
+        <command name="commit-content" description="Stage and commit content work" file=".claude/commands/commit-content.md"/>
+      </slash-commands>
+
+      <commit-workflow>
+        <auto-commit enabled="true">
+          <trigger>work-completion</trigger>
+          <message-template>📄 Content: {feature} implementation complete - browser_get_content tool fixed</message-template>
+          <include-files>
+            <pattern>tools/content/**</pattern>
+            <pattern>tests/content/**</pattern>
+            <pattern>extraction-utils/**</pattern>
+            <pattern>chrome-extension-mvp/content.js</pattern>
+          </include-files>
+        </auto-commit>
+        <mandatory-user-workflow enabled="true">
+          <steps>
+            <step order="1">Agent commits work to dedicated branch</step>
+            <step order="2">Agent pushes branch to remote repository</step>
+            <step order="3">Agent creates Pull Request with detailed description</step>
+            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
+            <step order="5">User manually merges PR to integrate content tool</step>
+          </steps>
+          <halt-condition>PR merge required for proper tool integration</halt-condition>
+        </mandatory-user-workflow>
+      </commit-workflow>
+
+      <fix-requirements>
+        <requirement>Debug and fix request timeout issues</requirement>
+        <requirement>Optimize content extraction and formatting</requirement>
+        <requirement>Implement intelligent content truncation</requirement>
+      </fix-requirements>
+    </agent-universe>
+
+  </agent-universes>
+
+  <!-- 📦 Feature Batch Organization -->
+  <feature-batches>
+
+    <!-- Batch 1: Foundation (COMPLETED) -->
+    <batch id="batch-1" name="Foundation Infrastructure">
+      <metadata>
+        <description>Core infrastructure and architectural foundation for MANE system</description>
+        <priority>critical</priority>
+        <status>completed</status>
+        <completion-date>2025-09-20</completion-date>
+        <prerequisites>none</prerequisites>
+      </metadata>
+
+      <agents>
+        <agent-ref>agent-a-foundation</agent-ref>
+      </agents>
+
+      <features>
+        <feature name="Interface Contracts" status="completed">
+          <description>Define standard interfaces for all browser tools (IBrowserTool, IWebSocketHandler)</description>
+          <acceptance-criteria>
+            <criterion status="completed">IBrowserTool interface implemented and documented</criterion>
+            <criterion status="completed">IWebSocketHandler interface implemented and documented</criterion>
+            <criterion status="completed">All contracts validated and tested</criterion>
+          </acceptance-criteria>
+        </feature>
+
+        <feature name="Registry System" status="completed">
+          <description>Auto-discovery and registration system for zero-coordination development</description>
+          <acceptance-criteria>
+            <criterion status="completed">Registry automatically discovers tool implementations</criterion>
+            <criterion status="completed">Zero manual coordination required between agents</criterion>
+            <criterion status="completed">Integration tests validate auto-discovery functionality</criterion>
+          </acceptance-criteria>
+        </feature>
+
+        <feature name="Quality Gates Pipeline" status="completed">
+          <description>Automated quality validation and compliance checking</description>
+          <acceptance-criteria>
+            <criterion status="completed">Interface compliance validation implemented</criterion>
+            <criterion status="completed">Test coverage gates (90% minimum) enforced</criterion>
+            <criterion status="completed">Security vulnerability scanning integrated</criterion>
+          </acceptance-criteria>
+        </feature>
+      </features>
+
+      <deliverables status="completed">
+        <deliverable>Core interface contracts (IBrowserTool, IWebSocketHandler)</deliverable>
+        <deliverable>Auto-discovery registry system</deliverable>
+        <deliverable>Base class library for tool inheritance</deliverable>
+        <deliverable>Quality validation pipeline</deliverable>
+      </deliverables>
+    </batch>
+
+    <!-- Batch 2: Framework (COMPLETED) -->
+    <batch id="batch-2" name="Framework Enhancement">
+      <metadata>
+        <description>UI framework and component system enhancement for better user experience</description>
+        <priority>high</priority>
+        <status>completed</status>
+        <completion-date>2025-09-20</completion-date>
+        <prerequisites>
+          <prerequisite>batch-1</prerequisite>
+        </prerequisites>
+      </metadata>
+
+      <agents>
+        <agent-ref>agent-f-framework</agent-ref>
+      </agents>
+
+      <features>
+        <feature name="UI Component Modularization" status="completed">
+          <description>Break UI into modular, reusable components for independent development</description>
+        </feature>
+
+        <feature name="Responsive Design Enhancement" status="completed">
+          <description>Enhance responsive design and visual polish across all screen sizes</description>
+        </feature>
+
+        <feature name="Real-time Status Indicators" status="completed">
+          <description>Implement real-time status and progress indicators for all operations</description>
+        </feature>
+      </features>
+    </batch>
+
+    <!-- Batch 3: Core Tools (IN PROGRESS) -->
+    <batch id="batch-3" name="Core Tools">
+      <metadata>
+        <description>Navigation, screenshot, and interaction tools - the foundation of browser automation</description>
+        <priority>high</priority>
+        <status>in-progress</status>
+        <completion-percentage>75</completion-percentage>
+        <prerequisites>
+          <prerequisite>batch-1</prerequisite>
+          <prerequisite>batch-2</prerequisite>
+        </prerequisites>
+      </metadata>
+
+      <agents>
+        <agent-ref>agent-g-navigation</agent-ref>
+        <agent-ref>agent-h-screenshot</agent-ref>
+        <agent-ref>agent-i-interaction</agent-ref>
+      </agents>
+
+      <features>
+        <feature name="Navigation Tool" status="completed">
+          <description>Reliable browser navigation with comprehensive security validation</description>
+          <target-tools>
+            <tool>browser_navigate</tool>
+          </target-tools>
+          <acceptance-criteria>
+            <criterion status="completed">URL validation and normalization implemented</criterion>
+            <criterion status="completed">Security protocol filtering (blocks dangerous URLs)</criterion>
+            <criterion status="completed">Timeout handling with AbortController</criterion>
+            <criterion status="completed">Real-time navigation status updates</criterion>
+          </acceptance-criteria>
+        </feature>
+
+        <feature name="Screenshot Tool" status="partial">
+          <description>Intelligent screenshot capture with smart naming and optimization</description>
+          <target-tools>
+            <tool>browser_screenshot</tool>
+          </target-tools>
+          <acceptance-criteria>
+            <criterion status="completed">Full page screenshot capture</criterion>
+            <criterion status="completed">Element-specific screenshots using selectors</criterion>
+            <criterion status="completed">Smart filename generation</criterion>
+            <criterion status="in-progress">WebSocket timeout optimization</criterion>
+          </acceptance-criteria>
+          <issues>
+            <issue severity="medium">Timeout optimization needed for large screenshots</issue>
+          </issues>
+        </feature>
+
+        <feature name="Interaction Tools" status="partial">
+          <description>Element interaction capabilities (click, type, wait)</description>
+          <target-tools>
+            <tool>browser_click</tool>
+            <tool>browser_type</tool>
+            <tool>browser_wait</tool>
+          </target-tools>
+          <acceptance-criteria>
+            <criterion status="completed">CSS selector-based element interaction</criterion>
+            <criterion status="completed">Input field text entry with clear option</criterion>
+            <criterion status="completed">Element waiting with timeout handling</criterion>
+            <criterion status="in-progress">WebSocket message format debugging</criterion>
+          </acceptance-criteria>
+          <issues>
+            <issue severity="medium">WebSocket message format validation needed</issue>
+          </issues>
+        </feature>
+      </features>
+
+      <parallel-execution enabled="true">
+        <reason>Independent tool implementations with no shared dependencies</reason>
+        <coordination-mechanism>interface-contracts</coordination-mechanism>
+        <isolation-level>complete</isolation-level>
+      </parallel-execution>
+
+      <integration-status>
+        <ready-for-integration>agent-g-navigation</ready-for-integration>
+        <needs-debugging>agent-h-screenshot</needs-debugging>
+        <needs-debugging>agent-i-interaction</needs-debugging>
+      </integration-status>
+    </batch>
+
+    <!-- Batch 4: Advanced Tools (PENDING) -->
+    <batch id="batch-4" name="Advanced Tools">
+      <metadata>
+        <description>JavaScript execution, auditing, console monitoring, content extraction - the power tools</description>
+        <priority>critical</priority>
+        <status>pending</status>
+        <blocking-issues>10</blocking-issues>
+        <prerequisites>
+          <prerequisite>batch-3</prerequisite>
+        </prerequisites>
+      </metadata>
+
+      <agents>
+        <agent-ref>agent-b-evaluate</agent-ref>
+        <agent-ref>agent-c-audit</agent-ref>
+        <agent-ref>agent-d-console</agent-ref>
+        <agent-ref>agent-e-content</agent-ref>
+      </agents>
+
+      <features>
+        <feature name="JavaScript Execution" status="broken" priority="critical">
+          <description>Secure JavaScript execution in browser context with sandboxing</description>
+          <target-tools>
+            <tool>browser_evaluate</tool>
+          </target-tools>
+          <critical-issues>
+            <issue severity="critical">Timeout errors during execution - security sandbox needed</issue>
+            <issue severity="high">Error handling incomplete for script failures</issue>
+          </critical-issues>
+          <acceptance-criteria>
+            <criterion status="pending">Secure JavaScript execution sandbox</criterion>
+            <criterion status="pending">Timeout handling for long-running scripts</criterion>
+            <criterion status="pending">Comprehensive error handling and result serialization</criterion>
+          </acceptance-criteria>
+        </feature>
+
+        <feature name="Performance Auditing" status="broken" priority="high">
+          <description>Lighthouse integration for comprehensive performance analysis</description>
+          <target-tools>
+            <tool>browser_audit</tool>
+          </target-tools>
+          <critical-issues>
+            <issue severity="high">Returns HTML instead of JSON (parsing error)</issue>
+          </critical-issues>
+          <acceptance-criteria>
+            <criterion status="pending">Lighthouse performance audits working</criterion>
+            <criterion status="pending">JSON result parsing fixed</criterion>
+            <criterion status="pending">Accessibility and SEO audits functional</criterion>
+          </acceptance-criteria>
+        </feature>
+
+        <feature name="Console Monitoring" status="broken" priority="high">
+          <description>Real-time console log and error monitoring for debugging</description>
+          <target-tools>
+            <tool>browser_get_console</tool>
+          </target-tools>
+          <critical-issues>
+            <issue severity="high">Request timeout issues in console monitoring</issue>
+          </critical-issues>
+          <acceptance-criteria>
+            <criterion status="pending">Real-time console log monitoring</criterion>
+            <criterion status="pending">Error detection and filtering</criterion>
+            <criterion status="pending">Performance monitoring integration</criterion>
+          </acceptance-criteria>
+        </feature>
+
+        <feature name="Content Extraction" status="broken" priority="high">
+          <description>HTML and text content extraction capabilities</description>
+          <target-tools>
+            <tool>browser_get_content</tool>
+          </target-tools>
+          <critical-issues>
+            <issue severity="high">Request timeout issues during content extraction</issue>
+          </critical-issues>
+          <acceptance-criteria>
+            <criterion status="pending">Full page HTML extraction working</criterion>
+            <criterion status="pending">Element-specific content retrieval</criterion>
+            <criterion status="pending">Content formatting optimization</criterion>
+          </acceptance-criteria>
+        </feature>
+      </features>
+
+      <parallel-execution enabled="true">
+        <reason>Independent tool fixes with isolated debugging requirements</reason>
+        <coordination-mechanism>interface-contracts</coordination-mechanism>
+        <isolation-level>complete</isolation-level>
+      </parallel-execution>
+
+      <critical-blockers>
+        <blocker priority="critical">JavaScript execution security sandbox implementation</blocker>
+        <blocker priority="high">WebSocket timeout handling optimization</blocker>
+        <blocker priority="high">Lighthouse integration JSON parsing fix</blocker>
+        <blocker priority="medium">Console monitoring performance optimization</blocker>
+      </critical-blockers>
+    </batch>
+
+  </feature-batches>
+
+  <!-- 🔌 Integration Configuration -->
+  <integration-config>
+
+    <!-- Batch-to-Universe Mappings -->
+    <batch-mappings>
+      <batch-mapping batch="1" strategy="foundation-first">
+        <universes>
+          <universe>agent-a-foundation</universe>
+        </universes>
+        <integration-order>sequential</integration-order>
+        <validation-requirements>
+          <requirement>Interface contracts validated and documented</requirement>
+          <requirement>Registry system functional with auto-discovery</requirement>
+          <requirement>Quality gates operational and tested</requirement>
+        </validation-requirements>
+        <success-criteria>
+          <criterion>All interface contracts implemented</criterion>
+          <criterion>Registry system passes integration tests</criterion>
+          <criterion>Quality gates validate all components</criterion>
+        </success-criteria>
+      </batch-mapping>
+
+      <batch-mapping batch="2" strategy="framework-enhancement">
+        <universes>
+          <universe>agent-f-framework</universe>
+        </universes>
+        <integration-order>after-foundation</integration-order>
+        <dependencies>
+          <dependency>batch-1</dependency>
+        </dependencies>
+        <validation-requirements>
+          <requirement>UI components modularized and responsive</requirement>
+          <requirement>Status indicators functional</requirement>
+          <requirement>Framework enhancement complete</requirement>
+        </validation-requirements>
+      </batch-mapping>
+
+      <batch-mapping batch="3" strategy="parallel-core-tools">
+        <universes>
+          <universe>agent-g-navigation</universe>
+          <universe>agent-h-screenshot</universe>
+          <universe>agent-i-interaction</universe>
+        </universes>
+        <integration-order>parallel</integration-order>
+        <validation-strategy>individual-then-batch</validation-strategy>
+        <dependencies>
+          <dependency>batch-1</dependency>
+          <dependency>batch-2</dependency>
+        </dependencies>
+        <integration-phases>
+          <phase name="individual-validation">
+            <description>Test each tool individually before batch integration</description>
+            <tools>
+              <tool name="browser_navigate" status="ready" confidence="high"/>
+              <tool name="browser_screenshot" status="debugging" confidence="medium"/>
+              <tool name="browser_click" status="debugging" confidence="medium"/>
+              <tool name="browser_type" status="debugging" confidence="medium"/>
+              <tool name="browser_wait" status="debugging" confidence="medium"/>
+            </tools>
+          </phase>
+          <phase name="batch-integration">
+            <description>Integrate all core tools after individual validation</description>
+            <prerequisites>
+              <prerequisite>All individual tools validated</prerequisite>
+              <prerequisite>WebSocket communication issues resolved</prerequisite>
+            </prerequisites>
+          </phase>
+        </integration-phases>
+      </batch-mapping>
+
+      <batch-mapping batch="4" strategy="parallel-advanced-tools">
+        <universes>
+          <universe>agent-b-evaluate</universe>
+          <universe>agent-c-audit</universe>
+          <universe>agent-d-console</universe>
+          <universe>agent-e-content</universe>
+        </universes>
+        <integration-order>parallel</integration-order>
+        <validation-strategy>critical-path-first</validation-strategy>
+        <dependencies>
+          <dependency>batch-3</dependency>
+        </dependencies>
+        <critical-path>
+          <tool name="browser_evaluate" priority="critical">
+            <reason>Most complex implementation requiring security sandbox</reason>
+          </tool>
+          <tool name="browser_get_content" priority="high">
+            <reason>High usage tool for content analysis</reason>
+          </tool>
+          <tool name="browser_audit" priority="medium">
+            <reason>Performance analysis and optimization</reason>
+          </tool>
+          <tool name="browser_get_console" priority="medium">
+            <reason>Debugging and monitoring capabilities</reason>
+          </tool>
+        </critical-path>
+      </batch-mapping>
+    </batch-mappings>
+
+    <!-- Integration Strategies -->
+    <integration-strategies>
+      <strategy name="registry-based" default="true">
+        <description>Use auto-discovery registry for zero-coordination integration</description>
+        <suitable-for>
+          <batch>1</batch>
+          <batch>2</batch>
+          <batch>3</batch>
+          <batch>4</batch>
+        </suitable-for>
+        <validation-steps>
+          <step>Registry discovery validation</step>
+          <step>Interface compliance checking</step>
+          <step>Auto-integration testing</step>
+          <step>Quality gate validation</step>
+        </validation-steps>
+        <benefits>
+          <benefit>Zero manual coordination required</benefit>
+          <benefit>Automatic tool discovery and registration</benefit>
+          <benefit>Consistent interface compliance</benefit>
+        </benefits>
+        <mandatory-workflow>
+          <pre-integration-requirements>
+            <requirement>All batch agents must commit and push their work</requirement>
+            <requirement>Pull Requests must be created for each agent's work</requirement>
+            <requirement>User must manually merge PRs before next batch deployment</requirement>
+            <requirement>New worktrees must be created AFTER merge completion</requirement>
+          </pre-integration-requirements>
+          <workflow-enforcement>
+            <halt-on-missing-pr>true</halt-on-missing-pr>
+            <require-user-confirmation>true</require-user-confirmation>
+            <validate-merge-status>true</validate-merge-status>
+          </workflow-enforcement>
+        </mandatory-workflow>
+      </strategy>
+
+      <strategy name="validation-first">
+        <description>Test each universe individually before batch integration</description>
+        <suitable-for>
+          <batch>3</batch>
+          <batch>4</batch>
+        </suitable-for>
+        <validation-steps>
+          <step>Individual universe testing</step>
+          <step>Tool-specific validation</step>
+          <step>WebSocket communication testing</step>
+          <step>Integration readiness assessment</step>
+          <step>Batch integration execution</step>
+        </validation-steps>
+        <benefits>
+          <benefit>Isolates issues to specific agents</benefit>
+          <benefit>Reduces integration complexity</benefit>
+          <benefit>Enables targeted debugging</benefit>
+        </benefits>
+      </strategy>
+
+      <strategy name="smart-merge">
+        <description>AI-driven conflict resolution with intelligent merging</description>
+        <suitable-for>
+          <scenario>Conflicting implementations detected</scenario>
+          <scenario>Complex dependency resolution required</scenario>
+          <scenario>Multiple agents modifying shared components</scenario>
+        </suitable-for>
+        <validation-steps>
+          <step>Conflict detection and analysis</step>
+          <step>AI-powered resolution strategy selection</step>
+          <step>Intelligent merge execution</step>
+          <step>Merged result validation and testing</step>
+        </validation-steps>
+      </strategy>
+    </integration-strategies>
+
+    <!-- Quality Gates for Integration -->
+    <quality-gates>
+      <gate name="interface-compliance" required="true">
+        <description>Validate all implementations follow IBrowserTool interface contracts</description>
+        <validation-command>npm run validate:interfaces</validation-command>
+        <applies-to>all-batches</applies-to>
+        <failure-action>block-integration</failure-action>
+      </gate>
+
+      <gate name="test-coverage" required="true">
+        <description>Ensure minimum test coverage requirements are met</description>
+        <validation-command>npm run test:coverage</validation-command>
+        <minimum-threshold>90</minimum-threshold>
+        <applies-to>all-batches</applies-to>
+        <failure-action>block-integration</failure-action>
+      </gate>
+
+      <gate name="security-scan" required="true">
+        <description>Security vulnerability validation and compliance</description>
+        <validation-command>npm audit --audit-level high</validation-command>
+        <applies-to>all-batches</applies-to>
+        <failure-action>block-integration</failure-action>
+      </gate>
+
+      <gate name="mcp-protocol-compliance" required="true">
+        <description>MCP protocol 2025-06-18 compliance validation</description>
+        <validation-command>npm run validate:mcp-protocol</validation-command>
+        <applies-to>all-batches</applies-to>
+        <failure-action>block-integration</failure-action>
+      </gate>
+
+      <gate name="websocket-communication" required="true">
+        <description>WebSocket communication validation and timeout testing</description>
+        <validation-command>npm run test:websocket-communication</validation-command>
+        <applies-to>
+          <batch>3</batch>
+          <batch>4</batch>
+        </applies-to>
+        <failure-action>warn-and-continue</failure-action>
+      </gate>
+
+      <gate name="performance-regression" required="false">
+        <description>Performance regression detection and benchmarking</description>
+        <validation-command>npm run test:performance-benchmarks</validation-command>
+        <applies-to>
+          <batch>3</batch>
+          <batch>4</batch>
+        </applies-to>
+        <failure-action>warn-and-continue</failure-action>
+      </gate>
+    </quality-gates>
+
+    <!-- Rollback and Recovery Configuration -->
+    <rollback-config>
+      <automatic-rollback enabled="true">
+        <triggers>
+          <trigger>Critical quality gate failure</trigger>
+          <trigger>Integration test failure rate > 25%</trigger>
+          <trigger>Security vulnerability detection</trigger>
+          <trigger>MCP protocol compliance failure</trigger>
+        </triggers>
+        <rollback-strategy>restore-from-backup</rollback-strategy>
+      </automatic-rollback>
+
+      <backup-strategy>
+        <create-backup>before-integration</create-backup>
+        <backup-retention>7-days</backup-retention>
+        <backup-location>../mane-backups</backup-location>
+        <backup-verification>enabled</backup-verification>
+      </backup-strategy>
+
+      <recovery-procedures>
+        <procedure name="quality-gate-failure">
+          <steps>
+            <step>Identify failed quality gate</step>
+            <step>Restore from backup</step>
+            <step>Analyze failure cause</step>
+            <step>Fix issue in individual universe</step>
+            <step>Re-run validation</step>
+          </steps>
+        </procedure>
+        <procedure name="integration-failure">
+          <steps>
+            <step>Restore from backup</step>
+            <step>Re-run individual universe tests</step>
+            <step>Identify integration conflict</step>
+            <step>Apply smart-merge strategy</step>
+            <step>Validate merged result</step>
+          </steps>
+        </procedure>
+      </recovery-procedures>
+    </rollback-config>
+
+    <!-- User Testing Configuration -->
+    <user-testing-config>
+      <generate-testing-checklist enabled="true">
+        <format>markdown</format>
+        <include-debug-guidance>true</include-debug-guidance>
+        <testing-duration-estimate>true</testing-duration-estimate>
+      </generate-testing-checklist>
+
+      <testing-categories>
+        <category name="core-functionality">
+          <description>Basic tool operation validation</description>
+          <applies-to>all-tools</applies-to>
+        </category>
+        <category name="error-handling">
+          <description>Error scenarios and recovery testing</description>
+          <applies-to>all-tools</applies-to>
+        </category>
+        <category name="performance">
+          <description>Performance and timeout validation</description>
+          <applies-to>
+            <tool>browser_screenshot</tool>
+            <tool>browser_evaluate</tool>
+            <tool>browser_get_content</tool>
+          </applies-to>
+        </category>
+        <category name="security">
+          <description>Security validation and sandboxing</description>
+          <applies-to>
+            <tool>browser_navigate</tool>
+            <tool>browser_evaluate</tool>
+          </applies-to>
+        </category>
+      </testing-categories>
+    </user-testing-config>
+
+  </integration-config>
+
+</mane-project>

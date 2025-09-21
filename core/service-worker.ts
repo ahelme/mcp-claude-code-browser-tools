@@ -9,8 +9,8 @@
  * For: MANE (Modular Agentic Non-linear Engineering)
  */
 
-import http from 'http';
-import url from 'url';
+import http from "http";
+import url from "url";
 import {
   IHttpBridge,
   IHttpRequest,
@@ -19,13 +19,16 @@ import {
   IBridgeStatus,
   ILogger,
   IMetrics,
-  ErrorType
-} from './interfaces.js';
+  ErrorType,
+} from "./interfaces.js";
 
 /**
  * HTTP request handler type
  */
-type HttpRequestHandler = (req: http.IncomingMessage, res: http.ServerResponse) => Promise<void>;
+type HttpRequestHandler = (
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+) => Promise<void>;
 
 /**
  * Route definition
@@ -56,7 +59,7 @@ export class HttpBridge implements IHttpBridge {
 
   constructor(
     private logger: ILogger,
-    private metrics: IMetrics
+    private metrics: IMetrics,
   ) {
     this.setupDefaultRoutes();
   }
@@ -66,7 +69,7 @@ export class HttpBridge implements IHttpBridge {
    */
   async start(port: number): Promise<void> {
     if (this.server) {
-      throw new Error('Server is already running');
+      throw new Error("Server is already running");
     }
 
     this.logger.info(`Starting HTTP bridge on port ${port}`);
@@ -74,10 +77,10 @@ export class HttpBridge implements IHttpBridge {
     return new Promise((resolve, reject) => {
       this.server = http.createServer(this.handleRequest.bind(this));
 
-      this.server.on('error', (error: Error & { code?: string }) => {
-        this.logger.error('HTTP server error', error);
+      this.server.on("error", (error: Error & { code?: string }) => {
+        this.logger.error("HTTP server error", error);
 
-        if (error.code === 'EADDRINUSE') {
+        if (error.code === "EADDRINUSE") {
           reject(new Error(`Port ${port} is already in use`));
         } else {
           reject(error);
@@ -89,7 +92,9 @@ export class HttpBridge implements IHttpBridge {
         this.startTime = Date.now();
 
         this.logger.info(`HTTP bridge started successfully on port ${port}`);
-        this.metrics.increment('http_bridge.started', { port: port.toString() });
+        this.metrics.increment("http_bridge.started", {
+          port: port.toString(),
+        });
 
         resolve();
       });
@@ -104,16 +109,16 @@ export class HttpBridge implements IHttpBridge {
       return;
     }
 
-    this.logger.info('Stopping HTTP bridge');
+    this.logger.info("Stopping HTTP bridge");
 
     return new Promise((resolve, reject) => {
       this.server!.close((error) => {
         if (error) {
-          this.logger.error('Error stopping HTTP bridge', error);
+          this.logger.error("Error stopping HTTP bridge", error);
           reject(error);
         } else {
-          this.logger.info('HTTP bridge stopped successfully');
-          this.metrics.increment('http_bridge.stopped');
+          this.logger.info("HTTP bridge stopped successfully");
+          this.metrics.increment("http_bridge.stopped");
           this.server = null;
           this.currentPort = 0;
           resolve();
@@ -127,7 +132,7 @@ export class HttpBridge implements IHttpBridge {
    */
   registerRoute(path: string, handler: IRouteHandler): void {
     // Support both GET and POST for flexibility
-    const methods = ['GET', 'POST'];
+    const methods = ["GET", "POST"];
 
     for (const method of methods) {
       const routeKey = `${method}:${path}`;
@@ -135,7 +140,7 @@ export class HttpBridge implements IHttpBridge {
     }
 
     this.logger.debug(`Registered route: ${path}`, { methods });
-    this.metrics.increment('http_bridge.route_registered', { path });
+    this.metrics.increment("http_bridge.route_registered", { path });
   }
 
   /**
@@ -149,7 +154,7 @@ export class HttpBridge implements IHttpBridge {
       port: this.currentPort,
       uptime,
       requestCount: this.requestCount,
-      errorCount: this.errorCount
+      errorCount: this.errorCount,
     };
   }
 
@@ -160,7 +165,10 @@ export class HttpBridge implements IHttpBridge {
   /**
    * Handle incoming HTTP requests
    */
-  private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+  private async handleRequest(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+  ): Promise<void> {
     this.requestCount++;
     const startTime = Date.now();
 
@@ -168,20 +176,20 @@ export class HttpBridge implements IHttpBridge {
     this.setCorsHeaders(res);
 
     // Handle preflight requests
-    if (req.method === 'OPTIONS') {
+    if (req.method === "OPTIONS") {
       res.writeHead(200);
       res.end();
       return;
     }
 
     try {
-      const parsedUrl = url.parse(req.url || '', true);
-      const path = parsedUrl.pathname || '/';
-      const method = req.method || 'GET';
+      const parsedUrl = url.parse(req.url || "", true);
+      const path = parsedUrl.pathname || "/";
+      const method = req.method || "GET";
 
       this.logger.debug(`${method} ${path}`, {
-        userAgent: req.headers['user-agent'],
-        contentType: req.headers['content-type']
+        userAgent: req.headers["user-agent"],
+        contentType: req.headers["content-type"],
       });
 
       // Find matching route
@@ -202,7 +210,7 @@ export class HttpBridge implements IHttpBridge {
         path,
         headers: req.headers as Record<string, string>,
         body,
-        query: parsedUrl.query as Record<string, string>
+        query: parsedUrl.query as Record<string, string>,
       };
 
       // Execute route handler
@@ -212,28 +220,27 @@ export class HttpBridge implements IHttpBridge {
       await this.sendResponse(res, response);
 
       const duration = Date.now() - startTime;
-      this.metrics.timing('http_bridge.request.duration', duration, {
+      this.metrics.timing("http_bridge.request.duration", duration, {
         method,
         path,
-        status: response.statusCode.toString()
+        status: response.statusCode.toString(),
       });
-
     } catch (error) {
       this.errorCount++;
 
-      this.logger.error('Request handling error', {
+      this.logger.error("Request handling error", {
         url: req.url,
         method: req.method,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
 
       await this.sendError(res, error);
 
       const duration = Date.now() - startTime;
-      this.metrics.timing('http_bridge.request.duration', duration, {
-        method: req.method || 'unknown',
-        path: 'error',
-        status: '500'
+      this.metrics.timing("http_bridge.request.duration", duration, {
+        method: req.method || "unknown",
+        path: "error",
+        status: "500",
       });
     }
   }
@@ -242,69 +249,210 @@ export class HttpBridge implements IHttpBridge {
    * Set CORS headers for browser extension access
    */
   private setCorsHeaders(res: http.ServerResponse): void {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Max-Age', '86400');
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
+    res.setHeader("Access-Control-Max-Age", "86400");
   }
 
   /**
-   * Parse request body based on content type
+   * Parse request body based on content type with security validation
    */
   private async parseRequestBody(req: http.IncomingMessage): Promise<any> {
     return new Promise((resolve, reject) => {
-      let body = '';
+      let body = "";
+      const maxBodySize = 10 * 1024 * 1024; // 10MB limit
+      let receivedBytes = 0;
 
-      req.on('data', (chunk) => {
-        body += chunk.toString();
+      req.on("data", (chunk) => {
+        receivedBytes += chunk.length;
+
+        // Prevent DoS attacks with large payloads
+        if (receivedBytes > maxBodySize) {
+          reject(new Error("Request body too large"));
+          return;
+        }
+
+        body += chunk.toString("utf8");
       });
 
-      req.on('end', () => {
+      req.on("end", () => {
         try {
-          const contentType = req.headers['content-type'] || '';
+          const contentType = req.headers["content-type"] || "";
 
-          if (contentType.includes('application/json')) {
-            resolve(body ? JSON.parse(body) : {});
-          } else if (contentType.includes('application/x-www-form-urlencoded')) {
+          // Validate content type
+          if (!this.isValidContentType(contentType)) {
+            reject(new Error(`Unsupported content type: ${contentType}`));
+            return;
+          }
+
+          if (contentType.includes("application/json")) {
+            if (!body.trim()) {
+              resolve({});
+              return;
+            }
+
+            // Validate JSON before parsing
+            if (!this.isValidJson(body)) {
+              reject(new Error("Invalid JSON format"));
+              return;
+            }
+
+            const parsed = JSON.parse(body);
+
+            // Sanitize parsed object
+            const sanitized = this.sanitizeObject(parsed);
+            resolve(sanitized);
+          } else if (
+            contentType.includes("application/x-www-form-urlencoded")
+          ) {
             const parsed = new URLSearchParams(body);
             const result: Record<string, string> = {};
+
             for (const [key, value] of parsed) {
-              result[key] = value;
+              // Sanitize form data
+              const sanitizedKey = this.sanitizeString(key);
+              const sanitizedValue = this.sanitizeString(value);
+
+              if (sanitizedKey && sanitizedValue !== null) {
+                result[sanitizedKey] = sanitizedValue;
+              }
             }
             resolve(result);
           } else {
-            resolve(body);
+            // For other content types, sanitize as string
+            const sanitized = this.sanitizeString(body);
+            resolve(sanitized);
           }
         } catch (error) {
-          reject(new Error(`Invalid request body: ${error instanceof Error ? error.message : String(error)}`));
+          reject(
+            new Error(
+              `Request body parsing failed: ${error instanceof Error ? error.message : String(error)}`,
+            ),
+          );
         }
       });
 
-      req.on('error', reject);
+      req.on("error", reject);
     });
+  }
+
+  /**
+   * Validate content type against allowed types
+   */
+  private isValidContentType(contentType: string): boolean {
+    const allowedTypes = [
+      "application/json",
+      "application/x-www-form-urlencoded",
+      "text/plain",
+      "text/html",
+    ];
+
+    return (
+      allowedTypes.some((type) => contentType.includes(type)) || !contentType
+    );
+  }
+
+  /**
+   * Validate JSON string format
+   */
+  private isValidJson(str: string): boolean {
+    try {
+      JSON.parse(str);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Sanitize object by removing dangerous properties and values
+   */
+  private sanitizeObject(obj: any): any {
+    if (typeof obj !== "object" || obj === null) {
+      return this.sanitizeString(String(obj));
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.sanitizeObject(item));
+    }
+
+    const sanitized: any = {};
+    const dangerousKeys = ["__proto__", "constructor", "prototype"];
+
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip dangerous keys
+      if (dangerousKeys.includes(key)) {
+        continue;
+      }
+
+      const sanitizedKey = this.sanitizeString(key);
+      if (sanitizedKey) {
+        sanitized[sanitizedKey] = this.sanitizeObject(value);
+      }
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * Sanitize string input by removing dangerous characters and patterns
+   */
+  private sanitizeString(input: string): string | null {
+    if (typeof input !== "string") {
+      return String(input);
+    }
+
+    // Remove null bytes and control characters
+    let sanitized = input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+
+    // Remove script tags and javascript: URLs
+    sanitized = sanitized.replace(/<script[^>]*>.*?<\/script>/gi, "");
+    sanitized = sanitized.replace(/javascript:/gi, "");
+    sanitized = sanitized.replace(/on\w+\s*=/gi, "");
+
+    // Remove SQL injection patterns
+    sanitized = sanitized.replace(
+      /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b)/gi,
+      "",
+    );
+
+    // Limit length to prevent DoS
+    if (sanitized.length > 10000) {
+      sanitized = sanitized.substring(0, 10000);
+    }
+
+    return sanitized;
   }
 
   /**
    * Send HTTP response
    */
-  private async sendResponse(res: http.ServerResponse, response: IHttpResponse): Promise<void> {
+  private async sendResponse(
+    res: http.ServerResponse,
+    response: IHttpResponse,
+  ): Promise<void> {
     // Set headers
     for (const [key, value] of Object.entries(response.headers)) {
       res.setHeader(key, value);
     }
 
     // Set content type if not already set
-    if (!response.headers['Content-Type']) {
-      res.setHeader('Content-Type', response.contentType || 'application/json');
+    if (!response.headers["Content-Type"]) {
+      res.setHeader("Content-Type", response.contentType || "application/json");
     }
 
     // Write response
     res.writeHead(response.statusCode);
 
     if (response.body !== undefined) {
-      const bodyStr = typeof response.body === 'string'
-        ? response.body
-        : JSON.stringify(response.body);
+      const bodyStr =
+        typeof response.body === "string"
+          ? response.body
+          : JSON.stringify(response.body);
       res.end(bodyStr);
     } else {
       res.end();
@@ -314,16 +462,19 @@ export class HttpBridge implements IHttpBridge {
   /**
    * Send 404 Not Found response
    */
-  private async sendNotFound(res: http.ServerResponse, path: string): Promise<void> {
+  private async sendNotFound(
+    res: http.ServerResponse,
+    path: string,
+  ): Promise<void> {
     const response: IHttpResponse = {
       statusCode: 404,
       headers: {},
-      contentType: 'application/json',
+      contentType: "application/json",
       body: {
-        error: 'Not Found',
+        error: "Not Found",
         message: `Route not found: ${path}`,
-        availableRoutes: Array.from(this.routes.keys())
-      }
+        availableRoutes: Array.from(this.routes.keys()),
+      },
     };
 
     await this.sendResponse(res, response);
@@ -332,19 +483,23 @@ export class HttpBridge implements IHttpBridge {
   /**
    * Send error response
    */
-  private async sendError(res: http.ServerResponse, error: unknown): Promise<void> {
-    const statusCode = error instanceof Error && 'statusCode' in error
-      ? (error as any).statusCode
-      : 500;
+  private async sendError(
+    res: http.ServerResponse,
+    error: unknown,
+  ): Promise<void> {
+    const statusCode =
+      error instanceof Error && "statusCode" in error
+        ? (error as any).statusCode
+        : 500;
 
     const response: IHttpResponse = {
       statusCode,
       headers: {},
-      contentType: 'application/json',
+      contentType: "application/json",
       body: {
-        error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : String(error)
-      }
+        error: "Internal Server Error",
+        message: error instanceof Error ? error.message : String(error),
+      },
     };
 
     await this.sendResponse(res, response);
@@ -355,13 +510,13 @@ export class HttpBridge implements IHttpBridge {
    */
   private setupDefaultRoutes(): void {
     // Health check endpoint
-    this.registerRoute('/health', new HealthCheckHandler(this));
+    this.registerRoute("/health", new HealthCheckHandler(this));
 
     // Status endpoint
-    this.registerRoute('/status', new StatusHandler(this));
+    this.registerRoute("/status", new StatusHandler(this));
 
     // Routes listing endpoint
-    this.registerRoute('/routes', new RoutesHandler(this));
+    this.registerRoute("/routes", new RoutesHandler(this));
   }
 
   /**
@@ -388,12 +543,12 @@ class HealthCheckHandler implements IRouteHandler {
     return {
       statusCode: status.running ? 200 : 503,
       headers: {},
-      contentType: 'application/json',
+      contentType: "application/json",
       body: {
-        status: status.running ? 'healthy' : 'unhealthy',
+        status: status.running ? "healthy" : "unhealthy",
         uptime: status.uptime,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     };
   }
 }
@@ -410,13 +565,14 @@ class StatusHandler implements IRouteHandler {
     return {
       statusCode: 200,
       headers: {},
-      contentType: 'application/json',
+      contentType: "application/json",
       body: {
         ...status,
-        errorRate: status.requestCount > 0 ? status.errorCount / status.requestCount : 0,
+        errorRate:
+          status.requestCount > 0 ? status.errorCount / status.requestCount : 0,
         averageUptime: status.uptime,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     };
   }
 }
@@ -431,11 +587,11 @@ class RoutesHandler implements IRouteHandler {
     return {
       statusCode: 200,
       headers: {},
-      contentType: 'application/json',
+      contentType: "application/json",
       body: {
         routes: this.bridge.getRoutes(),
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     };
   }
 }
@@ -451,7 +607,7 @@ export class StaticHandler implements IRouteHandler {
   constructor(
     private response: any,
     private statusCode = 200,
-    private contentType = 'application/json'
+    private contentType = "application/json",
   ) {}
 
   async handle(request: IHttpRequest): Promise<IHttpResponse> {
@@ -459,7 +615,7 @@ export class StaticHandler implements IRouteHandler {
       statusCode: this.statusCode,
       headers: {},
       contentType: this.contentType,
-      body: this.response
+      body: this.response,
     };
   }
 }
@@ -470,7 +626,7 @@ export class StaticHandler implements IRouteHandler {
 export class ProxyHandler implements IRouteHandler {
   constructor(
     private targetUrl: string,
-    private logger: ILogger
+    private logger: ILogger,
   ) {}
 
   async handle(request: IHttpRequest): Promise<IHttpResponse> {
@@ -482,22 +638,22 @@ export class ProxyHandler implements IRouteHandler {
       return {
         statusCode: 200,
         headers: {},
-        contentType: 'application/json',
+        contentType: "application/json",
         body: {
           proxied: true,
           target: this.targetUrl,
-          originalRequest: request
-        }
+          originalRequest: request,
+        },
       };
     } catch (error) {
       return {
         statusCode: 502,
         headers: {},
-        contentType: 'application/json',
+        contentType: "application/json",
         body: {
-          error: 'Bad Gateway',
-          message: `Proxy request failed: ${error instanceof Error ? error.message : String(error)}`
-        }
+          error: "Bad Gateway",
+          message: `Proxy request failed: ${error instanceof Error ? error.message : String(error)}`,
+        },
       };
     }
   }
@@ -510,24 +666,28 @@ export function jsonResponse(data: any, statusCode = 200): IHttpResponse {
   return {
     statusCode,
     headers: {},
-    contentType: 'application/json',
-    body: data
+    contentType: "application/json",
+    body: data,
   };
 }
 
 /**
  * Error response helper
  */
-export function errorResponse(message: string, statusCode = 500, details?: any): IHttpResponse {
+export function errorResponse(
+  message: string,
+  statusCode = 500,
+  details?: any,
+): IHttpResponse {
   return {
     statusCode,
     headers: {},
-    contentType: 'application/json',
+    contentType: "application/json",
     body: {
       error: true,
       message,
       details,
-      timestamp: Date.now()
-    }
+      timestamp: Date.now(),
+    },
   };
 }

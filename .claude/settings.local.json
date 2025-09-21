@@ -33,7 +33,10 @@
       "Bash(npx:*)",
       "WebFetch(domain:spec.modelcontextprotocol.io)",
       "Bash(export MCP_HTTP_BRIDGE_PORT=3024 MCP_DEBUG=1)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git branch:*)",
+      "Read(//Users/lennox/development/mane-universes/**)",
+      "Bash(make:*)"
     ],
     "deny": [],
     "ask": []

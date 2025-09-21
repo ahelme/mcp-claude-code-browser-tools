@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Browser Tools Configuration Schema",
+  "description": "Environment configuration schema for MANE Browser Tools",
+  "type": "object",
+  "properties": {
+    "BROWSER_TOOLS_PORT": {
+      "type": "string",
+      "pattern": "^[0-9]{4,5}$",
+      "default": "3024",
+      "description": "Port for HTTP bridge server"
+    },
+    "MCP_DEBUG": {
+      "type": "string",
+      "enum": ["0", "1"],
+      "default": "0",
+      "description": "Enable MCP debug logging (0=off, 1=on)"
+    },
+    "CHROME_EXTENSION_PORT": {
+      "type": "string",
+      "pattern": "^[0-9]{4,5}$",
+      "default": "3024",
+      "description": "Port Chrome extension connects to"
+    },
+    "SCREENSHOTS_DIR": {
+      "type": "string",
+      "default": ".screenshots",
+      "description": "Directory for screenshot outputs"
+    },
+    "NODE_ENV": {
+      "type": "string",
+      "enum": ["development", "production", "test"],
+      "default": "development",
+      "description": "Node environment"
+    },
+    "LOG_LEVEL": {
+      "type": "string",
+      "enum": ["error", "warn", "info", "debug"],
+      "default": "info",
+      "description": "Logging level"
+    },
+    "TIMEOUT_MS": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "default": "30000",
+      "description": "Default timeout in milliseconds"
+    },
+    "MAX_RETRIES": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "default": "3",
+      "description": "Maximum retry attempts"
+    },
+    "ENABLE_CORS": {
+      "type": "string",
+      "enum": ["true", "false"],
+      "default": "true",
+      "description": "Enable CORS for HTTP bridge"
+    },
+    "ENABLE_METRICS": {
+      "type": "string",
+      "enum": ["true", "false"],
+      "default": "true",
+      "description": "Enable metrics collection"
+    }
+  },
+  "required": [
+    "BROWSER_TOOLS_PORT"
+  ],
+  "additionalProperties": false
+}

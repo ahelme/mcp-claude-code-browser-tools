@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page for Browser Interactions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0052a3;
+        }
+        .test-input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin: 5px;
+            width: 200px;
+        }
+        .hidden-element {
+            display: none;
+        }
+        .delayed-element {
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .delayed-element.visible {
+            opacity: 1;
+        }
+        .click-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            display: none;
+        }
+        .form-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Browser Interactions Test Page</h1>
+    <p>This page contains various elements to test the browser_click, browser_type, and browser_wait functionality.</p>
+
+    <!-- Click Tests -->
+    <div class="test-section">
+        <h2>Click Tests</h2>
+
+        <button id="simple-button" class="test-button">Simple Button</button>
+        <div id="simple-button-result" class="click-result">Simple button was clicked!</div>
+
+        <button class="test-button special-button">Button with Class</button>
+        <div id="class-button-result" class="click-result">Special button was clicked!</div>
+
+        <a href="#" id="test-link" class="test-button" style="text-decoration: none; display: inline-block;">Test Link</a>
+        <div id="link-result" class="click-result">Test link was clicked!</div>
+
+        <div class="test-button" id="div-button" style="display: inline-block;">Clickable Div</div>
+        <div id="div-result" class="click-result">Clickable div was clicked!</div>
+    </div>
+
+    <!-- Type Tests -->
+    <div class="test-section">
+        <h2>Type Tests</h2>
+
+        <div class="form-section">
+            <label for="simple-input">Simple Text Input:</label><br>
+            <input type="text" id="simple-input" class="test-input" placeholder="Type here">
+            <div id="simple-input-result" class="click-result">Input value changed!</div>
+        </div>
+
+        <div class="form-section">
+            <label for="password-input">Password Input:</label><br>
+            <input type="password" id="password-input" class="test-input" placeholder="Password">
+        </div>
+
+        <div class="form-section">
+            <label for="textarea-input">Textarea:</label><br>
+            <textarea id="textarea-input" class="test-input" rows="3" placeholder="Multi-line text"></textarea>
+        </div>
+
+        <div class="form-section">
+            <label for="email-input">Email Input:</label><br>
+            <input type="email" id="email-input" class="test-input" placeholder="email@example.com">
+        </div>
+
+        <div class="form-section">
+            <label>Contenteditable Element:</label><br>
+            <div id="contenteditable-div" contenteditable="true"
+                 style="border: 1px solid #ccc; padding: 8px; min-height: 50px; background: white;">
+                Click here to edit this content
+            </div>
+        </div>
+    </div>
+
+    <!-- Wait Tests -->
+    <div class="test-section">
+        <h2>Wait Tests</h2>
+
+        <button id="show-delayed-element" class="test-button">Show Element After 2 Seconds</button>
+        <div id="delayed-element" class="delayed-element hidden-element">
+            This element appears after a delay!
+        </div>
+
+        <button id="show-dynamic-element" class="test-button">Create Dynamic Element</button>
+        <div id="dynamic-container"></div>
+
+        <button id="toggle-visibility" class="test-button">Toggle Element Visibility</button>
+        <div id="toggleable-element" class="test-button" style="margin-top: 10px;">
+            Toggleable Element (click the button above to hide/show)
+        </div>
+    </div>
+
+    <!-- Common Selectors Guide -->
+    <div class="test-section">
+        <h2>Common Test Selectors</h2>
+        <pre style="background: #f0f0f0; padding: 10px; border-radius: 4px;">
+Click Tests:
+- #simple-button
+- .special-button
+- #test-link
+- #div-button
+
+Type Tests:
+- #simple-input
+- #password-input
+- #textarea-input
+- #email-input
+- #contenteditable-div
+
+Wait Tests:
+- #delayed-element (appears after clicking "Show Element After 2 Seconds")
+- #dynamic-element (created after clicking "Create Dynamic Element")
+- #toggleable-element (visibility toggles with button)
+        </pre>
+    </div>
+
+    <script>
+        // Click event handlers to show results
+        document.getElementById('simple-button').addEventListener('click', function() {
+            document.getElementById('simple-button-result').style.display = 'block';
+            console.log('Simple button clicked');
+        });
+
+        document.querySelector('.special-button').addEventListener('click', function() {
+            document.getElementById('class-button-result').style.display = 'block';
+            console.log('Special button clicked');
+        });
+
+        document.getElementById('test-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('link-result').style.display = 'block';
+            console.log('Test link clicked');
+        });
+
+        document.getElementById('div-button').addEventListener('click', function() {
+            document.getElementById('div-result').style.display = 'block';
+            console.log('Div button clicked');
+        });
+
+        // Input change handlers
+        document.getElementById('simple-input').addEventListener('input', function() {
+            document.getElementById('simple-input-result').style.display = 'block';
+            document.getElementById('simple-input-result').textContent = 'Input value: ' + this.value;
+        });
+
+        // Wait test handlers
+        document.getElementById('show-delayed-element').addEventListener('click', function() {
+            setTimeout(function() {
+                const element = document.getElementById('delayed-element');
+                element.classList.remove('hidden-element');
+                element.classList.add('visible');
+                console.log('Delayed element is now visible');
+            }, 2000);
+        });
+
+        document.getElementById('show-dynamic-element').addEventListener('click', function() {
+            setTimeout(function() {
+                const container = document.getElementById('dynamic-container');
+                const element = document.createElement('div');
+                element.id = 'dynamic-element';
+                element.className = 'test-button';
+                element.textContent = 'Dynamically Created Element';
+                element.style.marginTop = '10px';
+                container.appendChild(element);
+                console.log('Dynamic element created');
+            }, 1000);
+        });
+
+        document.getElementById('toggle-visibility').addEventListener('click', function() {
+            const element = document.getElementById('toggleable-element');
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+                this.textContent = 'Hide Element';
+            } else {
+                element.style.display = 'none';
+                this.textContent = 'Show Element';
+            }
+        });
+
+        console.log('Test page loaded and ready for interactions');
+    </script>
+</body>
+</html>
