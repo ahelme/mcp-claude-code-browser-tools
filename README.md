@@ -12,13 +12,34 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 - 100% June 2025 MCP-compliant implementation
 - **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3024)
 
-### 🦁 MANE ARCHITECTURE + Chrome Extension MVP
-**Revolutionary AI collaborative development with complete UI redesign!**
-- 🦁 **MANE Created**: Modular Agentic Non-linear Engineering - 3 deployment models
-- ✅ **UI Complete**: Responsive 4-panel layout, screenshot naming, scan indicators
-- 🤖 **8 GitHub Issues**: Ready for parallel AI agent development
-- 📋 **Implementation Ready**: [MANE Chrome Extension Plan](CHROME-EXTENSION-MANE-IMPLEMENTATION.md)
-- 🎯 **Analyzer Prompts**: [GitHub](MANE-GITHUB-ANALYZER-PROMPT.md) | [Worktree](MANE-WORKTREE-ANALYZER-PROMPT.md) | [Hybrid](MANE-HYBRID-ANALYZER-PROMPT.md)
+### 🦁 MANE FOUNDATION INFRASTRUCTURE COMPLETE ✅
+**World's first complete AI collaborative development platform!**
+- 🦁 **MANE Methodology**: Modular Agentic Non-linear Engineering - revolutionary parallel development
+- ✅ **Foundation Merged**: Complete infrastructure with contracts, base classes, registry system
+- 🏗️ **Core Architecture**: TypeScript interfaces, quality gates, monitoring system
+- 🤖 **Agent Universes**: 9 agents in 4 logical batches for systematic development
+- 📋 **Contract-Driven**: OpenAPI specifications and comprehensive quality requirements
+- 🎯 **Complete Documentation**: [MANE User Guide](MANE/MANE-USER-GUIDE.md) | [Architecture](MANE/MANE-ARCHITECTURE.md) | [Worktrees](MANE/MANE-WORKTREES-ULTIMATE-METHODOLOGY.md)
+
+### 🏗️ **MANE FOUNDATION & BATCH SYSTEM**
+**Current Status - Foundation Complete, Ready for Batch 2:**
+- **✅ Batch 1**: Agent A (Foundation) - COMPLETED & MERGED
+  - Contracts: OpenAPI 3.0 specification, quality gates
+  - Core: Base classes, interfaces, registry system
+  - Infrastructure: Service worker, monitoring, MCP handler
+- **🎯 Batch 2**: Agent B (Framework) - NEXT TO DEPLOY
+  - UI Framework & Component System
+- **🎯 Batch 3**: Agents C,D,E (Core Tools) - Working tools
+  - browser_navigate, browser_screenshot, browser_click, browser_type, browser_wait
+- **🎯 Batch 4**: Agents F,G,H,I (Advanced Tools) - Broken tools needing fixes
+  - browser_evaluate, browser_audit, browser_get_console, browser_get_content
+
+### ⚡ **MANE Branch Strategy**
+- **`main`**: Default stable branch
+- **`MANE_CORE`**: Primary MANE development branch (foundation complete)
+- **Agent universes**: Will branch from MANE_CORE for parallel development
+
+**Current Status**: Foundation infrastructure merged and operational on MANE_CORE branch
 
 ### ✅ WORKING (5 tools):
 
@@ -292,7 +313,7 @@ Guide to usage of available tools: TOOLS_GUIDE.md
 
 ### MCP Method (Port 3024)
 - `scripts/mcp-claude-code-browser-tools.mjs` - MCP server
-- `scripts/mcp-http-bridge.js` - MCP HTTP bridge
+- `scripts/mcp-http-bridge.mjs` - MCP HTTP bridge (FIXED: .mjs extension)
 - `scripts/start-mcp-browser-tools.sh` - Start script for MCP
 
 ### BACKUP: Direct Method (Port 3026)

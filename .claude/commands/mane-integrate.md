@@ -138,9 +138,11 @@ The command performs the following XML-driven operations:
 ### Phase 1: XML-Driven Discovery & Analysis
 1. **Map Batch to Universes** - Use XML batch mappings to identify target agent universes
 2. **Locate Agent Universes** - Find actual universe directories using XML-specified paths
-3. **Catalog Agent Changes** - Analyze modifications in each universe since last integration
-4. **Validate XML Configuration** - Ensure agent implementations match XML specifications
-5. **Assess Integration Readiness** - Evaluate agent work quality against XML-defined criteria
+3. **Validate Mandatory Workflow Compliance** - Ensure all agents have committed, pushed, and created PRs
+4. **Check PR Merge Status** - Verify prerequisite PRs are merged before proceeding
+5. **Catalog Agent Changes** - Analyze modifications in each universe since last integration
+6. **Validate XML Configuration** - Ensure agent implementations match XML specifications
+7. **Assess Integration Readiness** - Evaluate agent work quality against XML-defined criteria
 
 ### Phase 2: Integration Planning
 1. **Select optimal strategy** based on analysis

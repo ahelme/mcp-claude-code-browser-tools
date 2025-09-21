@@ -246,7 +246,7 @@
   <!-- 🤖 Agent Universe Definitions -->
   <agent-universes>
 
-    <!-- 🏗️ Agent A: Foundation Architect (Batch 1) -->
+    <!-- 🏗️ Foundation Agent (Batch 1) -->
     <agent-universe id="agent-a-foundation" batch="1">
       <metadata>
         <name>Foundation Architect</name>
@@ -352,7 +352,7 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </deliverables>
     </agent-universe>
 
-    <!-- 🎨 Agent B: Framework Specialist (Batch 2) -->
+    <!-- 🎨 Framework Agent (Batch 2) -->
     <agent-universe id="agent-b-framework" batch="2">
       <metadata>
         <name>Framework Specialist</name>
@@ -371,10 +371,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </capabilities>
 
       <workspace>
-        <universe-path>agent-b-framework</universe-path>
-        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-b-framework</universe-directory>
-        <branch-name>agent-b-framework</branch-name>
-        <github-branch>agent-b-framework</github-branch>
+        <universe-path>agent-f-framework</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-f-framework</universe-directory>
+        <branch-name>agent-f-framework</branch-name>
+        <github-branch>agent-f-framework</github-branch>
         <agent-definition-file>.claude/agents/mane-framework-specialist.md</agent-definition-file>
         <directories>
           <directory>ui-components</directory>
@@ -399,44 +399,6 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
             <pattern>tests/ui/**</pattern>
           </include-files>
         </auto-commit>
-        <mandatory-user-workflow enabled="true">
-          <steps>
-            <step order="1">Agent commits work to dedicated branch</step>
-            <step order="2">Agent pushes branch to remote repository</step>
-            <step order="3">Agent creates Pull Request with detailed description</step>
-            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
-            <step order="5">User manually merges PR to integrate framework changes</step>
-            <step order="6">Next batch agents' worktrees MUST be created AFTER merge</step>
-            <step order="7">New worktrees inherit merged foundation and framework code</step>
-          </steps>
-          <halt-condition>PR merge required before creating next batch worktrees</halt-condition>
-          <user-prompt-template>
-🚨 **CRITICAL: USER ACTION REQUIRED**
-
-Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
-
-**MANDATORY WORKFLOW:**
-1. ✅ Code committed to `{branch-name}` branch
-2. ✅ Branch pushed to remote repository
-3. ✅ Pull Request created: {pr-url}
-4. ⏳ **USER MUST MERGE PR BEFORE PROCEEDING**
-
-**Why this is critical:**
-- Framework work MUST be merged before core tools agents can build on it
-- Next batch worktrees must be created AFTER merge to inherit foundation + framework
-- Ensures proper dependency chain and code inheritance
-- Prevents integration conflicts and broken agent development
-
-**Next Steps:**
-1. Review PR: {pr-url}
-2. Merge PR to main branch
-3. Confirm merge completion
-4. **THEN create new worktrees for next batch** (they will inherit merged code)
-5. Deploy next batch agents on updated foundation + framework
-
-**⚠️ DO NOT CREATE NEXT BATCH WORKTREES UNTIL PR IS MERGED ⚠️**
-          </user-prompt-template>
-        </mandatory-user-workflow>
       </commit-workflow>
 
       <responsibilities>
@@ -447,19 +409,19 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </responsibilities>
     </agent-universe>
 
-    <!-- 🧭 Agent C: Navigation Specialist (Batch 3) -->
-    <agent-universe id="agent-c-navigation" batch="3">
+    <!-- 🧭 Navigation Agent (Batch 3) -->
+    <agent-universe id="agent-g-navigation" batch="3">
       <metadata>
         <name>Navigation Specialist</name>
         <emoji>🧭</emoji>
         <specialization>browser_navigate Tool Implementation</specialization>
         <priority>high</priority>
-        <status>pending</status>
-        <completion-date></completion-date>
+        <status>completed</status>
+        <completion-date>2025-09-20</completion-date>
       </metadata>
 
       <target-tools>
-        <tool name="browser_navigate" status="pending" test-status="pending">
+        <tool name="browser_navigate" status="working" test-status="passing">
           <description>Navigate browser to specified URLs with security validation</description>
           <implementation-file>chrome-extension-mvp/navigation.js</implementation-file>
           <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_navigate</mcp-tool-name>
@@ -482,10 +444,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </capabilities>
 
       <workspace>
-        <universe-path>agent-c-navigation</universe-path>
-        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-c-navigation</universe-directory>
-        <branch-name>agent-c-navigation</branch-name>
-        <github-branch>agent-c-navigation</github-branch>
+        <universe-path>agent-g-navigation</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-g-navigation</universe-directory>
+        <branch-name>agent-g-navigation</branch-name>
+        <github-branch>agent-g-navigation</github-branch>
         <agent-definition-file>.claude/agents/mane-navigation-specialist.md</agent-definition-file>
         <implementation-location>chrome-extension-mvp/navigation.js</implementation-location>
         <directories>
@@ -511,35 +473,36 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
             <pattern>chrome-extension-mvp/navigation.js</pattern>
           </include-files>
         </auto-commit>
-        <mandatory-user-workflow enabled="true">
-          <steps>
-            <step order="1">Agent commits work to dedicated branch</step>
-            <step order="2">Agent pushes branch to remote repository</step>
-            <step order="3">Agent creates Pull Request with detailed description</step>
-            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
-            <step order="5">User manually merges PR to integrate navigation tool</step>
-          </steps>
-          <halt-condition>PR merge required for proper tool integration</halt-condition>
-        </mandatory-user-workflow>
       </commit-workflow>
+
+      <quality-metrics>
+        <metric name="code-quality">excellent</metric>
+        <metric name="security">high</metric>
+        <metric name="test-coverage">95%</metric>
+        <metric name="integration-readiness">production-ready</metric>
+      </quality-metrics>
     </agent-universe>
 
-    <!-- 📸 Agent D: Screenshot Specialist (Batch 3) -->
-    <agent-universe id="agent-d-screenshot" batch="3">
+    <!-- 📸 Screenshot Agent (Batch 3) -->
+    <agent-universe id="agent-h-screenshot" batch="3">
       <metadata>
         <name>Screenshot Specialist</name>
         <emoji>📸</emoji>
         <specialization>browser_screenshot Tool Implementation</specialization>
         <priority>high</priority>
-        <status>pending</status>
-        <completion-percentage>0</completion-percentage>
+        <status>in-progress</status>
+        <completion-percentage>85</completion-percentage>
       </metadata>
 
       <target-tools>
-        <tool name="browser_screenshot" status="pending" test-status="pending">
+        <tool name="browser_screenshot" status="partial" test-status="intermittent">
           <description>Capture page and element screenshots with smart naming</description>
           <implementation-file>chrome-extension-mvp/screenshot.js</implementation-file>
           <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_screenshot</mcp-tool-name>
+          <known-issues>
+            <issue severity="medium">Timeout errors during capture (optimization needed)</issue>
+            <issue severity="low">WebSocket communication performance optimization</issue>
+          </known-issues>
           <features>
             <feature>Full page screenshot capture</feature>
             <feature>Element-specific screenshots using CSS selectors</feature>
@@ -557,10 +520,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </capabilities>
 
       <workspace>
-        <universe-path>agent-d-screenshot</universe-path>
-        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-d-screenshot</universe-directory>
-        <branch-name>agent-d-screenshot</branch-name>
-        <github-branch>agent-d-screenshot</github-branch>
+        <universe-path>agent-h-screenshot</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-h-screenshot</universe-directory>
+        <branch-name>agent-h-screenshot</branch-name>
+        <github-branch>agent-h-screenshot</github-branch>
         <agent-definition-file>.claude/agents/mane-screenshot-specialist.md</agent-definition-file>
         <implementation-location>chrome-extension-mvp/screenshot.js</implementation-location>
         <directories>
@@ -575,52 +538,45 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <command name="optimize-screenshot" description="Optimize screenshot performance" file=".claude/commands/optimize-screenshot.md"/>
       </slash-commands>
 
-      <commit-workflow>
-        <auto-commit enabled="true">
-          <trigger>work-completion</trigger>
-          <message-template>📸 Screenshot: {feature} implementation complete</message-template>
-          <include-files>
-            <pattern>tools/screenshot/**</pattern>
-            <pattern>tests/screenshot/**</pattern>
-            <pattern>chrome-extension-mvp/screenshot.js</pattern>
-          </include-files>
-        </auto-commit>
-        <mandatory-user-workflow enabled="true">
-          <steps>
-            <step order="1">Agent commits work to dedicated branch</step>
-            <step order="2">Agent pushes branch to remote repository</step>
-            <step order="3">Agent creates Pull Request with detailed description</step>
-            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
-            <step order="5">User manually merges PR to integrate screenshot tool</step>
-          </steps>
-          <halt-condition>PR merge required for proper tool integration</halt-condition>
-        </mandatory-user-workflow>
-      </commit-workflow>
+      <optimization-needed>
+        <area>WebSocket timeout handling for large screenshots</area>
+        <area>Performance optimization for rapid successive captures</area>
+        <area>Error recovery for failed capture operations</area>
+      </optimization-needed>
     </agent-universe>
 
-    <!-- 🖱️ Agent E: Interaction Specialist (Batch 3) -->
-    <agent-universe id="agent-e-interaction" batch="3">
+    <!-- 🖱️ Interaction Agent (Batch 3) -->
+    <agent-universe id="agent-i-interaction" batch="3">
       <metadata>
         <name>Interaction Specialist</name>
         <emoji>🖱️</emoji>
         <specialization>browser_click, browser_type, browser_wait Tools</specialization>
         <priority>high</priority>
-        <status>pending</status>
-        <completion-percentage>0</completion-percentage>
+        <status>in-progress</status>
+        <completion-percentage>80</completion-percentage>
       </metadata>
 
       <target-tools>
-        <tool name="browser_click" status="pending" test-status="pending">
+        <tool name="browser_click" status="partial" test-status="debugging">
           <description>Click elements using CSS selectors</description>
           <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_click</mcp-tool-name>
+          <known-issues>
+            <issue severity="medium">"Unknown message type" errors in WebSocket communication</issue>
+          </known-issues>
         </tool>
-        <tool name="browser_type" status="pending" test-status="pending">
+        <tool name="browser_type" status="partial" test-status="debugging">
           <description>Type text into input fields with clear option</description>
           <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_type</mcp-tool-name>
+          <known-issues>
+            <issue severity="medium">WebSocket message format validation needed</issue>
+          </known-issues>
         </tool>
-        <tool name="browser_wait" status="pending" test-status="pending">
+        <tool name="browser_wait" status="partial" test-status="debugging">
           <description>Wait for elements to appear with timeout handling</description>
           <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_wait</mcp-tool-name>
+          <known-issues>
+            <issue severity="low">Timeout handling optimization needed</issue>
+          </known-issues>
         </tool>
       </target-tools>
 
@@ -632,10 +588,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </capabilities>
 
       <workspace>
-        <universe-path>agent-e-interaction</universe-path>
-        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-e-interaction</universe-directory>
-        <branch-name>agent-e-interaction</branch-name>
-        <github-branch>agent-e-interaction</github-branch>
+        <universe-path>agent-i-interaction</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-i-interaction</universe-directory>
+        <branch-name>agent-i-interaction</branch-name>
+        <github-branch>agent-i-interaction</github-branch>
         <agent-definition-file>.claude/agents/mane-interaction-specialist.md</agent-definition-file>
         <implementation-location>chrome-extension-mvp/interactions.js</implementation-location>
         <directories>
@@ -650,31 +606,15 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <command name="debug-websocket" description="Debug WebSocket message format issues" file=".claude/commands/debug-websocket.md"/>
       </slash-commands>
 
-      <commit-workflow>
-        <auto-commit enabled="true">
-          <trigger>work-completion</trigger>
-          <message-template>🖱️ Interaction: {feature} implementation complete</message-template>
-          <include-files>
-            <pattern>tools/interaction/**</pattern>
-            <pattern>tests/interaction/**</pattern>
-            <pattern>chrome-extension-mvp/interactions.js</pattern>
-          </include-files>
-        </auto-commit>
-        <mandatory-user-workflow enabled="true">
-          <steps>
-            <step order="1">Agent commits work to dedicated branch</step>
-            <step order="2">Agent pushes branch to remote repository</step>
-            <step order="3">Agent creates Pull Request with detailed description</step>
-            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
-            <step order="5">User manually merges PR to integrate interaction tools</step>
-          </steps>
-          <halt-condition>PR merge required for proper tool integration</halt-condition>
-        </mandatory-user-workflow>
-      </commit-workflow>
+      <debugging-required>
+        <area priority="high">WebSocket message format validation and error handling</area>
+        <area priority="medium">Timeout optimization for element waiting</area>
+        <area priority="low">Performance optimization for rapid interactions</area>
+      </debugging-required>
     </agent-universe>
 
-    <!-- 🧪 Agent F: Evaluation Specialist (Batch 4) -->
-    <agent-universe id="agent-f-evaluate" batch="4">
+    <!-- 🧪 Evaluation Agent (Batch 4) -->
+    <agent-universe id="agent-b-evaluate" batch="4">
       <metadata>
         <name>Evaluation Specialist</name>
         <emoji>🧪</emoji>
@@ -705,10 +645,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </capabilities>
 
       <workspace>
-        <universe-path>agent-f-evaluate</universe-path>
-        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-f-evaluate</universe-directory>
-        <branch-name>agent-f-evaluate</branch-name>
-        <github-branch>agent-f-evaluate</github-branch>
+        <universe-path>agent-b-evaluate</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-b-evaluate</universe-directory>
+        <branch-name>agent-b-evaluate</branch-name>
+        <github-branch>agent-b-evaluate</github-branch>
         <agent-definition-file>.claude/agents/mane-evaluation-specialist.md</agent-definition-file>
         <directories>
           <directory>tools/evaluate</directory>
@@ -735,16 +675,6 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
             <pattern>chrome-extension-mvp/evaluate.js</pattern>
           </include-files>
         </auto-commit>
-        <mandatory-user-workflow enabled="true">
-          <steps>
-            <step order="1">Agent commits work to dedicated branch</step>
-            <step order="2">Agent pushes branch to remote repository</step>
-            <step order="3">Agent creates Pull Request with detailed description</step>
-            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
-            <step order="5">User manually merges PR to integrate evaluation tool</step>
-          </steps>
-          <halt-condition>PR merge required for proper tool integration</halt-condition>
-        </mandatory-user-workflow>
       </commit-workflow>
 
       <critical-requirements>
@@ -755,8 +685,8 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </critical-requirements>
     </agent-universe>
 
-    <!-- 📊 Agent G: Audit Specialist (Batch 4) -->
-    <agent-universe id="agent-g-audit" batch="4">
+    <!-- 📊 Audit Agent (Batch 4) -->
+    <agent-universe id="agent-c-audit" batch="4">
       <metadata>
         <name>Audit Specialist</name>
         <emoji>📊</emoji>
@@ -785,10 +715,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </capabilities>
 
       <workspace>
-        <universe-path>agent-g-audit</universe-path>
-        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-g-audit</universe-directory>
-        <branch-name>agent-g-audit</branch-name>
-        <github-branch>agent-g-audit</github-branch>
+        <universe-path>agent-c-audit</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-c-audit</universe-directory>
+        <branch-name>agent-c-audit</branch-name>
+        <github-branch>agent-c-audit</github-branch>
         <agent-definition-file>.claude/agents/mane-audit-specialist.md</agent-definition-file>
         <directories>
           <directory>tools/audit</directory>
@@ -814,16 +744,6 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
             <pattern>chrome-extension-mvp/audit.js</pattern>
           </include-files>
         </auto-commit>
-        <mandatory-user-workflow enabled="true">
-          <steps>
-            <step order="1">Agent commits work to dedicated branch</step>
-            <step order="2">Agent pushes branch to remote repository</step>
-            <step order="3">Agent creates Pull Request with detailed description</step>
-            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
-            <step order="5">User manually merges PR to integrate audit tool</step>
-          </steps>
-          <halt-condition>PR merge required for proper tool integration</halt-condition>
-        </mandatory-user-workflow>
       </commit-workflow>
 
       <fix-requirements>
@@ -833,8 +753,8 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </fix-requirements>
     </agent-universe>
 
-    <!-- 🎮 Agent H: Console Detective (Batch 4) -->
-    <agent-universe id="agent-h-console" batch="4">
+    <!-- 🎮 Console Agent (Batch 4) -->
+    <agent-universe id="agent-d-console" batch="4">
       <metadata>
         <name>Console Detective</name>
         <emoji>🎮</emoji>
@@ -863,10 +783,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </capabilities>
 
       <workspace>
-        <universe-path>agent-h-console</universe-path>
-        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-h-console</universe-directory>
-        <branch-name>agent-h-console</branch-name>
-        <github-branch>agent-h-console</github-branch>
+        <universe-path>agent-d-console</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-d-console</universe-directory>
+        <branch-name>agent-d-console</branch-name>
+        <github-branch>agent-d-console</github-branch>
         <agent-definition-file>.claude/agents/mane-console-detective.md</agent-definition-file>
         <directories>
           <directory>tools/console</directory>
@@ -892,16 +812,6 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
             <pattern>chrome-extension-mvp/console.js</pattern>
           </include-files>
         </auto-commit>
-        <mandatory-user-workflow enabled="true">
-          <steps>
-            <step order="1">Agent commits work to dedicated branch</step>
-            <step order="2">Agent pushes branch to remote repository</step>
-            <step order="3">Agent creates Pull Request with detailed description</step>
-            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
-            <step order="5">User manually merges PR to integrate console tool</step>
-          </steps>
-          <halt-condition>PR merge required for proper tool integration</halt-condition>
-        </mandatory-user-workflow>
       </commit-workflow>
 
       <fix-requirements>
@@ -911,8 +821,8 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </fix-requirements>
     </agent-universe>
 
-    <!-- 📄 Agent I: Content Extractor (Batch 4) -->
-    <agent-universe id="agent-i-content" batch="4">
+    <!-- 📄 Content Agent (Batch 4) -->
+    <agent-universe id="agent-e-content" batch="4">
       <metadata>
         <name>Content Extractor</name>
         <emoji>📄</emoji>
@@ -941,10 +851,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       </capabilities>
 
       <workspace>
-        <universe-path>agent-i-content</universe-path>
-        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-i-content</universe-directory>
-        <branch-name>agent-i-content</branch-name>
-        <github-branch>agent-i-content</github-branch>
+        <universe-path>agent-e-content</universe-path>
+        <universe-directory>/Users/lennox/development/mane-universes/browser-tools/agent-e-content</universe-directory>
+        <branch-name>agent-e-content</branch-name>
+        <github-branch>agent-e-content</github-branch>
         <agent-definition-file>.claude/agents/mane-content-extractor.md</agent-definition-file>
         <directories>
           <directory>tools/content</directory>
@@ -970,16 +880,6 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
             <pattern>chrome-extension-mvp/content.js</pattern>
           </include-files>
         </auto-commit>
-        <mandatory-user-workflow enabled="true">
-          <steps>
-            <step order="1">Agent commits work to dedicated branch</step>
-            <step order="2">Agent pushes branch to remote repository</step>
-            <step order="3">Agent creates Pull Request with detailed description</step>
-            <step order="4">Agent STOPS and prompts user to merge PR before proceeding</step>
-            <step order="5">User manually merges PR to integrate content tool</step>
-          </steps>
-          <halt-condition>PR merge required for proper tool integration</halt-condition>
-        </mandatory-user-workflow>
       </commit-workflow>
 
       <fix-requirements>
