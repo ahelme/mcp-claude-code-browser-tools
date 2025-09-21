@@ -11,16 +11,50 @@ import {
   IUIPanel,
   ILogger,
   IMetrics,
-} from '../interfaces.js';
+} from "../interfaces.js";
 
+/**
+ * Performance Quality Gate
+ *
+ * Validates that MANE components meet performance requirements for
+ * response time, memory usage, and concurrent execution capability.
+ * Critical for ensuring agent tools perform adequately in production.
+ *
+ * @implements {IQualityGate}
+ *
+ * **Performance Criteria:**
+ * - Browser tools: < 5s response time, < 50MB memory increase
+ * - UI panels: < 2s initialization, < 1s render, < 500ms state updates
+ * - Concurrent execution: Handle 5+ simultaneous requests
+ * - Memory management: No significant leaks detected
+ *
+ * **Agent Usage:**
+ * - Agent B-I: Validate tools before production deployment
+ * - Agent A.2: Performance optimization validation
+ * - Continuous monitoring: Regular performance regression testing
+ *
+ * **Pass Criteria:** 80% of performance tests must pass
+ */
 export class PerformanceQualityGate implements IQualityGate {
-  name = 'performance';
-  description = 'Validates performance requirements for response time and resource usage';
-  requiredPassRate = 0.80; // 80% of tests must pass
+  /** Quality gate identifier used in MANE workflows */
+  name = "performance";
 
+  /** Human-readable description for logging and reports */
+  description =
+    "Validates performance requirements for response time and resource usage";
+
+  /** Minimum pass rate required (0.80 = 80% of tests must pass) */
+  requiredPassRate = 0.8;
+
+  /**
+   * Creates new performance quality gate
+   *
+   * @param logger - Logging service for performance tracking
+   * @param metrics - Metrics collection for performance monitoring and alerting
+   */
   constructor(
     private logger: ILogger,
-    private metrics: IMetrics
+    private metrics: IMetrics,
   ) {}
 
   async execute(target: unknown): Promise<{
@@ -29,53 +63,56 @@ export class PerformanceQualityGate implements IQualityGate {
     errors: string[];
     details?: any;
   }> {
-    this.logger.info(`Running performance validation for: ${this.getTargetName(target)}`);
+    this.logger.info(
+      `Running performance validation for: ${this.getTargetName(target)}`,
+    );
 
     const startTime = Date.now();
     const results: any[] = [];
 
     try {
       if (this.isBrowserTool(target)) {
-        results.push(...await this.validateToolPerformance(target));
+        results.push(...(await this.validateToolPerformance(target)));
       } else if (this.isUIPanel(target)) {
-        results.push(...await this.validatePanelPerformance(target));
+        results.push(...(await this.validatePanelPerformance(target)));
       } else {
         return {
           valid: false,
           score: 0,
           errors: [`Unknown target type: ${typeof target}`],
-          details: { target: this.getTargetName(target) }
+          details: { target: this.getTargetName(target) },
         };
       }
 
-      const passedTests = results.filter(r => r.passed).length;
+      const passedTests = results.filter((r) => r.passed).length;
       const totalTests = results.length;
       const score = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
-      const passed = (passedTests / totalTests) >= this.requiredPassRate;
+      const passed = passedTests / totalTests >= this.requiredPassRate;
 
       const duration = Date.now() - startTime;
-      this.metrics.timing('quality_gate.performance.duration', duration);
-      this.metrics.gauge('quality_gate.performance.score', score);
+      this.metrics.timing("quality_gate.performance.duration", duration);
+      this.metrics.gauge("quality_gate.performance.score", score);
 
       return {
         valid: passed,
         score: Math.round(score),
-        errors: results.filter(r => !r.passed).map(r => r.message),
+        errors: results.filter((r) => !r.passed).map((r) => r.message),
         details: {
           target: this.getTargetName(target),
           totalTests,
           passedTests,
           requiredPassRate: this.requiredPassRate,
-          results
-        }
+          results,
+        },
       };
-
     } catch (error) {
-      this.logger.error('Performance validation failed', error);
+      this.logger.error("Performance validation failed", error);
       return {
         valid: false,
         score: 0,
-        errors: [`Validation failed: ${error instanceof Error ? error.message : String(error)}`]
+        errors: [
+          `Validation failed: ${error instanceof Error ? error.message : String(error)}`,
+        ],
       };
     }
   }
@@ -93,40 +130,41 @@ export class PerformanceQualityGate implements IQualityGate {
       const responseTime = Date.now() - startTime;
 
       results.push({
-        test: 'response-time',
+        test: "response-time",
         passed: responseTime < maxResponseTime,
-        message: responseTime < maxResponseTime
-          ? `✓ Tool responds in ${responseTime}ms`
-          : `✗ Tool response time ${responseTime}ms exceeds limit (${maxResponseTime}ms)`,
-        category: 'response-time',
+        message:
+          responseTime < maxResponseTime
+            ? `✓ Tool responds in ${responseTime}ms`
+            : `✗ Tool response time ${responseTime}ms exceeds limit (${maxResponseTime}ms)`,
+        category: "response-time",
         value: responseTime,
-        threshold: maxResponseTime
+        threshold: maxResponseTime,
       });
 
-      this.metrics.timing('quality_gate.tool.response_time', responseTime, {
+      this.metrics.timing("quality_gate.tool.response_time", responseTime, {
         tool: tool.name,
       });
-
     } catch (error) {
       const responseTime = Date.now() - startTime;
       results.push({
-        test: 'response-time',
+        test: "response-time",
         passed: responseTime < maxResponseTime,
-        message: responseTime < maxResponseTime
-          ? `✓ Tool failed but responded in ${responseTime}ms`
-          : `✗ Tool failed and exceeded response time: ${responseTime}ms`,
-        category: 'response-time',
+        message:
+          responseTime < maxResponseTime
+            ? `✓ Tool failed but responded in ${responseTime}ms`
+            : `✗ Tool failed and exceeded response time: ${responseTime}ms`,
+        category: "response-time",
         value: responseTime,
-        threshold: maxResponseTime
+        threshold: maxResponseTime,
       });
     }
 
     // Test concurrent execution capability
     try {
       const concurrentRequests = 5;
-      const promises = Array(concurrentRequests).fill(null).map(() =>
-        tool.execute(testParams)
-      );
+      const promises = Array(concurrentRequests)
+        .fill(null)
+        .map(() => tool.execute(testParams));
 
       const concurrentStartTime = Date.now();
       await Promise.allSettled(promises);
@@ -134,22 +172,22 @@ export class PerformanceQualityGate implements IQualityGate {
       const concurrentThreshold = maxResponseTime * 2; // Allow 2x time for concurrent
 
       results.push({
-        test: 'concurrent-execution',
+        test: "concurrent-execution",
         passed: concurrentTime < concurrentThreshold,
-        message: concurrentTime < concurrentThreshold
-          ? `✓ Handles ${concurrentRequests} concurrent requests in ${concurrentTime}ms`
-          : `✗ Concurrent execution too slow: ${concurrentTime}ms (max: ${concurrentThreshold}ms)`,
-        category: 'concurrency',
+        message:
+          concurrentTime < concurrentThreshold
+            ? `✓ Handles ${concurrentRequests} concurrent requests in ${concurrentTime}ms`
+            : `✗ Concurrent execution too slow: ${concurrentTime}ms (max: ${concurrentThreshold}ms)`,
+        category: "concurrency",
         value: concurrentTime,
-        threshold: concurrentThreshold
+        threshold: concurrentThreshold,
       });
-
     } catch (error) {
       results.push({
-        test: 'concurrent-execution',
+        test: "concurrent-execution",
         passed: false,
         message: `✗ Concurrent execution test failed: ${error instanceof Error ? error.message : String(error)}`,
-        category: 'concurrency'
+        category: "concurrency",
       });
     }
 
@@ -171,22 +209,22 @@ export class PerformanceQualityGate implements IQualityGate {
       const maxMemoryIncrease = 50 * 1024 * 1024; // 50MB max increase
 
       results.push({
-        test: 'memory-usage',
+        test: "memory-usage",
         passed: memoryIncrease < maxMemoryIncrease,
-        message: memoryIncrease < maxMemoryIncrease
-          ? `✓ Memory increase: ${Math.round(memoryIncrease / 1024 / 1024)}MB`
-          : `✗ Excessive memory increase: ${Math.round(memoryIncrease / 1024 / 1024)}MB (max: 50MB)`,
-        category: 'memory',
+        message:
+          memoryIncrease < maxMemoryIncrease
+            ? `✓ Memory increase: ${Math.round(memoryIncrease / 1024 / 1024)}MB`
+            : `✗ Excessive memory increase: ${Math.round(memoryIncrease / 1024 / 1024)}MB (max: 50MB)`,
+        category: "memory",
         value: Math.round(memoryIncrease / 1024 / 1024),
-        threshold: 50
+        threshold: 50,
       });
-
     } catch (error) {
       results.push({
-        test: 'memory-usage',
+        test: "memory-usage",
         passed: false,
         message: `✗ Memory usage test failed: ${error instanceof Error ? error.message : String(error)}`,
-        category: 'memory'
+        category: "memory",
       });
     }
 
@@ -205,25 +243,25 @@ export class PerformanceQualityGate implements IQualityGate {
       const initTime = Date.now() - initStartTime;
 
       results.push({
-        test: 'initialization-time',
+        test: "initialization-time",
         passed: initTime < maxInitTime,
-        message: initTime < maxInitTime
-          ? `✓ Panel initializes in ${initTime}ms`
-          : `✗ Panel initialization too slow: ${initTime}ms (max: ${maxInitTime}ms)`,
-        category: 'initialization',
+        message:
+          initTime < maxInitTime
+            ? `✓ Panel initializes in ${initTime}ms`
+            : `✗ Panel initialization too slow: ${initTime}ms (max: ${maxInitTime}ms)`,
+        category: "initialization",
         value: initTime,
-        threshold: maxInitTime
+        threshold: maxInitTime,
       });
-
     } catch (error) {
       const initTime = Date.now() - initStartTime;
       results.push({
-        test: 'initialization-time',
+        test: "initialization-time",
         passed: false,
         message: `✗ Panel initialization failed in ${initTime}ms: ${error instanceof Error ? error.message : String(error)}`,
-        category: 'initialization',
+        category: "initialization",
         value: initTime,
-        threshold: maxInitTime
+        threshold: maxInitTime,
       });
     }
 
@@ -236,25 +274,25 @@ export class PerformanceQualityGate implements IQualityGate {
       const renderTime = Date.now() - renderStartTime;
 
       results.push({
-        test: 'render-time',
+        test: "render-time",
         passed: renderTime < maxRenderTime,
-        message: renderTime < maxRenderTime
-          ? `✓ Panel renders in ${renderTime}ms`
-          : `✗ Panel render too slow: ${renderTime}ms (max: ${maxRenderTime}ms)`,
-        category: 'rendering',
+        message:
+          renderTime < maxRenderTime
+            ? `✓ Panel renders in ${renderTime}ms`
+            : `✗ Panel render too slow: ${renderTime}ms (max: ${maxRenderTime}ms)`,
+        category: "rendering",
         value: renderTime,
-        threshold: maxRenderTime
+        threshold: maxRenderTime,
       });
-
     } catch (error) {
       const renderTime = Date.now() - renderStartTime;
       results.push({
-        test: 'render-time',
+        test: "render-time",
         passed: false,
         message: `✗ Panel render failed in ${renderTime}ms: ${error instanceof Error ? error.message : String(error)}`,
-        category: 'rendering',
+        category: "rendering",
         value: renderTime,
-        threshold: maxRenderTime
+        threshold: maxRenderTime,
       });
     }
 
@@ -267,25 +305,25 @@ export class PerformanceQualityGate implements IQualityGate {
       const updateTime = Date.now() - updateStartTime;
 
       results.push({
-        test: 'state-update-time',
+        test: "state-update-time",
         passed: updateTime < maxUpdateTime,
-        message: updateTime < maxUpdateTime
-          ? `✓ Panel updates state in ${updateTime}ms`
-          : `✗ Panel state update too slow: ${updateTime}ms (max: ${maxUpdateTime}ms)`,
-        category: 'state-updates',
+        message:
+          updateTime < maxUpdateTime
+            ? `✓ Panel updates state in ${updateTime}ms`
+            : `✗ Panel state update too slow: ${updateTime}ms (max: ${maxUpdateTime}ms)`,
+        category: "state-updates",
         value: updateTime,
-        threshold: maxUpdateTime
+        threshold: maxUpdateTime,
       });
-
     } catch (error) {
       const updateTime = Date.now() - updateStartTime;
       results.push({
-        test: 'state-update-time',
+        test: "state-update-time",
         passed: false,
         message: `✗ Panel state update failed in ${updateTime}ms: ${error instanceof Error ? error.message : String(error)}`,
-        category: 'state-updates',
+        category: "state-updates",
         value: updateTime,
-        threshold: maxUpdateTime
+        threshold: maxUpdateTime,
       });
     }
 
@@ -294,7 +332,7 @@ export class PerformanceQualityGate implements IQualityGate {
 
   private generateTestParams(schema: any): any {
     // Generate minimal valid parameters based on schema
-    if (schema.type === 'object') {
+    if (schema.type === "object") {
       const params: any = {};
 
       if (schema.required) {
@@ -314,15 +352,15 @@ export class PerformanceQualityGate implements IQualityGate {
 
   private generateTestValue(schema: any): any {
     switch (schema.type) {
-      case 'string':
-        return 'test';
-      case 'number':
+      case "string":
+        return "test";
+      case "number":
         return 1;
-      case 'boolean':
+      case "boolean":
         return true;
-      case 'array':
+      case "array":
         return [];
-      case 'object':
+      case "object":
         return {};
       default:
         return null;
@@ -330,26 +368,30 @@ export class PerformanceQualityGate implements IQualityGate {
   }
 
   private isBrowserTool(target: unknown): target is IBrowserTool {
-    return target !== null &&
-           typeof target === 'object' &&
-           'execute' in target &&
-           typeof target.execute === 'function';
+    return (
+      target !== null &&
+      typeof target === "object" &&
+      "execute" in target &&
+      typeof target.execute === "function"
+    );
   }
 
   private isUIPanel(target: unknown): target is IUIPanel {
-    return target !== null &&
-           typeof target === 'object' &&
-           'render' in target &&
-           typeof target.render === 'function';
+    return (
+      target !== null &&
+      typeof target === "object" &&
+      "render" in target &&
+      typeof target.render === "function"
+    );
   }
 
   private getTargetName(target: unknown): string {
-    if (target && typeof target === 'object' && 'name' in target) {
+    if (target && typeof target === "object" && "name" in target) {
       return String(target.name);
     }
-    if (target && typeof target === 'object' && 'id' in target) {
+    if (target && typeof target === "object" && "id" in target) {
       return String(target.id);
     }
-    return 'unknown';
+    return "unknown";
   }
 }

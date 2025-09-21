@@ -6,7 +6,12 @@
   "scripts": {
     "start": "node scripts/http-bridge-server.js",
     "start-bridge": "node scripts/http-bridge-server.js",
-    "test-mcp": "MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js"
+    "test-mcp": "MCP_DEBUG=1 node scripts/browser-tools-mcp-2025.js",
+    "test": "node --test .tests/*.test.mjs",
+    "test:quality": "node --test .tests/quality-gates.test.mjs",
+    "test:mcp": "node --test .tests/mcp-modules.test.mjs",
+    "test:core": "node --test .tests/core-infrastructure.test.mjs",
+    "test:watch": "node --test --watch .tests/*.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.0",
