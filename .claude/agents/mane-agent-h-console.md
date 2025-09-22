@@ -247,8 +247,8 @@ export class ConsoleProtocolOptimizer {
       return result;
 
     } catch (error) {
-      if (this.logger && this.logger.error) {
-        this.logger.error('Console access test failed', { error: error.message, stack: error.stack });
+      if (logger && logger.error) {
+        logger.error('Console access test failed', { error: error.message, stack: error.stack });
       }
       throw error;
     }
@@ -788,13 +788,13 @@ import { ConsoleTool } from './tools/console.mjs';
 const tool = new ConsoleTool(console, {});
 tool.execute({ level: 'all', count: 10 })
   .then(result => {
-    if (this.logger && this.logger.debug) {
-      this.logger.debug('Console tool test success:', result);
+    if (tool.logger && tool.logger.debug) {
+      tool.logger.debug('Console tool test success:', result);
     }
   })
   .catch(error => {
-    if (this.logger && this.logger.error) {
-      this.logger.error('Console tool test timeout error', { error: error.message, stack: error.stack });
+    if (tool.logger && tool.logger.error) {
+      tool.logger.error('Console tool test timeout error', { error: error.message, stack: error.stack });
     }
   });
 "
