@@ -113,6 +113,7 @@ Each agent can now work **independently** in their dedicated universe, building 
 - 📚 **[MANE/MANE-USER-GUIDE.md](MANE/MANE-USER-GUIDE.md)** - Complete setup and deployment guide
 - 🌳 **[MANE/MANE-WORKTREES-ULTIMATE-METHODOLOGY.md](MANE/MANE-WORKTREES-ULTIMATE-METHODOLOGY.md)** - Local parallel development
 - 🐙 **[MANE/MANE-GITHUB-ULTIMATE-METHODOLOGY.md](MANE/MANE-GITHUB-ULTIMATE-METHODOLOGY.md)** - Global distributed collaboration
+- 📋 **[MANE/TECHNICAL-DECISIONS.md](MANE/TECHNICAL-DECISIONS.md)** - Technical decision rationale and history
 
 **Current Implementation Focus:**
 - **Branch**: `MANE_CORE` - Primary MANE development branch (renamed from MANE_WORKTREE)
@@ -122,7 +123,11 @@ Each agent can now work **independently** in their dedicated universe, building 
   - `<working-branch>MANE_CORE</working-branch>`
 - **Agent Organization**: 9 agents in 4 logical batches with mandatory user workflow enforcement
 - **Foundation**: Agent A COMPLETED and MERGED - Foundation infrastructure operational
-- **Follow-up**: Issue #20 created for TypeScript import path fixes
+- **🚀 MAJOR MILESTONE**: Complete TypeScript to .mjs conversion COMPLETED
+  - **PR #23**: MERGED - All core files converted to native Node.js modules
+  - **PR #25**: Created - Technical decisions documentation
+  - **Status**: ✅ PRODUCTION READY for MANE Batch 2 deployment
+- **Follow-up**: Issue #24 created for runtime validation & JSDoc linting improvements
 - **Goal**: Demonstrate world's first complete XML-driven AI collaborative development system
 
 ### ✅ WORKING (5 tools):
