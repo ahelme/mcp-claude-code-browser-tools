@@ -798,13 +798,13 @@ import { ContentTool } from './tools/content.mjs';
 const tool = new ContentTool(console, {});
 tool.execute({ format: 'text', maxLength: 1000 })
   .then(result => {
-    if (this.logger && this.logger.debug) {
-      this.logger.debug('Content tool test success - extracted length:', result.data.length);
+    if (tool.logger && tool.logger.debug) {
+      tool.logger.debug('Content tool test success - extracted length:', result.data.length);
     }
   })
   .catch(error => {
-    if (this.logger && this.logger.error) {
-      this.logger.error('Content tool test timeout error', { error: error.message, stack: error.stack });
+    if (tool.logger && tool.logger.error) {
+      tool.logger.error('Content tool test timeout error', { error: error.message, stack: error.stack });
     }
   });
 "
