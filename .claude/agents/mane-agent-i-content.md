@@ -797,7 +797,7 @@ node -e "
 import { ContentTool } from './tools/content.mjs';
 const tool = new ContentTool(console, {});
 tool.execute({ format: 'text', maxLength: 1000 })
-  .then(result => console.log('Success:', result.data.length))
+  .then(result => this.logger.debug('Content tool test success - extracted length:', result.data.length))
   .catch(error => console.error('Timeout error:', error));
 "
 ```

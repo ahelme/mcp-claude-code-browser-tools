@@ -235,7 +235,7 @@ export class ConsoleProtocolOptimizer {
         // Trigger some console output for testing
         Runtime.evaluate({
           expression: `
-            console.log('Test log message');
+            this.logger.debug('Test log message');
             console.warn('Test warning');
             console.error('Test error');
           `
@@ -791,7 +791,7 @@ node -e "
 import { ConsoleTool } from './tools/console.mjs';
 const tool = new ConsoleTool(console, {});
 tool.execute({ level: 'all', count: 10 })
-  .then(result => console.log('Success:', result))
+  .then(result => this.logger.debug('Console tool test success:', result))
   .catch(error => console.error('Timeout error:', error));
 "
 ```

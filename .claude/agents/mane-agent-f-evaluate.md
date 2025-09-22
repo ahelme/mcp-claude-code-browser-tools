@@ -167,10 +167,10 @@ async function testWebSocketConnection() {
       timeout: 5000
     });
 
-    console.log('WebSocket test passed:', result);
+    this.logger.debug('WebSocket test passed', { result });
     await client.close();
   } catch (error) {
-    console.error('WebSocket test failed:', error);
+    this.logger.error('WebSocket test failed', error);
   }
 }
 ```
@@ -184,13 +184,18 @@ async function profileSerialization() {
     complex: { nested: { deeply: { data: Array(1000).fill('test') } } }
   };
 
-  console.time('serialization');
+  const serializationStart = performance.now();
   const serialized = JSON.stringify(testData);
-  console.timeEnd('serialization');
+  const serializationTime = performance.now() - serializationStart;
 
-  console.time('deserialization');
+  const deserializationStart = performance.now();
   const parsed = JSON.parse(serialized);
-  console.timeEnd('deserialization');
+  const deserializationTime = performance.now() - deserializationStart;
+
+  this.logger.debug('Serialization performance', {
+    serializationTime: `${serializationTime.toFixed(2)}ms`,
+    deserializationTime: `${deserializationTime.toFixed(2)}ms`
+  });
 }
 ```
 
@@ -207,7 +212,9 @@ async function monitorBridgeCommunication() {
     const response = await originalFetch(...args);
     const requestEnd = Date.now();
 
-    console.log('Bridge request time:', requestEnd - requestStart, 'ms');
+    this.logger.debug('Bridge request completed', {
+      duration: `${requestEnd - requestStart}ms`
+    });
     return response;
   };
 }

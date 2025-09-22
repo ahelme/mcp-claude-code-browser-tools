@@ -186,30 +186,35 @@ export class AuditTool extends BaseBrowserTool {
  * Debug response format to understand HTML vs JSON issue
  */
 async function debugResponseFormat(response) {
-  console.log('Response headers:', response.headers);
-  console.log('Content-Type:', response.headers['content-type']);
+  this.logger.debug('Response received', {
+    headers: response.headers,
+    contentType: response.headers['content-type']
+  });
 
   const text = await response.text();
-  console.log('Response first 500 chars:', text.substring(0, 500));
+  this.logger.debug('Response content sample', {
+    firstChars: text.substring(0, 500),
+    contentLength: text.length
+  });
 
   // Check if HTML error page
   if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
-    console.error('ERROR: Received HTML instead of JSON');
+    this.logger.error('Received HTML instead of JSON response');
 
     // Extract error message from HTML if possible
     const errorMatch = text.match(/<title>(.*?)<\/title>/);
     if (errorMatch) {
-      console.error('HTML error page title:', errorMatch[1]);
+      this.logger.error('HTML error page detected', { title: errorMatch[1] });
     }
   }
 
   // Attempt JSON parse
   try {
     const json = JSON.parse(text);
-    console.log('Successfully parsed as JSON');
+    this.logger.debug('Successfully parsed JSON response');
     return json;
   } catch (e) {
-    console.error('Failed to parse as JSON:', e.message);
+    this.logger.error('Failed to parse JSON response', { error: e.message });
     throw new Error('Response is not valid JSON');
   }
 }
