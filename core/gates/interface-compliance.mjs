@@ -84,6 +84,11 @@ export class InterfaceComplianceGate {
    * ```
    */
   async execute(target) {
+    // Runtime validation - compensates for loss of TypeScript compile-time checks
+    if (!target || typeof target !== 'object') {
+      throw new TypeError('Target must be an object for interface validation');
+    }
+
     this.logger.info(
       `Running interface compliance validation for: ${this.getTargetName(target)}`,
     );
