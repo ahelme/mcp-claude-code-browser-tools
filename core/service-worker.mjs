@@ -12,13 +12,6 @@
 import http from "http";
 import url from "url";
 import {
-  IHttpBridge,
-  IHttpRequest,
-  IHttpResponse,
-  IRouteHandler,
-  IBridgeStatus,
-  ILogger,
-  IMetrics,
   ErrorType,
 } from "./interfaces.mjs";
 

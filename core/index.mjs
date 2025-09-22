@@ -21,16 +21,16 @@ export * from './interfaces.mjs';
 
 export {
   ToolRegistry,
-  getRegistry,
-  registerTool,
-  discoverToolsByCategory,
-  routeRequest
+  createToolRegistry
 } from './registry.mjs';
 
 export {
   BaseBrowserTool,
   BaseUIPanel,
-  BaseErrorHandler
+  BaseMonitor,
+  createBrowserTool,
+  createUIPanel,
+  createMonitor
 } from './base-classes.mjs';
 
 export {
@@ -60,7 +60,7 @@ export {
 // FOUNDATION BUILDER
 // ============================================================================
 
-import { ILogger, IMetrics, IMonitor, LogLevel } from './interfaces.mjs';
+import { LogLevel } from './interfaces.mjs';
 import { ToolRegistry } from './registry.mjs';
 import { HttpBridge } from './service-worker.mjs';
 import { MCPHandler } from './mcp-handler.mjs';

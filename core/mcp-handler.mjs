@@ -10,14 +10,6 @@
  */
 
 import {
-  IMCPHandler,
-  IMCPServerInfo,
-  IMCPCapabilities,
-  IBrowserTool,
-  IToolRegistry,
-  IToolResult,
-  ILogger,
-  IMetrics,
   ErrorType
 } from './interfaces.mjs';
 
