@@ -17,7 +17,7 @@
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.mjs"
+        "/Users/lennox/development/browser-tools-setup/mcp-server/server.mjs"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3024",

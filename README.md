@@ -1,13 +1,13 @@
 # Browser Tools for Claude Code
 
 ## Project Overview
-A powerful set of tools for your AI agent to visually test and debug front-end development, navigate and analyse UI and audit performance, SEO and accessibility.
+A powerful set of tools for you and your AI agent to visually test and debug front-end development, navigate and analyse UI and audit performance, SEO and accessibility.
 
-Complete re-write of AgentDesk's sophisticated Browser Tools MCP server to optimise browser-testing and front-end development with AI agents - now updated to June 2025 MCP specification. 
+Complete re-write of:
+1. AgentDesk's sophisticated Browser Tools MCP server to optimise browser-testing and front-end development - updated to June 2025 MCP spec
+2. AgentDesk's Chrome Extension to improve UI and address mcp tools no longer working
 
-The re-write still relies on AgentDesk's Chrome Extension available (here)[https://browsertools.agentdesk.ai/]
-
-## PROJECT STATUS: New Implementation Based on AgentDesk Tools
+## PROJECT STATUS: New Chrome Ext. Based on AgentDesk Tools
 - **IMPORTANT**: We are building a NEW browser tools implementation from scratch
 - The "working/broken tools" refer to status in the OLD AgentDesk Chrome extension
 - Our NEW implementation will use foundation infrastructure (.mjs modules) and MANE agents
@@ -46,20 +46,24 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 
 ### 🔄 IMPLEMENTATION STATUS (All tools need NEW implementation):
 
-**Working in OLD AgentDesk Extension:**
+**Working in OLD AgentDesk Chrome Ext. Need to be Implemnted in OUR new Chrome Ext:**
   1. browser_navigate - Successfully navigates to URLs (NEW implementation needed)
   2. browser_screenshot - Captures screenshots perfectly (NEW implementation needed)
   3. browser_click - Clicks elements successfully (NEW implementation needed)
   4. browser_type - Types text into input fields (NEW implementation needed)
   5. browser_wait - Waits for elements to appear (NEW implementation needed)
   
-**Broken in OLD AgentDesk Extension:**
+**Broken in OLD AgentDesk Chrome Ext. & Need to be Implemnted in OUR new Chrome Ext:**
   6. browser_evaluate - Timeout error when executing JavaScript (NEW implementation needed)
   7. browser_get_content - Request timeout (NEW implementation needed)
   8. browser_audit - Returns HTML instead of JSON (NEW implementation needed)
   9. browser_get_console - Request timeout (NEW implementation needed)
 
 **🎯 Our Goal**: Build ALL 9 tools from scratch using our foundation infrastructure (.mjs modules)
+
+## 🛡️ Code Quality Standards
+**Enterprise-grade standards for all MANE agents:**
+- See gh issues 30-34
 
 ### Features
 
@@ -197,6 +201,34 @@ curl http://localhost:3026/health
 
 ```
 
+## Architecture
+
+```
+Main Method (MCP): Claude Code <--[stdio]--> MCP Server <--[HTTP:3024]--> MCP Bridge <--[WebSocket]--> Chrome Extension
+Backup Method (Direct): External Tool <--[HTTP:3026]--> Direct Bridge <--[WebSocket]--> Chrome Extension
+```
+### Chrome Extension
+- Monitors XHR requests/responses and console logs
+- Tracks selected DOM elements
+- Sends all logs and current element to the BrowserTools Connector
+- Connects to Websocket server to capture/send screenshots
+- Allows user to configure token/truncation limits + screenshot folder path
+
+### Node Server HTTP Bridge
+- Acts as middleware between the Chrome extension and MCP server
+- Receives logs and currently selected element from Chrome extension
+- Processes requests from MCP server to capture logs, screenshot or current element
+- Sends Websocket command to the Chrome extension for capturing a screenshot
+- Intelligently truncates strings and # of duplicate objects in logs to avoid token limits
+- Removes cookies and sensitive headers to avoid sending to LLMs in MCP clients
+
+### MCP Server
+- Implements the Model Context Protocol
+- Provides standardized tools for AI clients
+- Compatible with various MCP clients (Cursor, Cline, Zed, Claude Desktop, etc.)
+
+**See CODE-ARCHITECTURE.md for more details.**
+
 **IMPORTANT**: Port 3024 is reserved for MCP server method.
 
 ## 🚀 Multi-Project Usage
@@ -284,7 +316,7 @@ Now you can work on multiple projects simultaneously! 🎉
 
 ## Tools and Examples 
 
-### Individual Tools in Browser Tools MCP (NOT ALL WORKING YET)
+### Individual Tools (NOT ALL WORKING YET)
 
 All tools are prefixed with `mcp__browser-tools__`:
 
@@ -342,58 +374,6 @@ The MCP server supports several environment variables for customization:
 | `MCP_HTTP_BRIDGE_PORT` | `3024` | Alternative name for same setting | `3026` |
 | `MCP_DEBUG` | `0` | Enable detailed debug logging | `1` |
 
-### Usage Examples
-
-```bash
-# Basic custom port
-BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
-
-# Debug mode with custom port
-BROWSER_TOOLS_PORT=3026 MCP_DEBUG=1 ./scripts/start-mcp-browser-tools.sh
-
-# Via .mcp.json configuration
-{
-  "mcpServers": {
-    "mcp-claude-code-browser-tools": {
-      "env": {
-        "BROWSER_TOOLS_PORT": "3027",
-        "MCP_DEBUG": "1"
-      }
-    }
-  }
-}
-```
-
-### Multi-Project Port Strategy
-
-**Systematic approach for teams:**
-
-```bash
-# Project naming convention: base-port + project-id = final-port
-
-# Project 1: E-commerce site
-BROWSER_TOOLS_PORT=3024
-
-# Project 2: Marketing site
-BROWSER_TOOLS_PORT=3025
-
-# Project 3: Admin dashboard
-BROWSER_TOOLS_PORT=3026
-
-# Project 4: Mobile app testing
-BROWSER_TOOLS_PORT=3027
-```
-
-**Chrome extension setup:** Switch port in extension settings when changing projects, or use separate Chrome profiles for seamless switching.
-
-## Troubleshooting Connection Issues
-
-If the extension shows "Not connected to server. Searching..." try these steps:
-
-1. **Quit Chrome completely** - Not just the window but all of Chrome itself
-2. **Restart the local node server** (HTTP bridge server)
-3. **Ensure only ONE instance** of Chrome Dev Tools panel is open
-4. **Refresh the browser tab** and reopen Dev Tools
 
 ### Port Conflict Issues
 
@@ -429,55 +409,6 @@ lsof -i :3024-3030
 cd project-a && BROWSER_TOOLS_PORT=3024 ./scripts/start-mcp-browser-tools.sh
 cd project-b && BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
 ```
-
-### Chrome Extension Port Switching
-
-**Problem**: Extension connected to wrong project
-
-**Solution**: Update port in extension settings
-1. Open Chrome DevTools → Browser Tools tab
-2. In "Server Connection Settings"
-3. Change "Server Port" to match your project's port
-4. Click "Connect" or refresh the page
-
-## Full MCP Toolset
-- `mcp__browser-tools__navigate` - Navigate to URL
-- `mcp__browser-tools__screenshot` - Capture screenshots
-- `mcp__browser-tools__click` - Click elements
-- `mcp__browser-tools__type` - Type text
-- `mcp__browser-tools__evaluate` - Execute JavaScript
-- `mcp__browser-tools__get_content` - Get page HTML
-- `mcp__browser-tools__audit` - Run Lighthouse audits
-- `mcp__browser-tools__wait` - Wait for elements
-- `mcp__browser-tools__get_console` - Get console logs
-
-## Architecture
-
-```
-Main Method (MCP): Claude Code <--[stdio]--> MCP Server <--[HTTP:3024]--> MCP Bridge <--[WebSocket]--> Chrome Extension
-Backup Method (Direct): External Tool <--[HTTP:3026]--> Direct Bridge <--[WebSocket]--> Chrome Extension
-```
-### Chrome Extension
-- Monitors XHR requests/responses and console logs
-- Tracks selected DOM elements
-- Sends all logs and current element to the BrowserTools Connector
-- Connects to Websocket server to capture/send screenshots
-- Allows user to configure token/truncation limits + screenshot folder path
-
-### Node Server HTTP Bridge
-- Acts as middleware between the Chrome extension and MCP server
-- Receives logs and currently selected element from Chrome extension
-- Processes requests from MCP server to capture logs, screenshot or current element
-- Sends Websocket command to the Chrome extension for capturing a screenshot
-- Intelligently truncates strings and # of duplicate objects in logs to avoid token limits
-- Removes cookies and sensitive headers to avoid sending to LLMs in MCP clients
-
-### MCP Server
-- Implements the Model Context Protocol
-- Provides standardized tools for AI clients
-- Compatible with various MCP clients (Cursor, Cline, Zed, Claude Desktop, etc.)
-
-**See CODE-ARCHITECTURE.md for more details.**
 
 ## Configuration
 
@@ -515,6 +446,7 @@ To modify MCP server configurations:
 4. **Path Requirements**: Use absolute paths for local scripts (e.g., our browser-tools-mcp-2025.js)
 5. **NPX Dependencies**: External packages can be run with `npx -y` for auto-installation
 
+
 ## Compatibility
 
 - Works with Claude Code 
@@ -535,6 +467,6 @@ To modify MCP server configurations:
 
 ## Resources
 
-- [Chrome Extension](https://browsertools.agentdesk.ai/)
+- [Original Chrome Extension by AgentDesk](https://browsertools.agentdesk.ai/)
 - [Original Browser Tools MCP by AgentDesk](https://github.com/AgentDeskAI/browser-tools-mcp)
 - [MCP Specification](https://modelcontextprotocol.io/specification/2025-06-18)

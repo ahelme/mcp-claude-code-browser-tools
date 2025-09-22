@@ -120,7 +120,7 @@
       <key-files>
         <file path="scripts/mcp-claude-code-browser-tools.mjs" role="MCP Server Implementation"/>
         <file path="scripts/mcp-http-bridge.mjs" role="HTTP Bridge for WebSocket Communication"/>
-        <file path="chrome-extension-mvp/" role="Chrome Extension Implementation"/>
+        <file path="chrome-extension/" role="Chrome Extension Implementation"/>
         <file path=".mcp.json" role="Claude Code MCP Configuration"/>
         <file path=".screenshots/" role="Screenshot Output Directory"/>
       </key-files>
@@ -323,7 +323,7 @@
           <trigger>work-completion</trigger>
           <message-template>🏗️ Foundation: {feature} implementation complete</message-template>
           <include-files>
-            <pattern>core/**</pattern>
+            <pattern>chrome-extension/core/**</pattern>
             <pattern>contracts/**</pattern>
             <pattern>tests/foundation/**</pattern>
           </include-files>
@@ -494,7 +494,7 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       <target-tools>
         <tool name="browser_navigate" status="pending" test-status="pending">
           <description>Navigate browser to specified URLs with security validation</description>
-          <implementation-file>chrome-extension-mvp/navigation.js</implementation-file>
+          <implementation-file>chrome-extension/navigation.js</implementation-file>
           <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_navigate</mcp-tool-name>
           <features>
             <feature>URL validation and normalization</feature>
@@ -520,9 +520,9 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <branch-name>agent-c-navigation</branch-name>
         <github-branch>agent-c-navigation</github-branch>
         <agent-definition-file>.claude/agents/mane-navigation-specialist.md</agent-definition-file>
-        <implementation-location>chrome-extension-mvp/navigation.js</implementation-location>
+        <implementation-location>chrome-extension/navigation.js</implementation-location>
         <directories>
-          <directory>tools/navigation</directory>
+          <directory>mcp-server/tools/navigation</directory>
           <directory>tests/navigation</directory>
           <directory>demos/navigation</directory>
         </directories>
@@ -539,9 +539,9 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
           <trigger>work-completion</trigger>
           <message-template>🧭 Navigation: {feature} implementation complete</message-template>
           <include-files>
-            <pattern>tools/navigation/**</pattern>
+            <pattern>mcp-server/tools/navigation/**</pattern>
             <pattern>tests/navigation/**</pattern>
-            <pattern>chrome-extension-mvp/navigation.js</pattern>
+            <pattern>chrome-extension/navigation.js</pattern>
           </include-files>
         </auto-commit>
         <mandatory-user-workflow enabled="true">
@@ -571,7 +571,7 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
       <target-tools>
         <tool name="browser_screenshot" status="pending" test-status="pending">
           <description>Capture page and element screenshots with smart naming</description>
-          <implementation-file>chrome-extension-mvp/screenshot.js</implementation-file>
+          <implementation-file>chrome-extension/screenshot.js</implementation-file>
           <mcp-tool-name>mcp__mcp-claude-code-browser-tools__browser_screenshot</mcp-tool-name>
           <features>
             <feature>Full page screenshot capture</feature>
@@ -595,9 +595,9 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <branch-name>agent-d-screenshot</branch-name>
         <github-branch>agent-d-screenshot</github-branch>
         <agent-definition-file>.claude/agents/mane-screenshot-specialist.md</agent-definition-file>
-        <implementation-location>chrome-extension-mvp/screenshot.js</implementation-location>
+        <implementation-location>chrome-extension/screenshot.js</implementation-location>
         <directories>
-          <directory>tools/screenshot</directory>
+          <directory>mcp-server/tools/screenshot</directory>
           <directory>tests/screenshot</directory>
           <directory>demos/screenshot</directory>
         </directories>
@@ -613,9 +613,9 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
           <trigger>work-completion</trigger>
           <message-template>📸 Screenshot: {feature} implementation complete</message-template>
           <include-files>
-            <pattern>tools/screenshot/**</pattern>
+            <pattern>mcp-server/tools/screenshot/**</pattern>
             <pattern>tests/screenshot/**</pattern>
-            <pattern>chrome-extension-mvp/screenshot.js</pattern>
+            <pattern>chrome-extension/screenshot.js</pattern>
           </include-files>
         </auto-commit>
         <mandatory-user-workflow enabled="true">
@@ -670,9 +670,9 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <branch-name>agent-e-interaction</branch-name>
         <github-branch>agent-e-interaction</github-branch>
         <agent-definition-file>.claude/agents/mane-interaction-specialist.md</agent-definition-file>
-        <implementation-location>chrome-extension-mvp/interactions.js</implementation-location>
+        <implementation-location>chrome-extension/interactions.js</implementation-location>
         <directories>
-          <directory>tools/interaction</directory>
+          <directory>mcp-server/tools/interaction</directory>
           <directory>tests/interaction</directory>
           <directory>demos/interaction</directory>
         </directories>
@@ -688,9 +688,9 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
           <trigger>work-completion</trigger>
           <message-template>🖱️ Interaction: {feature} implementation complete</message-template>
           <include-files>
-            <pattern>tools/interaction/**</pattern>
+            <pattern>mcp-server/tools/interaction/**</pattern>
             <pattern>tests/interaction/**</pattern>
-            <pattern>chrome-extension-mvp/interactions.js</pattern>
+            <pattern>chrome-extension/interactions.js</pattern>
           </include-files>
         </auto-commit>
         <mandatory-user-workflow enabled="true">
@@ -744,7 +744,7 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <github-branch>agent-f-evaluate</github-branch>
         <agent-definition-file>.claude/agents/mane-evaluation-specialist.md</agent-definition-file>
         <directories>
-          <directory>tools/evaluate</directory>
+          <directory>mcp-server/tools/evaluate</directory>
           <directory>tests/evaluate</directory>
           <directory>security/sandbox</directory>
         </directories>
@@ -762,10 +762,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
           <trigger>work-completion</trigger>
           <message-template>🧪 Evaluate: {feature} implementation complete - browser_evaluate tool fixed</message-template>
           <include-files>
-            <pattern>tools/evaluate/**</pattern>
+            <pattern>mcp-server/tools/evaluate/**</pattern>
             <pattern>tests/evaluate/**</pattern>
             <pattern>security/sandbox/**</pattern>
-            <pattern>chrome-extension-mvp/evaluate.js</pattern>
+            <pattern>chrome-extension/evaluate.js</pattern>
           </include-files>
         </auto-commit>
         <mandatory-user-workflow enabled="true">
@@ -824,7 +824,7 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <github-branch>agent-g-audit</github-branch>
         <agent-definition-file>.claude/agents/mane-audit-specialist.md</agent-definition-file>
         <directories>
-          <directory>tools/audit</directory>
+          <directory>mcp-server/tools/audit</directory>
           <directory>tests/audit</directory>
           <directory>lighthouse-config</directory>
         </directories>
@@ -841,10 +841,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
           <trigger>work-completion</trigger>
           <message-template>📊 Audit: {feature} implementation complete - browser_audit tool fixed</message-template>
           <include-files>
-            <pattern>tools/audit/**</pattern>
+            <pattern>mcp-server/tools/audit/**</pattern>
             <pattern>tests/audit/**</pattern>
             <pattern>lighthouse-config/**</pattern>
-            <pattern>chrome-extension-mvp/audit.js</pattern>
+            <pattern>chrome-extension/audit.js</pattern>
           </include-files>
         </auto-commit>
         <mandatory-user-workflow enabled="true">
@@ -902,7 +902,7 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <github-branch>agent-h-console</github-branch>
         <agent-definition-file>.claude/agents/mane-console-detective.md</agent-definition-file>
         <directories>
-          <directory>tools/console</directory>
+          <directory>mcp-server/tools/console</directory>
           <directory>tests/console</directory>
           <directory>monitoring</directory>
         </directories>
@@ -919,10 +919,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
           <trigger>work-completion</trigger>
           <message-template>🎮 Console: {feature} implementation complete - browser_get_console tool fixed</message-template>
           <include-files>
-            <pattern>tools/console/**</pattern>
+            <pattern>mcp-server/tools/console/**</pattern>
             <pattern>tests/console/**</pattern>
             <pattern>monitoring/**</pattern>
-            <pattern>chrome-extension-mvp/console.js</pattern>
+            <pattern>chrome-extension/console.js</pattern>
           </include-files>
         </auto-commit>
         <mandatory-user-workflow enabled="true">
@@ -980,7 +980,7 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
         <github-branch>agent-i-content</github-branch>
         <agent-definition-file>.claude/agents/mane-content-extractor.md</agent-definition-file>
         <directories>
-          <directory>tools/content</directory>
+          <directory>mcp-server/tools/content</directory>
           <directory>tests/content</directory>
           <directory>extraction-utils</directory>
         </directories>
@@ -997,10 +997,10 @@ Agent {agent-name} has completed {batch-name} work and created PR #{pr-number}.
           <trigger>work-completion</trigger>
           <message-template>📄 Content: {feature} implementation complete - browser_get_content tool fixed</message-template>
           <include-files>
-            <pattern>tools/content/**</pattern>
+            <pattern>mcp-server/tools/content/**</pattern>
             <pattern>tests/content/**</pattern>
             <pattern>extraction-utils/**</pattern>
-            <pattern>chrome-extension-mvp/content.js</pattern>
+            <pattern>chrome-extension/content.js</pattern>
           </include-files>
         </auto-commit>
         <mandatory-user-workflow enabled="true">
