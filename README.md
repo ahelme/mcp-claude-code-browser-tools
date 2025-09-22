@@ -7,8 +7,11 @@ Complete re-write of AgentDesk's sophisticated Browser Tools MCP server to optim
 
 The re-write still relies on AgentDesk's Chrome Extension available (here)[https://browsertools.agentdesk.ai/]
 
-## IN-DEVELOPMENT: Current Status - Partially Working
-- FIVE out of NINE tools currently working (see below)
+## PROJECT STATUS: New Implementation Based on AgentDesk Tools
+- **IMPORTANT**: We are building a NEW browser tools implementation from scratch
+- The "working/broken tools" refer to status in the OLD AgentDesk Chrome extension
+- Our NEW implementation will use foundation infrastructure (.mjs modules) and MANE agents
+- **Current Status**: Foundation ready, agent definitions complete, tool implementation needed
 - 100% June 2025 MCP-compliant implementation
 - **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3024)
 
@@ -29,9 +32,9 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
   - Infrastructure: Service worker, monitoring, MCP handler
 - **🎯 Batch 2**: Agent B (Framework) - NEXT TO DEPLOY
   - UI Framework & Component System
-- **🎯 Batch 3**: Agents C,D,E (Core Tools) - Working tools
+- **🎯 Batch 3**: Agents C,D,E (Core Tools) - Working in OLD extension, NEW implementation needed
   - browser_navigate, browser_screenshot, browser_click, browser_type, browser_wait
-- **🎯 Batch 4**: Agents F,G,H,I (Advanced Tools) - Broken tools needing fixes
+- **🎯 Batch 4**: Agents F,G,H,I (Advanced Tools) - Broken in OLD extension, NEW implementation needed
   - browser_evaluate, browser_audit, browser_get_console, browser_get_content
 
 ### ⚡ **MANE Branch Strategy**
@@ -41,20 +44,22 @@ The re-write still relies on AgentDesk's Chrome Extension available (here)[https
 
 **Current Status**: Foundation infrastructure merged and operational on MANE_CORE branch
 
-### ✅ WORKING (5 tools):
+### 🔄 IMPLEMENTATION STATUS (All tools need NEW implementation):
 
-  1. browser_navigate - Successfully navigates to URLs
-  2. browser_screenshot - Captures screenshots perfectly
-  3. browser_click - Clicks elements successfully
-  4. browser_type - Types text into input fields
-  5. browser_wait - Waits for elements to appear
+**Working in OLD AgentDesk Extension:**
+  1. browser_navigate - Successfully navigates to URLs (NEW implementation needed)
+  2. browser_screenshot - Captures screenshots perfectly (NEW implementation needed)
+  3. browser_click - Clicks elements successfully (NEW implementation needed)
+  4. browser_type - Types text into input fields (NEW implementation needed)
+  5. browser_wait - Waits for elements to appear (NEW implementation needed)
   
-###  ❌ NOT WORKING (4 tools):
+**Broken in OLD AgentDesk Extension:**
+  6. browser_evaluate - Timeout error when executing JavaScript (NEW implementation needed)
+  7. browser_get_content - Request timeout (NEW implementation needed)
+  8. browser_audit - Returns HTML instead of JSON (NEW implementation needed)
+  9. browser_get_console - Request timeout (NEW implementation needed)
 
-  6. browser_evaluate - Timeout error when executing JavaScript
-  7. browser_get_content - Request timeout
-  8. browser_audit - Returns HTML instead of JSON (parsing error)
-  9. browser_get_console - Request timeout
+**🎯 Our Goal**: Build ALL 9 tools from scratch using our foundation infrastructure (.mjs modules)
 
 ### Features
 
