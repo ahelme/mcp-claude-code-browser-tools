@@ -37,7 +37,13 @@
       "Bash(git branch:*)",
       "Read(//Users/lennox/development/mane-universes/**)",
       "Bash(make:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh issue create:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(gh issue list:*)"
     ],
     "deny": [],
     "ask": []

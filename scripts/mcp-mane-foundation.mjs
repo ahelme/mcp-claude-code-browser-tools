@@ -27,9 +27,9 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 
 // Foundation imports would be here in real implementation
-// import { ToolRegistry } from '../core/registry.js';
-// import { createQualityFramework } from '../core/quality-framework.js';
-// import { MANEServiceWorker } from '../core/service-worker.js';
+// import { ToolRegistry } from '../core/registry.mjs';
+// import { createQualityFramework } from '../core/quality-framework.mjs';
+// import { MANEServiceWorker } from '../core/service-worker.mjs';
 
 // Mock implementations for demonstration
 const serverInfo = {

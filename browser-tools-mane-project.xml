@@ -21,9 +21,9 @@
 
     <repositories>
       <main-repo>browser-tools-setup</main-repo>
-      <github-url>https://github.com/anthropics/browser-tools-setup</github-url>
-      <github-owner>anthropics</github-owner>
-      <github-repo>browser-tools-setup</github-repo>
+      <github-url>https://github.com/ahelme/mcp-claude-code-browser-tools</github-url>
+      <github-owner>ahelme</github-owner>
+      <github-repo>mcp-claude-code-browser-tools</github-repo>
       <main-branch>main</main-branch>
       <development-branch>MANE_CORE</development-branch>
       <agent-source-branch>MANE_CORE</agent-source-branch>

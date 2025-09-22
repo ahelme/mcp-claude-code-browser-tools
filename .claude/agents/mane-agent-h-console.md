@@ -125,7 +125,7 @@ export class ConsoleTool extends BaseBrowserTool {
    * @returns {Promise<import('../../core/interfaces.mjs').IToolResult>}
    */
   async execute(params) {
-    const startTime = Date.now();
+    const startTime = performance.now();
 
     try {
       // Validate parameters
@@ -148,7 +148,7 @@ export class ConsoleTool extends BaseBrowserTool {
       // Categorize messages
       const categorized = this.categorizeMessages(formatted);
 
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('console_get', duration, true);
 
       return {
@@ -173,7 +173,7 @@ export class ConsoleTool extends BaseBrowserTool {
       };
 
     } catch (error) {
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('console_get', duration, false);
 
       return this.handleError(error, {
@@ -206,11 +206,9 @@ export class ConsoleProtocolOptimizer {
       // Enable runtime events
       await Runtime.enable();
 
-      console.time('console-collection');
-
       // Collect existing console messages
       const messages = [];
-      const startTime = Date.now();
+      const startTime = performance.now();
 
       // Set up event listener with timeout
       const messagePromise = new Promise((resolve, reject) => {
@@ -232,13 +230,9 @@ export class ConsoleProtocolOptimizer {
           }
         });
 
-        // Trigger some console output for testing
+        // Trigger basic console output for testing
         Runtime.evaluate({
-          expression: `
-            console.log('Test log message');
-            console.warn('Test warning');
-            console.error('Test error');
-          `
+          expression: 'console.log("Console test"); console.warn("Warning test");'
         });
 
         // If no messages, resolve after 2 seconds
@@ -249,13 +243,13 @@ export class ConsoleProtocolOptimizer {
       });
 
       const result = await messagePromise;
-      console.timeEnd('console-collection');
-
       await client.close();
       return result;
 
     } catch (error) {
-      console.error('Console access test failed:', error);
+      if (this.logger && this.logger.error) {
+        this.logger.error('Console access test failed', { error: error.message, stack: error.stack });
+      }
       throw error;
     }
   }
@@ -366,20 +360,22 @@ export class ConsoleMessageBuffer {
  */
 export class TimeoutResistantCollector {
   static async collectWithTimeout(collectionFn, timeoutMs = 5000) {
-    return new Promise(async (resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error(`Console collection timeout after ${timeoutMs}ms`));
-      }, timeoutMs);
+    let timeout;
 
-      try {
-        const result = await collectionFn();
-        clearTimeout(timeout);
-        resolve(result);
-      } catch (error) {
-        clearTimeout(timeout);
-        reject(error);
-      }
-    });
+    try {
+      const timeoutPromise = new Promise((_, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error(`Console collection timeout after ${timeoutMs}ms`));
+        }, timeoutMs);
+      });
+
+      const result = await Promise.race([collectionFn(), timeoutPromise]);
+      clearTimeout(timeout);
+      return result;
+    } catch (error) {
+      if (timeout) clearTimeout(timeout);
+      throw error;
+    }
   }
 
   /**
@@ -791,8 +787,16 @@ node -e "
 import { ConsoleTool } from './tools/console.mjs';
 const tool = new ConsoleTool(console, {});
 tool.execute({ level: 'all', count: 10 })
-  .then(result => console.log('Success:', result))
-  .catch(error => console.error('Timeout error:', error));
+  .then(result => {
+    if (this.logger && this.logger.debug) {
+      this.logger.debug('Console tool test success:', result);
+    }
+  })
+  .catch(error => {
+    if (this.logger && this.logger.error) {
+      this.logger.error('Console tool test timeout error', { error: error.message, stack: error.stack });
+    }
+  });
 "
 ```
 

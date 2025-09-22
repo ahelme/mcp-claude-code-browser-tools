@@ -130,7 +130,7 @@ export class ContentTool extends BaseBrowserTool {
    * @returns {Promise<import('../../core/interfaces.mjs').IToolResult>}
    */
   async execute(params) {
-    const startTime = Date.now();
+    const startTime = performance.now();
 
     try {
       // Configure extraction options
@@ -155,7 +155,7 @@ export class ContentTool extends BaseBrowserTool {
         ? await this.analyzeContentStructure(processed.content)
         : null;
 
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('content_extract', duration, true);
 
       return {
@@ -181,7 +181,7 @@ export class ContentTool extends BaseBrowserTool {
       };
 
     } catch (error) {
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('content_extract', duration, false);
 
       return this.handleError(error, {
@@ -205,7 +205,7 @@ export class ContentTool extends BaseBrowserTool {
  */
 export class TimeoutResistantExtractor {
   static async extractWithChunking(selector = null, maxLength = 100000) {
-    const startTime = Date.now();
+    const startTime = performance.now();
 
     // Strategy: Extract content in chunks to prevent timeout
     return new Promise((resolve, reject) => {
@@ -239,7 +239,7 @@ export class TimeoutResistantExtractor {
               truncated: content.length > maxLength,
               originalLength: content.length,
               found: true,
-              processingTime: Date.now() - startTime
+              processingTime: performance.now() - startTime
             });
             return;
           }
@@ -266,7 +266,7 @@ export class TimeoutResistantExtractor {
                 truncated: true,
                 originalLength: content.length,
                 found: true,
-                processingTime: Date.now() - startTime
+                processingTime: performance.now() - startTime
               });
               return;
             }
@@ -358,7 +358,7 @@ export class MemoryEfficientProcessor {
 
     return new Promise((resolve, reject) => {
       const processNext = () => {
-        const startTime = Date.now();
+        const startTime = performance.now();
         let chunkProcessed = 0;
 
         // Process chunk
@@ -797,8 +797,16 @@ node -e "
 import { ContentTool } from './tools/content.mjs';
 const tool = new ContentTool(console, {});
 tool.execute({ format: 'text', maxLength: 1000 })
-  .then(result => console.log('Success:', result.data.length))
-  .catch(error => console.error('Timeout error:', error));
+  .then(result => {
+    if (this.logger && this.logger.debug) {
+      this.logger.debug('Content tool test success - extracted length:', result.data.length);
+    }
+  })
+  .catch(error => {
+    if (this.logger && this.logger.error) {
+      this.logger.error('Content tool test timeout error', { error: error.message, stack: error.stack });
+    }
+  });
 "
 ```
 
