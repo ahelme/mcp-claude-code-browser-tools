@@ -155,7 +155,7 @@ export class EvaluateTool extends BaseBrowserTool {
 **Hypothesis 1**: Chrome DevTools Protocol WebSocket connection timing out
 ```javascript
 // Test WebSocket connection stability
-async function testWebSocketConnection() {
+async function testWebSocketConnection(logger = null) {
   const CDP = require('chrome-remote-interface');
 
   try {
@@ -167,10 +167,14 @@ async function testWebSocketConnection() {
       timeout: 5000
     });
 
-    this.logger.debug('WebSocket test passed', { result });
+    if (logger && logger.debug) {
+      logger.debug('WebSocket test passed', { result });
+    }
     await client.close();
   } catch (error) {
-    this.logger.error('WebSocket test failed', { error: error.message, stack: error.stack });
+    if (logger && logger.error) {
+      logger.error('WebSocket test failed', { error: error.message, stack: error.stack });
+    }
   }
 }
 ```
@@ -178,7 +182,7 @@ async function testWebSocketConnection() {
 **Hypothesis 2**: Message serialization causing delays
 ```javascript
 // Profile serialization performance
-async function profileSerialization() {
+async function profileSerialization(logger = null) {
   const testData = {
     simple: 'string',
     complex: { nested: { deeply: { data: Array(1000).fill('test') } } }
@@ -192,17 +196,19 @@ async function profileSerialization() {
   const parsed = JSON.parse(serialized);
   const deserializationTime = performance.now() - deserializationStart;
 
-  this.logger.debug('Serialization performance', {
-    serializationTime: `${serializationTime.toFixed(2)}ms`,
-    deserializationTime: `${deserializationTime.toFixed(2)}ms`
-  });
+  if (logger && logger.debug) {
+    logger.debug('Serialization performance', {
+      serializationTime: `${serializationTime.toFixed(2)}ms`,
+      deserializationTime: `${deserializationTime.toFixed(2)}ms`
+    });
+  }
 }
 ```
 
 **Hypothesis 3**: Extension-to-bridge communication bottleneck
 ```javascript
 // Monitor HTTP bridge communication
-async function monitorBridgeCommunication() {
+async function monitorBridgeCommunication(logger = null) {
   const startTime = performance.now();
 
   // Intercept fetch requests
@@ -212,9 +218,11 @@ async function monitorBridgeCommunication() {
     const response = await originalFetch(...args);
     const requestEnd = performance.now();
 
-    this.logger.debug('Bridge request completed', {
-      duration: `${requestEnd - requestStart}ms`
-    });
+    if (logger && logger.debug) {
+      logger.debug('Bridge request completed', {
+        duration: `${requestEnd - requestStart}ms`
+      });
+    }
     return response;
   };
 }

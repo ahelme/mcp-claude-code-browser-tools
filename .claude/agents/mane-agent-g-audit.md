@@ -185,37 +185,56 @@ export class AuditTool extends BaseBrowserTool {
 /**
  * Debug response format to understand HTML vs JSON issue
  */
-async function debugResponseFormat(response) {
-  this.logger.debug('Response received', {
-    headers: response.headers,
-    contentType: response.headers['content-type']
-  });
+async function debugResponseFormat(response, logger = null) {
+  try {
+    if (logger && logger.debug) {
+      logger.debug('Response received', {
+        headers: response.headers,
+        contentType: response.headers['content-type']
+      });
+    }
 
-  const text = await response.text();
-  this.logger.debug('Response content sample', {
-    firstChars: text.substring(0, 500),
-    contentLength: text.length
-  });
+    const text = await response.text();
+  if (logger && logger.debug) {
+    logger.debug('Response content sample', {
+      firstChars: text.substring(0, 500),
+      contentLength: text.length
+    });
+  }
 
   // Check if HTML error page
   if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
-    this.logger.error('Received HTML instead of JSON response', { responseType: 'text/html', expectedType: 'application/json' });
+    if (logger && logger.error) {
+      logger.error('Received HTML instead of JSON response', { responseType: 'text/html', expectedType: 'application/json' });
+    }
 
     // Extract error message from HTML if possible
     const errorMatch = text.match(/<title>(.*?)<\/title>/);
     if (errorMatch) {
-      this.logger.error('HTML error page detected', { title: errorMatch[1] });
+      if (logger && logger.error) {
+        logger.error('HTML error page detected', { title: errorMatch[1] });
+      }
     }
   }
 
   // Attempt JSON parse
   try {
     const json = JSON.parse(text);
-    this.logger.debug('Successfully parsed JSON response');
+    if (logger && logger.debug) {
+      logger.debug('Successfully parsed JSON response');
+    }
     return json;
   } catch (e) {
-    this.logger.error('Failed to parse JSON response', { error: e.message });
+    if (logger && logger.error) {
+      logger.error('Failed to parse JSON response', { error: e.message });
+    }
     throw new Error('Response is not valid JSON');
+  }
+  } catch (error) {
+    if (logger && logger.error) {
+      logger.error('Debug response format failed', { error: error.message, stack: error.stack });
+    }
+    throw error;
   }
 }
 ```
@@ -668,8 +687,16 @@ node -e "
 import { AuditTool } from './tools/audit.mjs';
 const tool = new AuditTool(console, {});
 tool.execute({ url: 'https://example.com' })
-  .then(result => console.log('Result:', result))
-  .catch(error => this.logger.error('Audit tool test error', { error: error.message, stack: error.stack }));
+  .then(result => {
+    if (tool.logger && tool.logger.debug) {
+      tool.logger.debug('Audit tool test result:', result);
+    }
+  })
+  .catch(error => {
+    if (tool.logger && tool.logger.error) {
+      tool.logger.error('Audit tool test error', { error: error.message, stack: error.stack });
+    }
+  });
 "
 ```
 
