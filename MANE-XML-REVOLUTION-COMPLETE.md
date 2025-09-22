@@ -15,7 +15,7 @@ We have successfully created the **world's first XML-driven AI collaborative dev
 <mane-project version="1.0" xmlns="https://mane-methodology.dev/schema/v1">
   <metadata>
     <repositories>
-      <github-url>https://github.com/anthropics/browser-tools-setup</github-url>
+      <github-url>https://github.com/ahelme/mcp-claude-code-browser-tools</github-url>
       <universe-path>/Users/lennox/development/mane-universes/browser-tools</universe-path>
       <universe-structure>project-specific</universe-structure>
     </repositories>
