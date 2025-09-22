@@ -7,13 +7,10 @@
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
-// Note: These would normally import from .ts files
-// For testing, we'll test the functionality without direct imports
-// until we have a proper TypeScript test setup
-
-// import { InterfaceComplianceGate } from '../core/gates/interface-compliance.ts';
-// import { PerformanceQualityGate } from '../core/gates/performance-quality.ts';
-// import { SecurityQualityGate } from '../core/gates/security-quality.ts';
+// Import the converted .mjs modules
+import { InterfaceComplianceGate } from '../core/gates/interface-compliance.mjs';
+import { PerformanceQualityGate } from '../core/gates/performance-quality.mjs';
+import { SecurityQualityGate } from '../core/gates/security-quality.mjs';
 
 // Mock implementations for testing
 class MockLogger {

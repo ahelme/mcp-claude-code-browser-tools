@@ -3,17 +3,11 @@
  *
  * Ensures all tools and panels properly implement their required interfaces
  * and can be successfully registered and discovered.
+ *
+ * **CONVERTED TO .mjs**: Native Node.js ES modules for immediate compatibility
  */
 
-import {
-  IQualityGate,
-  IBrowserTool,
-  IUIPanel,
-  IToolRegistry,
-  ILogger,
-  IMetrics,
-  ValidationResult,
-} from "../interfaces.js";
+import { ErrorType } from "../interfaces.mjs";
 
 /**
  * Interface Compliance Quality Gate
@@ -21,8 +15,6 @@ import {
  * Validates that MANE components properly implement their required interfaces.
  * This gate ensures parallel agent development is possible by verifying that
  * all components follow consistent interface contracts.
- *
- * @implements {IQualityGate}
  *
  * **Validation Scope:**
  * - Browser tool interface compliance (IBrowserTool)
@@ -37,8 +29,10 @@ import {
  * - Integration workflows: Use before universe merging
  *
  * **Pass Criteria:** 90% of interface checks must pass
+ *
+ * @implements {IQualityGate}
  */
-export class InterfaceComplianceGate implements IQualityGate {
+export class InterfaceComplianceGate {
   /** Quality gate identifier used in MANE workflows */
   name = "interface-compliance";
 
@@ -52,15 +46,15 @@ export class InterfaceComplianceGate implements IQualityGate {
   /**
    * Creates new interface compliance gate
    *
-   * @param registry - Tool registry for integration testing
-   * @param logger - Logging service for validation tracking
-   * @param metrics - Metrics collection for performance monitoring
+   * @param {IToolRegistry} registry - Tool registry for integration testing
+   * @param {ILogger} logger - Logging service for validation tracking
+   * @param {IMetrics} metrics - Metrics collection for performance monitoring
    */
-  constructor(
-    private registry: IToolRegistry,
-    private logger: ILogger,
-    private metrics: IMetrics,
-  ) {}
+  constructor(registry, logger, metrics) {
+    this.registry = registry;
+    this.logger = logger;
+    this.metrics = metrics;
+  }
 
   /**
    * Executes interface compliance validation on a target component
@@ -77,11 +71,11 @@ export class InterfaceComplianceGate implements IQualityGate {
    * - Components must pass 90% of interface tests
    * - Registry integration is validated for discoverability
    *
-   * @param target - Component to validate (tool, panel, or other)
-   * @returns Promise resolving to validation result with score and errors
+   * @param {unknown} target - Component to validate (tool, panel, or other)
+   * @returns {Promise<ValidationResult>} Promise resolving to validation result with score and errors
    *
    * @example
-   * ```typescript
+   * ```javascript
    * const gate = new InterfaceComplianceGate(registry, logger, metrics);
    * const result = await gate.execute(myBrowserTool);
    * if (result.valid) {
@@ -89,13 +83,13 @@ export class InterfaceComplianceGate implements IQualityGate {
    * }
    * ```
    */
-  async execute(target: unknown): Promise<ValidationResult> {
+  async execute(target) {
     this.logger.info(
       `Running interface compliance validation for: ${this.getTargetName(target)}`,
     );
 
     const startTime = Date.now();
-    const results: any[] = [];
+    const results = [];
 
     try {
       if (this.isBrowserTool(target)) {
@@ -159,12 +153,12 @@ export class InterfaceComplianceGate implements IQualityGate {
    * **Agent Usage:**
    * Use this to validate tools before deployment in Agent B-I workflows
    *
-   * @param tool - Browser tool implementing IBrowserTool
-   * @returns Array of test results with pass/fail status
+   * @param {IBrowserTool} tool - Browser tool implementing IBrowserTool
+   * @returns {Promise<Array>} Array of test results with pass/fail status
    *
    * @private
    */
-  private async validateBrowserTool(tool: IBrowserTool): Promise<any[]> {
+  async validateBrowserTool(tool) {
     const results = [];
 
     // Test required properties
@@ -283,12 +277,12 @@ export class InterfaceComplianceGate implements IQualityGate {
    * **Agent Usage:**
    * Use this for Agent F (UI panels) and Agent G (screenshot) components
    *
-   * @param panel - UI panel implementing IUIPanel
-   * @returns Array of test results with pass/fail status
+   * @param {IUIPanel} panel - UI panel implementing IUIPanel
+   * @returns {Promise<Array>} Array of test results with pass/fail status
    *
    * @private
    */
-  private async validateUIPanel(panel: IUIPanel): Promise<any[]> {
+  async validateUIPanel(panel) {
     const results = [];
 
     // Test required properties
@@ -361,7 +355,12 @@ export class InterfaceComplianceGate implements IQualityGate {
     return results;
   }
 
-  private isBrowserTool(target: unknown): target is IBrowserTool {
+  /**
+   * Type guard for browser tools
+   * @param {unknown} target - Object to check
+   * @returns {boolean} True if target implements IBrowserTool
+   */
+  isBrowserTool(target) {
     return (
       target !== null &&
       typeof target === "object" &&
@@ -371,7 +370,12 @@ export class InterfaceComplianceGate implements IQualityGate {
     );
   }
 
-  private isUIPanel(target: unknown): target is IUIPanel {
+  /**
+   * Type guard for UI panels
+   * @param {unknown} target - Object to check
+   * @returns {boolean} True if target implements IUIPanel
+   */
+  isUIPanel(target) {
     return (
       target !== null &&
       typeof target === "object" &&
@@ -380,7 +384,12 @@ export class InterfaceComplianceGate implements IQualityGate {
     );
   }
 
-  private getTargetName(target: unknown): string {
+  /**
+   * Get human-readable target name
+   * @param {unknown} target - Target object
+   * @returns {string} Target name or "unknown"
+   */
+  getTargetName(target) {
     if (target && typeof target === "object" && "name" in target) {
       return String(target.name);
     }

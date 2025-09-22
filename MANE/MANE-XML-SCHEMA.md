@@ -63,8 +63,44 @@ The **MANE XML Schema** provides a standardized, declarative format for defining
     <universe-structure>project-specific</universe-structure>
     <universe-parent>/Users/lennox/development/mane-universes</universe-parent>
     <integration-branch>integration</integration-branch>
+    <development-branch>MANE_CORE</development-branch>
+    <agent-source-branch>MANE_CORE</agent-source-branch>
+    <working-branch>MANE_CORE</working-branch>
   </repositories>
 </metadata>
+```
+
+### **1.1. 🚨 Development Standards (CRITICAL)**
+```xml
+<development-standards>
+  <file-formats>
+    <javascript-modules>
+      <required-format>.mjs</required-format>
+      <reason>Native Node.js ES modules - immediate compatibility</reason>
+      <import-extension>.mjs</import-extension>
+
+      <!-- ❌ FORBIDDEN FILE TYPES ❌ -->
+      <forbidden-formats>
+        <format>.ts</format>
+        <reason>Causes import issues, requires build step</reason>
+        <replacement>Use .mjs with JSDoc types instead</replacement>
+      </forbidden-formats>
+    </javascript-modules>
+
+    <type-definitions>
+      <method>JSDoc comments</method>
+      <example>/** @typedef {Object} IBrowserTool */</example>
+      <never-use>TypeScript interfaces</never-use>
+    </type-definitions>
+  </file-formats>
+
+  <agent-requirements>
+    <rule priority="critical">ALWAYS create .mjs files, NEVER .ts files</rule>
+    <rule priority="critical">ALWAYS import with .mjs extensions</rule>
+    <rule priority="high">Use JSDoc for type information</rule>
+    <rule priority="medium">Follow existing .mjs patterns in scripts/</rule>
+  </agent-requirements>
+</development-standards>
 ```
 
 ### **2. 📚 Essential Context**

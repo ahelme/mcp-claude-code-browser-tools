@@ -3,15 +3,9 @@
  *
  * Ensures components meet performance requirements for response time,
  * memory usage, and throughput.
+ *
+ * **CONVERTED TO .mjs**: Native Node.js ES modules for immediate compatibility
  */
-
-import {
-  IQualityGate,
-  IBrowserTool,
-  IUIPanel,
-  ILogger,
-  IMetrics,
-} from "../interfaces.js";
 
 /**
  * Performance Quality Gate
@@ -19,8 +13,6 @@ import {
  * Validates that MANE components meet performance requirements for
  * response time, memory usage, and concurrent execution capability.
  * Critical for ensuring agent tools perform adequately in production.
- *
- * @implements {IQualityGate}
  *
  * **Performance Criteria:**
  * - Browser tools: < 5s response time, < 50MB memory increase
@@ -34,8 +26,10 @@ import {
  * - Continuous monitoring: Regular performance regression testing
  *
  * **Pass Criteria:** 80% of performance tests must pass
+ *
+ * @implements {IQualityGate}
  */
-export class PerformanceQualityGate implements IQualityGate {
+export class PerformanceQualityGate {
   /** Quality gate identifier used in MANE workflows */
   name = "performance";
 
@@ -49,26 +43,26 @@ export class PerformanceQualityGate implements IQualityGate {
   /**
    * Creates new performance quality gate
    *
-   * @param logger - Logging service for performance tracking
-   * @param metrics - Metrics collection for performance monitoring and alerting
+   * @param {ILogger} logger - Logging service for performance tracking
+   * @param {IMetrics} metrics - Metrics collection for performance monitoring and alerting
    */
-  constructor(
-    private logger: ILogger,
-    private metrics: IMetrics,
-  ) {}
+  constructor(logger, metrics) {
+    this.logger = logger;
+    this.metrics = metrics;
+  }
 
-  async execute(target: unknown): Promise<{
-    valid: boolean;
-    score: number;
-    errors: string[];
-    details?: any;
-  }> {
+  /**
+   * Execute performance validation
+   * @param {unknown} target - Component to validate
+   * @returns {Promise<ValidationResult>} Validation result with performance metrics
+   */
+  async execute(target) {
     this.logger.info(
       `Running performance validation for: ${this.getTargetName(target)}`,
     );
 
     const startTime = Date.now();
-    const results: any[] = [];
+    const results = [];
 
     try {
       if (this.isBrowserTool(target)) {
@@ -117,7 +111,12 @@ export class PerformanceQualityGate implements IQualityGate {
     }
   }
 
-  private async validateToolPerformance(tool: IBrowserTool): Promise<any[]> {
+  /**
+   * Validate browser tool performance
+   * @param {IBrowserTool} tool - Tool to validate
+   * @returns {Promise<Array>} Performance test results
+   */
+  async validateToolPerformance(tool) {
     const results = [];
 
     // Test response time
@@ -231,7 +230,12 @@ export class PerformanceQualityGate implements IQualityGate {
     return results;
   }
 
-  private async validatePanelPerformance(panel: IUIPanel): Promise<any[]> {
+  /**
+   * Validate UI panel performance
+   * @param {IUIPanel} panel - Panel to validate
+   * @returns {Promise<Array>} Performance test results
+   */
+  async validatePanelPerformance(panel) {
     const results = [];
 
     // Test initialization time
@@ -330,10 +334,15 @@ export class PerformanceQualityGate implements IQualityGate {
     return results;
   }
 
-  private generateTestParams(schema: any): any {
+  /**
+   * Generate test parameters from schema
+   * @param {any} schema - Parameter schema
+   * @returns {any} Generated test parameters
+   */
+  generateTestParams(schema) {
     // Generate minimal valid parameters based on schema
     if (schema.type === "object") {
-      const params: any = {};
+      const params = {};
 
       if (schema.required) {
         for (const prop of schema.required) {
@@ -350,7 +359,12 @@ export class PerformanceQualityGate implements IQualityGate {
     return {};
   }
 
-  private generateTestValue(schema: any): any {
+  /**
+   * Generate test value for schema type
+   * @param {any} schema - Property schema
+   * @returns {any} Generated test value
+   */
+  generateTestValue(schema) {
     switch (schema.type) {
       case "string":
         return "test";
@@ -367,7 +381,12 @@ export class PerformanceQualityGate implements IQualityGate {
     }
   }
 
-  private isBrowserTool(target: unknown): target is IBrowserTool {
+  /**
+   * Type guard for browser tools
+   * @param {unknown} target - Object to check
+   * @returns {boolean} True if target implements IBrowserTool
+   */
+  isBrowserTool(target) {
     return (
       target !== null &&
       typeof target === "object" &&
@@ -376,7 +395,12 @@ export class PerformanceQualityGate implements IQualityGate {
     );
   }
 
-  private isUIPanel(target: unknown): target is IUIPanel {
+  /**
+   * Type guard for UI panels
+   * @param {unknown} target - Object to check
+   * @returns {boolean} True if target implements IUIPanel
+   */
+  isUIPanel(target) {
     return (
       target !== null &&
       typeof target === "object" &&
@@ -385,7 +409,12 @@ export class PerformanceQualityGate implements IQualityGate {
     );
   }
 
-  private getTargetName(target: unknown): string {
+  /**
+   * Get human-readable target name
+   * @param {unknown} target - Target object
+   * @returns {string} Target name or "unknown"
+   */
+  getTargetName(target) {
     if (target && typeof target === "object" && "name" in target) {
       return String(target.name);
     }
