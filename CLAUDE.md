@@ -7,8 +7,11 @@ Complete re-write of AgentDesk's sophisticated Browser Tools MCP server to optim
 
 The re-write still relies on AgentDesk's Chrome Extension available (here)[https://browsertools.agentdesk.ai/]
 
-## IN-DEVELOPMENT: Current Status - Partially Working
-- FIVE out of NINE tools currently working (see below)
+## PROJECT STATUS: New Implementation Based on AgentDesk Tools
+- **IMPORTANT**: We are building a NEW browser tools implementation from scratch
+- The "broken tools" refer to issues in the OLD AgentDesk Chrome extension
+- Our NEW implementation uses the foundation infrastructure (.mjs modules)
+- **Current Status**: Foundation ready, agent definitions complete, tool implementation needed
 - 100% June 2025 MCP-compliant implementation
 - **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3024)
 
@@ -32,13 +35,13 @@ We've successfully deployed the world's **first battle-tested AI collaborative d
 ../mane-universes/browser-tools/
 ├── agent-a-foundation   ✅ COMPLETED & MERGED - Foundation infrastructure operational
 ├── agent-b-framework    🎯 BATCH 2 NEXT - UI Framework & Component System
-├── agent-c-navigation   🎯 BATCH 3 - browser_navigate tool (working)
-├── agent-d-screenshot   🎯 BATCH 3 - browser_screenshot tool (working)
-├── agent-e-interaction  🎯 BATCH 3 - browser_click, browser_type, browser_wait (working)
-├── agent-f-evaluate     🎯 BATCH 4 - browser_evaluate tool (broken - timeout)
-├── agent-g-audit        🎯 BATCH 4 - browser_audit tool (broken - JSON parsing)
-├── agent-h-console      🎯 BATCH 4 - browser_get_console tool (broken - timeout)
-├── agent-i-content      🎯 BATCH 4 - browser_get_content tool (broken - timeout)
+├── agent-c-navigation   🎯 BATCH 3 - browser_navigate tool (working in OLD extension, NEW implementation needed)
+├── agent-d-screenshot   🎯 BATCH 3 - browser_screenshot tool (working in OLD extension, NEW implementation needed)
+├── agent-e-interaction  🎯 BATCH 3 - browser_click, browser_type, browser_wait (working in OLD extension, NEW implementation needed)
+├── agent-f-evaluate     🎯 BATCH 4 - browser_evaluate tool (broken in OLD extension, NEW implementation needed)
+├── agent-g-audit        🎯 BATCH 4 - browser_audit tool (broken in OLD extension, NEW implementation needed)
+├── agent-h-console      🎯 BATCH 4 - browser_get_console tool (broken in OLD extension, NEW implementation needed)
+├── agent-i-content      🎯 BATCH 4 - browser_get_content tool (broken in OLD extension, NEW implementation needed)
 └── integration         🔄 READY - Integration testing universe
 ```
 
@@ -78,13 +81,13 @@ make env-validate      # Environment consistency
 
 The enhanced MANE system is **fully operational** and ready to enable:
 - **Agent B**: UI Framework & Component System (Batch 2)
-- **Agent C**: browser_navigate tool (Batch 3 - working)
-- **Agent D**: browser_screenshot tool (Batch 3 - working)
-- **Agent E**: browser_click, browser_type, browser_wait tools (Batch 3 - working)
-- **Agent F**: browser_evaluate tool (Batch 4 - needs fixing)
-- **Agent G**: browser_audit tool (Batch 4 - needs fixing)
-- **Agent H**: browser_get_console tool (Batch 4 - needs fixing)
-- **Agent I**: browser_get_content tool (Batch 4 - needs fixing)
+- **Agent C**: browser_navigate tool (Batch 3 - working in OLD extension, NEW implementation needed)
+- **Agent D**: browser_screenshot tool (Batch 3 - working in OLD extension, NEW implementation needed)
+- **Agent E**: browser_click, browser_type, browser_wait tools (Batch 3 - working in OLD extension, NEW implementation needed)
+- **Agent F**: browser_evaluate tool (Batch 4 - broken in OLD extension, NEW implementation needed)
+- **Agent G**: browser_audit tool (Batch 4 - broken in OLD extension, NEW implementation needed)
+- **Agent H**: browser_get_console tool (Batch 4 - broken in OLD extension, NEW implementation needed)
+- **Agent I**: browser_get_content tool (Batch 4 - broken in OLD extension, NEW implementation needed)
 
 Each agent can now work **independently** in their dedicated universe, building on the **rock-solid foundation** established by Agent A, with **automatic quality validation** and **seamless integration** through the registry system.
 
@@ -113,6 +116,7 @@ Each agent can now work **independently** in their dedicated universe, building 
 - 📚 **[MANE/MANE-USER-GUIDE.md](MANE/MANE-USER-GUIDE.md)** - Complete setup and deployment guide
 - 🌳 **[MANE/MANE-WORKTREES-ULTIMATE-METHODOLOGY.md](MANE/MANE-WORKTREES-ULTIMATE-METHODOLOGY.md)** - Local parallel development
 - 🐙 **[MANE/MANE-GITHUB-ULTIMATE-METHODOLOGY.md](MANE/MANE-GITHUB-ULTIMATE-METHODOLOGY.md)** - Global distributed collaboration
+- 📋 **[MANE/TECHNICAL-DECISIONS.md](MANE/TECHNICAL-DECISIONS.md)** - Technical decision rationale and history
 
 **Current Implementation Focus:**
 - **Branch**: `MANE_CORE` - Primary MANE development branch (renamed from MANE_WORKTREE)
@@ -122,23 +126,29 @@ Each agent can now work **independently** in their dedicated universe, building 
   - `<working-branch>MANE_CORE</working-branch>`
 - **Agent Organization**: 9 agents in 4 logical batches with mandatory user workflow enforcement
 - **Foundation**: Agent A COMPLETED and MERGED - Foundation infrastructure operational
-- **Follow-up**: Issue #20 created for TypeScript import path fixes
+- **🚀 MAJOR MILESTONE**: Complete TypeScript to .mjs conversion COMPLETED
+  - **PR #23**: MERGED - All core files converted to native Node.js modules
+  - **PR #25**: Created - Technical decisions documentation
+  - **Status**: ✅ PRODUCTION READY for MANE Batch 2 deployment
+- **Follow-up**: Issue #24 created for runtime validation & JSDoc linting improvements
 - **Goal**: Demonstrate world's first complete XML-driven AI collaborative development system
 
-### ✅ WORKING (5 tools):
+### 🔄 IMPLEMENTATION STATUS (All tools need NEW implementation):
 
-  1. browser_navigate - Successfully navigates to URLs
-  2. browser_screenshot - Captures screenshots perfectly
-  3. browser_click - Clicks elements successfully
-  4. browser_type - Types text into input fields
-  5. browser_wait - Waits for elements to appear
-  
-###  ❌ NOT WORKING (4 tools):
+**Working in OLD AgentDesk Extension:**
+  1. browser_navigate - Successfully navigates to URLs (NEW implementation needed)
+  2. browser_screenshot - Captures screenshots perfectly (NEW implementation needed)
+  3. browser_click - Clicks elements successfully (NEW implementation needed)
+  4. browser_type - Types text into input fields (NEW implementation needed)
+  5. browser_wait - Waits for elements to appear (NEW implementation needed)
 
-  6. browser_evaluate - Timeout error when executing JavaScript
-  7. browser_get_content - Request timeout
-  8. browser_audit - Returns HTML instead of JSON (parsing error)
-  9. browser_get_console - Request timeout
+**Broken in OLD AgentDesk Extension:**
+  6. browser_evaluate - Timeout error when executing JavaScript (NEW implementation needed)
+  7. browser_get_content - Request timeout (NEW implementation needed)
+  8. browser_audit - Returns HTML instead of JSON (NEW implementation needed)
+  9. browser_get_console - Request timeout (NEW implementation needed)
+
+**🎯 Our Goal**: Build ALL 9 tools from scratch using our foundation infrastructure (.mjs modules)
 
 ### Features
 

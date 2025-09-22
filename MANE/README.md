@@ -26,6 +26,9 @@ Complete guide for transforming existing monolithic codebases into agent-ready a
 **[🏗️ MANE-ARCHITECTURE-GUIDELINES.md](MANE-ARCHITECTURE-GUIDELINES.md)**
 Comprehensive guide for architecting new systems from the ground up for optimal AI agent collaboration.
 
+**[📋 TECHNICAL-DECISIONS.md](TECHNICAL-DECISIONS.md)**
+Technical decision rationale and history, including the TypeScript to .mjs migration strategy and systematic decision-making framework.
+
 ### 🚀 **Deployment Methodologies**
 
 **[🌳 MANE-WORKTREES-ULTIMATE-METHODOLOGY.md](MANE-WORKTREES-ULTIMATE-METHODOLOGY.md)**
