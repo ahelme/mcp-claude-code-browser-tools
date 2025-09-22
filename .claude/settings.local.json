@@ -36,7 +36,8 @@
       "Bash(git add:*)",
       "Bash(git branch:*)",
       "Read(//Users/lennox/development/mane-universes/**)",
-      "Bash(make:*)"
+      "Bash(make:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
