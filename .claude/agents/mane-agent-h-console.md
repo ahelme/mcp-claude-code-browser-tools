@@ -125,7 +125,7 @@ export class ConsoleTool extends BaseBrowserTool {
    * @returns {Promise<import('../../core/interfaces.mjs').IToolResult>}
    */
   async execute(params) {
-    const startTime = Date.now();
+    const startTime = performance.now();
 
     try {
       // Validate parameters
@@ -148,7 +148,7 @@ export class ConsoleTool extends BaseBrowserTool {
       // Categorize messages
       const categorized = this.categorizeMessages(formatted);
 
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('console_get', duration, true);
 
       return {
@@ -173,7 +173,7 @@ export class ConsoleTool extends BaseBrowserTool {
       };
 
     } catch (error) {
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('console_get', duration, false);
 
       return this.handleError(error, {
@@ -210,7 +210,7 @@ export class ConsoleProtocolOptimizer {
 
       // Collect existing console messages
       const messages = [];
-      const startTime = Date.now();
+      const startTime = performance.now();
 
       // Set up event listener with timeout
       const messagePromise = new Promise((resolve, reject) => {
@@ -237,7 +237,7 @@ export class ConsoleProtocolOptimizer {
           expression: `
             this.logger.debug('Test log message');
             console.warn('Test warning');
-            console.error('Test error');
+            this.logger.error('Test error');
           `
         });
 
@@ -255,7 +255,7 @@ export class ConsoleProtocolOptimizer {
       return result;
 
     } catch (error) {
-      console.error('Console access test failed:', error);
+      this.logger.error('Console access test failed', { error: error.message, stack: error.stack });
       throw error;
     }
   }
@@ -792,7 +792,7 @@ import { ConsoleTool } from './tools/console.mjs';
 const tool = new ConsoleTool(console, {});
 tool.execute({ level: 'all', count: 10 })
   .then(result => this.logger.debug('Console tool test success:', result))
-  .catch(error => console.error('Timeout error:', error));
+  .catch(error => this.logger.error('Console tool test timeout error', { error: error.message, stack: error.stack }));
 "
 ```
 

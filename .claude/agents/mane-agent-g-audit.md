@@ -125,7 +125,7 @@ export class AuditTool extends BaseBrowserTool {
    * @returns {Promise<import('../../core/interfaces.mjs').IToolResult>}
    */
   async execute(params) {
-    const startTime = Date.now();
+    const startTime = performance.now();
 
     try {
       // Validate URL
@@ -143,7 +143,7 @@ export class AuditTool extends BaseBrowserTool {
       // Extract key metrics
       const metrics = this.extractMetrics(parsedResult);
 
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('audit', duration, true);
 
       return {
@@ -163,7 +163,7 @@ export class AuditTool extends BaseBrowserTool {
       };
 
     } catch (error) {
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('audit', duration, false);
 
       return this.handleError(error, {
@@ -199,7 +199,7 @@ async function debugResponseFormat(response) {
 
   // Check if HTML error page
   if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
-    this.logger.error('Received HTML instead of JSON response');
+    this.logger.error('Received HTML instead of JSON response', { responseType: 'text/html', expectedType: 'application/json' });
 
     // Extract error message from HTML if possible
     const errorMatch = text.match(/<title>(.*?)<\/title>/);
@@ -669,7 +669,7 @@ import { AuditTool } from './tools/audit.mjs';
 const tool = new AuditTool(console, {});
 tool.execute({ url: 'https://example.com' })
   .then(result => console.log('Result:', result))
-  .catch(error => console.error('Error:', error));
+  .catch(error => this.logger.error('Audit tool test error', { error: error.message, stack: error.stack }));
 "
 ```
 

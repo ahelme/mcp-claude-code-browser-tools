@@ -102,7 +102,7 @@ export class EvaluateTool extends BaseBrowserTool {
    * @returns {Promise<import('../../core/interfaces.mjs').IToolResult>}
    */
   async execute(params) {
-    const startTime = Date.now();
+    const startTime = performance.now();
 
     try {
       // Validate and sanitize script
@@ -121,7 +121,7 @@ export class EvaluateTool extends BaseBrowserTool {
       // Serialize result safely
       const serialized = await this.serializeResult(result);
 
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('execute', duration, true);
 
       return {
@@ -135,7 +135,7 @@ export class EvaluateTool extends BaseBrowserTool {
       };
 
     } catch (error) {
-      const duration = Date.now() - startTime;
+      const duration = performance.now() - startTime;
       await this.recordMetrics('execute', duration, false);
 
       return this.handleError(error, {
@@ -170,7 +170,7 @@ async function testWebSocketConnection() {
     this.logger.debug('WebSocket test passed', { result });
     await client.close();
   } catch (error) {
-    this.logger.error('WebSocket test failed', error);
+    this.logger.error('WebSocket test failed', { error: error.message, stack: error.stack });
   }
 }
 ```
@@ -203,14 +203,14 @@ async function profileSerialization() {
 ```javascript
 // Monitor HTTP bridge communication
 async function monitorBridgeCommunication() {
-  const startTime = Date.now();
+  const startTime = performance.now();
 
   // Intercept fetch requests
   const originalFetch = window.fetch;
   window.fetch = async (...args) => {
-    const requestStart = Date.now();
+    const requestStart = performance.now();
     const response = await originalFetch(...args);
-    const requestEnd = Date.now();
+    const requestEnd = performance.now();
 
     this.logger.debug('Bridge request completed', {
       duration: `${requestEnd - requestStart}ms`
