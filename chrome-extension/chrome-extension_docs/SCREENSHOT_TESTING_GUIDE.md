@@ -25,7 +25,7 @@ This guide walks you through testing the **browser_screenshot** functionality im
 Make sure the HTTP bridge is running:
 ```bash
 # In browser-tools-setup directory
-./scripts/start-mcp-browser-tools.sh
+./mcp-server/start.sh
 
 # Verify it's running
 curl http://localhost:3024/health

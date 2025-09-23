@@ -257,7 +257,7 @@ The MANE Foundation MCP server provides 10 comprehensive tools:
 ### Complete Documentation Suite
 
 **Core Documentation**:
-- **[Interface Contracts Guide](docs/INTERFACE-CONTRACTS.md)** - Comprehensive integration guide
+- **[Interface Contracts Guide](chrome-extension/chrome-extension_docs/INTERFACE-CONTRACTS.md)** - Comprehensive integration guide
 - **[Quality Gate Requirements](contracts/QUALITY_GATE.md)** - Quality standards and validation
 - **[HTTP API Contracts](contracts/http.yaml)** - Complete API specification
 
@@ -417,7 +417,7 @@ MANE_REGISTRY_PORT=3026 ./scripts/start-mane-foundation.sh
 
 ### Immediate Actions for Other Agents
 
-1. **Read Documentation** - Review `/docs/INTERFACE-CONTRACTS.md` for complete integration guide
+1. **Read Documentation** - Review `/chrome-extension/chrome-extension_docs/INTERFACE-CONTRACTS.md` for complete integration guide
 2. **Install MCP Component** - Run `npx claude-code-templates@latest --mcp="mane-foundation" --yes`
 3. **Choose Implementation** - Select tool or panel to implement
 4. **Extend Base Classes** - Use provided base implementations

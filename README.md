@@ -123,7 +123,7 @@ We built our own browser tools MCP server to address critical protocol violation
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.mjs"
+        "/Users/lennox/development/browser-tools-setup/mcp-server/server.mjs"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3024",
@@ -144,7 +144,7 @@ We built our own browser tools MCP server to address critical protocol violation
 npm install
 
 # Make script executable (
-chmod +x scripts/start-mcp-browser-tools.sh
+chmod +x mcp-server/start.sh
 ```
 
 4. **Start the HTTP Bridge Server (port 3024) in NEW Terminal Tab/Window**
@@ -152,7 +152,7 @@ starts on **Port 3024
 
 ```bash
 # Start MCP HTTP bridge (for Claude Code)
-./scripts/start-mcp-browser-tools.sh
+./mcp-server/start.sh
 ```
 
 5. **Download/install Browser Tools Chrome extension** 
@@ -182,7 +182,7 @@ cat .claude/mcp.json | grep browser-tools
 curl http://localhost:3024/health
 
 # Debug MCP server
-MCP_DEBUG=1 node scripts/mcp-claude-code-browser-tools.mjs
+MCP_DEBUG=1 node mcp-server/server.mjs
 ```
 
 ### **Configure MCP Server to Debug Mode**: 
@@ -194,7 +194,7 @@ Option to run direct http connection via **Port 3026**
 ```bash
 
 # Starts the direct MCP HTTP bridge on port 3026
-./scripts/start-direct-browser-tools.sh
+./mcp-server/scripts/start-direct-browser-tools.sh
 
 # Test Direct HTTP bridge (port 3026)
 curl http://localhost:3026/health
@@ -227,7 +227,7 @@ Backup Method (Direct): External Tool <--[HTTP:3026]--> Direct Bridge <--[WebSoc
 - Provides standardized tools for AI clients
 - Compatible with various MCP clients (Cursor, Cline, Zed, Claude Desktop, etc.)
 
-**See CODE-ARCHITECTURE.md for more details.**
+**See [mcp-server/mcp-server_docs/CODE-ARCHITECTURE.md](mcp-server/mcp-server_docs/CODE-ARCHITECTURE.md) for more details.**
 
 **IMPORTANT**: Port 3024 is reserved for MCP server method.
 
@@ -247,7 +247,7 @@ Each project can specify its own port in `.mcp.json`:
     "mcp-claude-code-browser-tools": {
       "type": "stdio",
       "command": "node",
-      "args": ["path/to/scripts/mcp-claude-code-browser-tools.mjs"],
+      "args": ["path/to/mcp-server/server.mjs"],
       "env": {
         "BROWSER_TOOLS_PORT": "3025",  // Custom port for this project
         "MCP_DEBUG": "1"
@@ -264,17 +264,17 @@ Start with custom ports using environment variables:
 ```bash
 # Project A (default port)
 cd /path/to/project-a
-./scripts/start-mcp-browser-tools.sh
+./mcp-server/start.sh
 # → Runs on port 3024
 
 # Project B (custom port)
 cd /path/to/project-b
-BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
+BROWSER_TOOLS_PORT=3025 ./mcp-server/start.sh
 # → Runs on port 3025
 
 # Project C (another custom port)
 cd /path/to/project-c
-BROWSER_TOOLS_PORT=3026 ./scripts/start-mcp-browser-tools.sh
+BROWSER_TOOLS_PORT=3026 ./mcp-server/start.sh
 # → Runs on port 3026
 ```
 
@@ -292,17 +292,17 @@ BROWSER_TOOLS_PORT=3026 ./scripts/start-mcp-browser-tools.sh
 ```bash
 # Terminal 1 - Project A (React app)
 cd ~/projects/my-react-app
-./scripts/start-mcp-browser-tools.sh  # port 3024
+./mcp-server/start.sh  # port 3024
 claude  # Start Claude Code
 
 # Terminal 2 - Project B (Vue app)
 cd ~/projects/my-vue-app
-BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh  # port 3025
+BROWSER_TOOLS_PORT=3025 ./mcp-server/start.sh  # port 3025
 claude  # Start Claude Code
 
 # Terminal 3 - Project C (Angular app)
 cd ~/projects/my-angular-app
-BROWSER_TOOLS_PORT=3026 ./scripts/start-mcp-browser-tools.sh  # port 3026
+BROWSER_TOOLS_PORT=3026 ./mcp-server/start.sh  # port 3026
 claude  # Start Claude Code
 ```
 
@@ -349,13 +349,13 @@ Guide to usage of available tools: TOOLS_GUIDE.md
 ## Important Files
 
 ### MCP Method (Port 3024)
-- `scripts/mcp-claude-code-browser-tools.mjs` - MCP server
-- `scripts/mcp-http-bridge.mjs` - MCP HTTP bridge (FIXED: .mjs extension)
-- `scripts/start-mcp-browser-tools.sh` - Start script for MCP
+- `mcp-server/server.mjs` - MCP server
+- `mcp-server/http-bridge.mjs` - MCP HTTP bridge
+- `mcp-server/start.sh` - Start script for MCP
 
 ### BACKUP: Direct Method (Port 3026)
-- `scripts/direct-http-bridge.js` - Direct HTTP bridge
-- `scripts/start-direct-browser-tools.sh` - Start script for direct
+- `mcp-server/scripts/direct-http-bridge.js` - Direct HTTP bridge
+- `mcp-server/scripts/start-direct-browser-tools.sh` - Start script for direct
 
 ### Configuration, Files & Directories
 - `~/.claude/mcp.json` - ==(DANGEROUS TO MODIFY)== User-level MCP configuration (Claude Code) 
@@ -389,7 +389,7 @@ lsof -i :3024
 pkill -f "mcp-http-bridge"
 
 # 3. Or use a different port
-BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
+BROWSER_TOOLS_PORT=3025 ./mcp-server/start.sh
 ```
 
 ### Multi-Project Port Conflicts
@@ -406,8 +406,8 @@ ps aux | grep mcp-http-bridge
 lsof -i :3024-3030
 
 # Start each project with unique port
-cd project-a && BROWSER_TOOLS_PORT=3024 ./scripts/start-mcp-browser-tools.sh
-cd project-b && BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh
+cd project-a && BROWSER_TOOLS_PORT=3024 ./mcp-server/start.sh
+cd project-b && BROWSER_TOOLS_PORT=3025 ./mcp-server/start.sh
 ```
 
 ## Configuration
@@ -454,8 +454,8 @@ To modify MCP server configurations:
 
 ## Documentation
 
-- [TOOLS-GUIDE.md](TOOLS-GUIDE.md) - Guide to use of available tools
-- [CODE-ARCHITECTURE.md](CODE-ARCHITECTURE.md) - Full technical details
+- [TOOLS-GUIDE.md](mcp-server/mcp-server_docs/TOOLS-GUIDE.md) - Guide to use of available tools
+- [CODE-ARCHITECTURE.md](mcp-server/mcp-server_docs/CODE-ARCHITECTURE.md) - Full technical details
 
 ## Important Notes
 

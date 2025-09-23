@@ -5,7 +5,7 @@
       "command": "npx",
       "args": ["-y", "@movibe/memory-bank-mcp", "--mode", "code"],
       "env": {
-        "MEMORY_BANK_ROOT": "/Users/lennox/development/browser-tools-setup/memory-bank"
+        "MEMORY_BANK_ROOT": "/Users/lennox/development/browser-tools-setup/product-management/mcp-servers/memory-bank"
       }
     },
     "sequential-thinking": {
@@ -28,7 +28,7 @@
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/lennox/development/browser-tools-setup/scripts/minimal_mcp_server_new_protocol_released_June_2025_for_browser_tools.js"
+        "/Users/lennox/development/browser-tools-setup/.archives/minimal_mcp_server_new_protocol_released_June_2025_for_browser_tools.js"
       ],
       "env": {
         "MCP_DEBUG": "1"

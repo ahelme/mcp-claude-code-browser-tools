@@ -40,8 +40,8 @@
 - **Status**: ⚠️ REFERENCE ONLY - broken but shows working communication patterns
 
 ### 🖥️ **Backend Infrastructure (WORKING)**
-- **`scripts/mcp-claude-code-browser-tools.mjs`** - MCP server (Claude Code integration)
-- **`scripts/mcp-http-bridge.mjs`** - HTTP bridge (port 3024)
+- **`mcp-server/server.mjs`** - MCP server (Claude Code integration)
+- **`mcp-server/http-bridge.mjs`** - HTTP bridge (port 3024)
 - **Communication Flow**: Claude Code → MCP Server → HTTP Bridge → [YOUR EXTENSION]
 - **Status**: ✅ WORKING - waiting for Chrome extension to connect
 
@@ -99,7 +99,7 @@
    - Click on "Browser Tools" tab
 
 3. Test Connection:
-   - Ensure HTTP bridge is running: ./scripts/start-mcp-browser-tools.sh
+   - Ensure HTTP bridge is running: ./mcp-server/start.sh
    - Extension should show "Connected" status
    - Check Configuration Panel shows port 3024 connection
    - Look for successful WebSocket connection messages
@@ -425,7 +425,7 @@ If you encounter:
 #### **1. 🔧 Setup Verification**
 ```bash
 # Ensure HTTP bridge is running
-./scripts/start-mcp-browser-tools.sh
+./mcp-server/start.sh
 # Should see: "HTTP Bridge Server running on port 3024"
 
 # Check extension files exist

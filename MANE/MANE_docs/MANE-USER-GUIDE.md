@@ -777,7 +777,7 @@ You've been assigned to contribute to this MANE-enabled repository. Here's every
 5. **Auto-Integration**: Your work will be automatically validated and integrated
 
 ### 🔌 Interface Contracts
-All agents must implement the defined interfaces. Check `docs/INTERFACE-CONTRACTS.md` for specifications.
+All agents must implement the defined interfaces. Check `chrome-extension/chrome-extension_docs/INTERFACE-CONTRACTS.md` for specifications.
 
 ### 🧪 Quality Standards
 - **Test Coverage**: 90%+ required
@@ -1083,7 +1083,7 @@ npm run agent:reset [agent-name]
 
 **🤖 For AI Agents:**
 - Check `docs/agents/AGENT-ONBOARDING.md`
-- Review interface contracts in `docs/INTERFACE-CONTRACTS.md`
+- Review interface contracts in `chrome-extension/chrome-extension_docs/INTERFACE-CONTRACTS.md`
 - Run diagnostic: `npm run agent:diagnose`
 
 **👥 For Human Teams:**

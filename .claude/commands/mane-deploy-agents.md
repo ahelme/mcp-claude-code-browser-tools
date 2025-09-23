@@ -306,7 +306,7 @@ generate_user_testing_instructions() {
    - Click on "Browser Tools" tab
 
 3. Test Connection:
-   - Ensure HTTP bridge is running: ./scripts/start-mcp-browser-tools.sh
+   - Ensure HTTP bridge is running: ./mcp-server/start.sh
    - Extension should show "Connected" status
    - Check Configuration Panel shows port 3024 connection
    - Look for successful WebSocket connection messages

@@ -13,7 +13,7 @@ Complete re-write of:
 - "Broken/working tools" refer to OLD AgentDesk Chrome extension status
 - **Current Status**: Foundation ready, agent definitions complete, tool implementation needed
 - **Implementation**: 100% June 2025 MCP-compliant
-- **Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3024)
+- **Method**: `mcp-server/server.mjs` + `mcp-server/http-bridge.mjs` (port 3024)
 
 ## 🦁 MANE SYSTEM OPERATIONAL
 
@@ -168,7 +168,7 @@ Built custom browser tools MCP server to address critical protocol violations in
     "mcp-claude-code-browser-tools": {
       "type": "stdio",
       "command": "node",
-      "args": ["/Users/lennox/development/browser-tools-setup/scripts/mcp-claude-code-browser-tools.mjs"],
+      "args": ["/Users/lennox/development/browser-tools-setup/mcp-server/server.mjs"],
       "env": {
         "BROWSER_TOOLS_PORT": "3024",
         "MCP_DEBUG": "1"
@@ -181,12 +181,12 @@ Built custom browser tools MCP server to address critical protocol violations in
 3. **Install and Prepare** (first time only):
 ```bash
 npm install
-chmod +x scripts/start-mcp-browser-tools.sh
+chmod +x mcp-server/start.sh
 ```
 
 4. **Start HTTP Bridge** (port 3024, NEW terminal):
 ```bash
-./scripts/start-mcp-browser-tools.sh
+./mcp-server/start.sh
 ```
 
 5. **Install Chrome Extension**: https://browsertools.agentdesk.ai/
@@ -215,7 +215,7 @@ cat .mcp.json | grep browser-tools
 curl http://localhost:3024/health
 
 # Debug MCP server
-MCP_DEBUG=1 node scripts/mcp-claude-code-browser-tools.mjs
+MCP_DEBUG=1 node mcp-server/server.mjs
 ```
 
 ## Multi-Project Usage (ADVANCED)
@@ -228,8 +228,8 @@ Run multiple instances with custom ports via `BROWSER_TOOLS_PORT` environment va
 
 ```bash
 # Start different instances
-BROWSER_TOOLS_PORT=3024 ./scripts/start-mcp-browser-tools.sh  # Project A
-BROWSER_TOOLS_PORT=3025 ./scripts/start-mcp-browser-tools.sh  # Project B
+BROWSER_TOOLS_PORT=3024 ./mcp-server/start.sh  # Project A
+BROWSER_TOOLS_PORT=3025 ./mcp-server/start.sh  # Project B
 ```
 
 Update Chrome extension port when switching projects.
@@ -237,7 +237,7 @@ Update Chrome extension port when switching projects.
 ## Alternative Direct HTTP (Backup)
 If MCP server fails, use direct HTTP on port 3026:
 ```bash
-./scripts/start-direct-browser-tools.sh
+./mcp-server/scripts/start-direct-browser-tools.sh
 curl http://localhost:3026/health
 ```
 
@@ -249,23 +249,22 @@ browser-tools-setup/
 ├── contracts/               # Foundation contracts (MERGED)
 │   ├── http.yaml            # OpenAPI 3.0 specification
 │   └── QUALITY_GATE.md      # Quality gate requirements
-├── core/                    # Foundation infrastructure (MERGED)
+├── chrome-extension/        # Chrome extension files
 │   ├── interfaces.mjs       # Interface definitions
 │   ├── base-classes.mjs     # Base classes
 │   ├── registry.mjs         # Auto-discovery registry
-│   └── *.mjs                #  Additional core modules
-├── chrome-extension-mvp/    # Our Chrome Extension UI and files
-│   ├── panel.html           # Main UI to be modularised as components
-├── chrome-extension-old/    # OLD AgentDesk Chrome Extension
-│   ├── panel.html           # OLD AgentDesk Extension UI for reference 
-├── scripts/
-│   ├── mcp-claude-code-browser-tools.mjs  # MCP server
-│   ├── mcp-http-bridge.mjs                # HTTP bridge (3024)
-│   └── start-*.sh                         # Start scripts
+│   └── *.mjs                # Additional core modules
+├── mcp-server/              # MCP server implementation
+│   ├── server.mjs           # Main MCP server
+│   ├── http-bridge.mjs      # HTTP bridge (3024)
+│   ├── start.sh             # Start script
+│   └── scripts/             # Additional server scripts
+├── product-management/     # Product management tools
+│   └── mcp-servers/        # Product management MCP servers
+│       └── memory-bank/    # Session persistence
 ├── .claude/agents/         # Agent definitions
 ├── .mcp.json               # Project MCP configuration
-├── CLAUDE.md               # Project instructions
-└── memory-bank/            # Session persistence
+└── CLAUDE.md               # Project instructions
 ```
 
 ## Available Tools
@@ -290,13 +289,13 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 
 ## MCP Protocol Compliance
 **✅ Full 2025-06-18 Protocol Compliance**
-- Implementation: `scripts/mcp-claude-code-browser-tools.mjs`
+- Implementation: `mcp-server/server.mjs`
 - All initialize handshake, capabilities, and tool definitions match specification
 
 ## Available MCP Servers
 
 ### 1. Browser-Tools MCP (Custom Implementation) - 5/9 Tools Working
-- **Server**: `scripts/mcp-claude-code-browser-tools.mjs`
+- **Server**: `mcp-server/server.mjs`
 - **Purpose**: Browser automation and testing
 - **Status**: Path mismatch resolved (Sept 14, 2025)
 

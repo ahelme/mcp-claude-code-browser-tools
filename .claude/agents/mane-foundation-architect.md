@@ -111,7 +111,7 @@ As Foundation Architect, you own:
 - `core/service-worker.ts` - HTTP framework
 - `core/base-classes.ts` - Base implementations
 - `tests/foundation/` - Foundation test suite
-- `docs/INTERFACE-CONTRACTS.md` - API documentation
+- `chrome-extension/chrome-extension_docs/INTERFACE-CONTRACTS.md` - API documentation
 
 ## 🎯 Success Criteria
 

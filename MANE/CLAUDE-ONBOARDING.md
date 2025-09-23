@@ -129,7 +129,7 @@ You are working on the **browser-tools-setup** project, which has become the **w
 
 ### 📁 **Key File Locations**
 - **MANE Docs**: `MANE/` (12 comprehensive documents)
-- **Scripts**: `scripts/mcp-claude-code-browser-tools.mjs`
+- **Scripts**: `mcp-server/server.mjs`
 - **Chrome Extension**: `chrome-extension-mvp/panel.html`
 - **Tests**: Various test directories need consolidation
 
