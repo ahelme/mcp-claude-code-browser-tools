@@ -15,6 +15,24 @@ Complete re-write of:
 - **Implementation**: 100% June 2025 MCP-compliant
 - **Method**: `mcp-server/server.mjs` + `mcp-server/http-bridge.mjs` (port 3024)
 
+## ⚠️ CRITICAL: MCP Server Read-Only Policy
+
+**IMPORTANT FOR ALL AGENTS**: The `/mcp-server/` directory is **READ-ONLY** and **MUST NOT BE MODIFIED** by agents working on this project.
+
+### 🚫 **DO NOT**:
+- Modify any files in `/mcp-server/`
+- Add new files to `/mcp-server/`
+- Update dependencies in `/mcp-server/package.json`
+- Change configuration in `/mcp-server/`
+
+### ✅ **DO**:
+- Work in `/chrome-extension/` for UI and component development
+- Use `/MANE/` for architecture and documentation
+- Create new files in appropriate project directories
+- Report any MCP server issues to the user
+
+**WHY**: The MCP server provides stable infrastructure that multiple projects depend on. Changes require careful coordination and testing.
+
 ## 🦁 MANE SYSTEM OPERATIONAL
 
 **World's first battle-tested AI collaborative development system deployed.**
@@ -237,7 +255,7 @@ Update Chrome extension port when switching projects.
 ## Alternative Direct HTTP (Backup)
 If MCP server fails, use direct HTTP on port 3026:
 ```bash
-./mcp-server/scripts/start-direct-browser-tools.sh
+./mcp-server/mcp-server/start-direct-browser-tools.sh
 curl http://localhost:3026/health
 ```
 
@@ -258,7 +276,7 @@ browser-tools-setup/
 │   ├── server.mjs           # Main MCP server
 │   ├── http-bridge.mjs      # HTTP bridge (3024)
 │   ├── start.sh             # Start script
-│   └── scripts/             # Additional server scripts
+│   └── mcp-server/             # Additional server scripts
 ├── product-management/     # Product management tools
 │   └── mcp-servers/        # Product management MCP servers
 │       └── memory-bank/    # Session persistence

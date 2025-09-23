@@ -194,7 +194,7 @@ Option to run direct http connection via **Port 3026**
 ```bash
 
 # Starts the direct MCP HTTP bridge on port 3026
-./mcp-server/scripts/start-direct-browser-tools.sh
+./mcp-server/mcp-server/start-direct-browser-tools.sh
 
 # Test Direct HTTP bridge (port 3026)
 curl http://localhost:3026/health
@@ -354,8 +354,8 @@ Guide to usage of available tools: TOOLS_GUIDE.md
 - `mcp-server/start.sh` - Start script for MCP
 
 ### BACKUP: Direct Method (Port 3026)
-- `mcp-server/scripts/direct-http-bridge.js` - Direct HTTP bridge
-- `mcp-server/scripts/start-direct-browser-tools.sh` - Start script for direct
+- `mcp-server/mcp-server/direct-http-bridge.js` - Direct HTTP bridge
+- `mcp-server/mcp-server/start-direct-browser-tools.sh` - Start script for direct
 
 ### Configuration, Files & Directories
 - `~/.claude/mcp.json` - ==(DANGEROUS TO MODIFY)== User-level MCP configuration (Claude Code) 
@@ -427,7 +427,7 @@ To modify MCP server configurations:
       "type": "stdio",
       "command": "node",
       "args": [
-        "scripts/claude-code-browser-tools.js"
+        "mcp-server/claude-code-browser-tools.js"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3024",
