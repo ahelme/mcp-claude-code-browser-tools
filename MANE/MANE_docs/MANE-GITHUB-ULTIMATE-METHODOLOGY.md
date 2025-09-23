@@ -314,7 +314,7 @@ interface IRegistry {
 - `core/registry.ts` - Auto-discovery system
 - `core/service-worker.ts` - HTTP framework
 - `tests/foundation/` - Foundation test suite
-- `docs/INTERFACE-CONTRACTS.md` - API documentation
+- `chrome-extension/chrome-extension_docs/INTERFACE-CONTRACTS.md` - API documentation
 
 ### 🎭 Success Criteria
 - [ ] All interface contracts defined and documented

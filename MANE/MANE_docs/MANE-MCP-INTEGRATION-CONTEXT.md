@@ -20,8 +20,8 @@
 ## 🏗️ **MCP Server Architecture (KEEP)**
 
 ### **Working Components:**
-- `scripts/mcp-claude-code-browser-tools.mjs` - MCP server ✅
-- `scripts/mcp-http-bridge.mjs` - HTTP bridge (port 3024) ✅
+- `mcp-server/server.mjs` - MCP server ✅
+- `mcp-server/http-bridge.mjs` - HTTP bridge (port 3024) ✅
 - **5 working tools** via old Chrome extension ✅
 
 ### **Integration Point:**
@@ -74,10 +74,10 @@ const ENDPOINTS = {
 ### **Testing Strategy:**
 ```bash
 # Test with existing MCP server
-node scripts/mcp-claude-code-browser-tools.mjs
+node mcp-server/server.mjs
 
 # HTTP bridge on port 3024
-node scripts/mcp-http-bridge.mjs
+node mcp-server/http-bridge.mjs
 
 # New MANE extension connects to SAME endpoints
 # Should get ALL 9 tools working!

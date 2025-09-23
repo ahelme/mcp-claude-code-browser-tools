@@ -8,9 +8,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
 // Import the converted .mjs modules
-import { InterfaceComplianceGate } from '../core/gates/interface-compliance.mjs';
-import { PerformanceQualityGate } from '../core/gates/performance-quality.mjs';
-import { SecurityQualityGate } from '../core/gates/security-quality.mjs';
+import { InterfaceComplianceGate } from '../chrome-extension/gates/interface-compliance.mjs';
+import { PerformanceQualityGate } from '../chrome-extension/gates/performance-quality.mjs';
+import { SecurityQualityGate } from '../chrome-extension/gates/security-quality.mjs';
 
 // Mock implementations for testing
 class MockLogger {

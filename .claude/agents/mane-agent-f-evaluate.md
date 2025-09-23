@@ -49,10 +49,10 @@ The **browser_evaluate tool currently fails** with:
 ### Foundation Usage (.mjs Required):
 ```javascript
 // MANDATORY: Use .mjs files with .mjs extensions
-import { BaseBrowserTool } from '../../core/base-classes.mjs';
-import { ToolRegistry } from '../../core/registry.mjs';
-import { ErrorType, LogLevel } from '../../core/interfaces.mjs';
-import { createMonitoringInfrastructure } from '../../core/monitoring.mjs';
+import { BaseBrowserTool } from '../../chrome-extension/base-classes.mjs';
+import { ToolRegistry } from '../../chrome-extension/registry.mjs';
+import { ErrorType, LogLevel } from '../../chrome-extension/interfaces.mjs';
+import { createMonitoringInfrastructure } from '../../chrome-extension/monitoring.mjs';
 
 /**
  * JavaScript Evaluation Tool Implementation
@@ -99,7 +99,7 @@ export class EvaluateTool extends BaseBrowserTool {
   /**
    * Execute JavaScript in browser context
    * @param {Object} params - Execution parameters
-   * @returns {Promise<import('../../core/interfaces.mjs').IToolResult>}
+   * @returns {Promise<import('../../chrome-extension/interfaces.mjs').IToolResult>}
    */
   async execute(params) {
     const startTime = performance.now();

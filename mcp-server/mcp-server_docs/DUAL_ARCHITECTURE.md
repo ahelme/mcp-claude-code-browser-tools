@@ -93,14 +93,14 @@ scripts/
 
 ### For MCP Method
 ```bash
-./scripts/start-mcp-browser-tools.sh
+./mcp-server/start.sh
 # Starts: mcp-http-bridge.js on port 3024
 # Claude Code auto-starts: mcp-browser-tools-server.js
 ```
 
 ### For Direct Method
 ```bash
-./scripts/start-direct-browser-tools.sh
+./mcp-server/scripts/start-direct-browser-tools.sh
 # Starts: direct-http-bridge.js on port 3026
 ```
 

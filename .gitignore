@@ -5,7 +5,7 @@ CLAUDE.md
 !.claude/settings.local.json
 
 # Memory Bank (keep private)
-memory-bank/
+product-management/mcp-servers/memory-bank/
 
 # Backups and archives
 .archive/
