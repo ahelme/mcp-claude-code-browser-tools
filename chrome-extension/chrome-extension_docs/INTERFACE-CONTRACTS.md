@@ -22,7 +22,7 @@ This document provides comprehensive documentation for all agents working with t
 
 ## 🚀 Quick Start Guide
 
-### For Tool Developers (Agents B-E)
+### For Tool Developers (Agents C-I)
 
 1. **Import the base class**:
 ```typescript
@@ -61,7 +61,7 @@ const registry = getRegistry();
 await registry.registerTool(new MyBrowserTool(logger, metrics));
 ```
 
-### For UI Developers (Agents F-I)
+### For UI Developers (Specialized Panels)
 
 1. **Import the base class**:
 ```typescript

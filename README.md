@@ -23,16 +23,16 @@ Ready to experience revolutionary AI collaboration? See **[AgileAI_KickStart.md]
 - **Implementation**: 100% June 2025 MCP-compliant with AgileAI break-point methodology
 - **MCP Method**: `mcp-server/server.mjs` + `mcp-server/http-bridge.mjs` (port 3024)
 
-### 🦁 MANE FOUNDATION INFRASTRUCTURE COMPLETE ✅
+### 🦁 AGILEAI FOUNDATION INFRASTRUCTURE COMPLETE ✅
 **World's first complete AI collaborative development platform!**
-- 🦁 **MANE Methodology**: Modular Agentic Non-linear Engineering - revolutionary parallel development
+- 🦁 **AgileAI Methodology**: Revolutionary Agile methodology for human-AI collaborative development
 - ✅ **Foundation Merged**: Complete infrastructure with contracts, base classes, registry system
 - 🏗️ **Core Architecture**: TypeScript interfaces, quality gates, monitoring system
 - 🤖 **Agent Universes**: 9 agents in 4 logical batches for systematic development
 - 📋 **Contract-Driven**: OpenAPI specifications and comprehensive quality requirements
-- 🎯 **Complete Documentation**: [MANE User Guide](MANE/MANE-USER-GUIDE.md) | [Architecture](MANE/MANE-ARCHITECTURE.md) | [Worktrees](MANE/MANE-WORKTREES-ULTIMATE-METHODOLOGY.md)
+- 🎯 **Complete Documentation**: [AgileAI KickStart Guide](product-management/product-management_docs/AgileAI_KickStart.md) | [Agent Specifications](product-management/product-management_docs/)
 
-### 🏗️ **MANE FOUNDATION & BATCH SYSTEM**
+### 🏗️ **AGILEAI FOUNDATION & BATCH SYSTEM**
 **Current Status - Foundation Complete, Ready for Batch 2:**
 - **✅ Batch 1**: Agent A (Foundation) - COMPLETED & MERGED
   - Contracts: OpenAPI 3.0 specification, quality gates
@@ -45,12 +45,10 @@ Ready to experience revolutionary AI collaboration? See **[AgileAI_KickStart.md]
 - **🎯 Batch 4**: Agents F,G,H,I (Advanced Tools) - Broken in OLD extension, NEW implementation needed
   - browser_evaluate, browser_audit, browser_get_console, browser_get_content
 
-### ⚡ **MANE Branch Strategy**
+### ⚡ **AGILEAI BRANCH STRATEGY**
 - **`main`**: Default stable branch
-- **`MANE_CORE`**: Primary MANE development branch (foundation complete)
-- **Agent universes**: Will branch from MANE_CORE for parallel development
-
-**Current Status**: Foundation infrastructure merged and operational on MANE_CORE branch
+- **Agent branches**: Each agent works in dedicated development reality
+- **Foundation**: Infrastructure merged and operational
 
 ### 🔄 IMPLEMENTATION STATUS (All tools need NEW implementation):
 
@@ -70,7 +68,7 @@ Ready to experience revolutionary AI collaboration? See **[AgileAI_KickStart.md]
 **🎯 Our Goal**: Build ALL 9 tools from scratch using our foundation infrastructure (.mjs modules)
 
 ## 🛡️ Code Quality Standards
-**Enterprise-grade standards for all MANE agents:**
+**Enterprise-grade standards for all AgileAI agents:**
 - See gh issues 30-34
 
 ### Features

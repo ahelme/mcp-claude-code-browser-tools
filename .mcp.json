@@ -3,10 +3,16 @@
     "memory-bank-mcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@movibe/memory-bank-mcp", "--mode", "code"],
-      "env": {
-        "MEMORY_BANK_ROOT": "/Users/lennox/development/browser-tools-setup/product-management/mcp-servers/memory-bank"
-      }
+      "args": [
+        "-y",
+        "@movibe/memory-bank-mcp",
+        "--mode",
+        "code",
+        "--path",
+        "/Users/lennox/development/browser-tools-setup/product-management/mcp-servers",
+        "--folder",
+        "memory-bank"
+      ]
     },
     "sequential-thinking": {
       "type": "stdio",
@@ -21,16 +27,6 @@
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3024",
-        "MCP_DEBUG": "1"
-      }
-    },
-    "minimal-test": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
-        "/Users/lennox/development/browser-tools-setup/.archives/minimal_mcp_server_new_protocol_released_June_2025_for_browser_tools.js"
-      ],
-      "env": {
         "MCP_DEBUG": "1"
       }
     }

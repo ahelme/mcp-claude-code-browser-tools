@@ -1,5 +1,45 @@
 # Browser Tools for Claude Code
 
+## Memory Bank MCP - Usage Guide
+
+**Purpose**: Keep essential context between sessions
+
+**Essential Workflow (BE PROACTIVE!)**:
+
+```javascript
+// Switch work mode - helps user and AI track/search dev history by category
+mcp__memory-bank-mcp__switch_mode({ mode: "code" })      // Implementing
+mcp__memory-bank-mcp__switch_mode({ mode: "debug" })     // Fixing bugs
+mcp__memory-bank-mcp__switch_mode({ mode: "architect" }) // Planning/designing
+
+// Log progress - creates searchable development timeline
+mcp__memory-bank-mcp__track_progress({
+  action: "Fixed authentication bug",
+  description: "Resolved JWT token expiration issue in login flow"
+})
+
+// Update current context - keeps AI informed of active work
+mcp__memory-bank-mcp__update_active_context({
+  tasks: ["Add user profile page", "Fix responsive layout"],
+  issues: ["CSS breaks on mobile", "Database slow on large queries"],
+  nextSteps: ["Test on staging", "Performance audit"]
+})
+
+// Record decisions - create searchable decision archive
+mcp__memory-bank-mcp__log_decision({
+  title: "State Management Choice",
+  context: "Component state getting complex",
+  decision: "Use Zustand instead of Context API"
+})
+
+// Browse history - find prev. solutions by category/keyword
+mcp__memory-bank-mcp__read_memory_bank_file({ filename: "progress.md" })
+```
+
+**When to Use**: After completing changes, making decisions, when stuck (search previous solutions), between sessions
+
+---
+
 ## Project Overview
 A powerful set of tools for you and your AI agent to visually test and debug front-end development, navigate and analyse UI and audit performance, SEO and accessibility.
 
@@ -45,20 +85,19 @@ Simply say: *"Claude, please assume the identity of Agent B - Framework Speciali
 
 **WHY**: The MCP server provides stable infrastructure that multiple projects depend on. Changes require careful coordination and testing.
 
-## 🦁 MANE SYSTEM OPERATIONAL
+## 🚀 AGILEAI SYSTEM OPERATIONAL
 
 **World's first battle-tested AI collaborative development system deployed.**
 
 ### Foundation Infrastructure
 - **Contract Validation**: OpenAPI contracts prevent breaking changes
 - **Quality Gates**: 3-tier validation (Interface/Performance/Security)
-- **Universe Doctor**: Real-time health monitoring of agent universes
 - **Auto-Discovery Registry**: Zero-coordination tool registration
 - **Base Class Library**: 90% code duplication eliminated
 
-### MANE Universe Structure (4 Logical Batches)
+### AgileAI Agent Structure
 ```
-../mane-universes/browser-tools/
+browser-tools-setup/
 ├── agent-a-foundation   ✅ COMPLETED & MERGED
 ├── agent-b-framework    🎯 BATCH 2 - UI Framework & Component System
 ├── agent-c-navigation   🎯 BATCH 3 - browser_navigate (working, needs NEW impl)
@@ -72,16 +111,16 @@ Simply say: *"Claude, please assume the identity of Agent B - Framework Speciali
 ```
 
 ### Developer Experience
-**Universe Management:**
+**Agent Management:**
 ```bash
-make universe-doctor    # Real-time health monitoring
-make quality-gate      # Full validation pipeline
-make contract-check    # OpenAPI compliance
-make env-validate      # Environment consistency
+# Quality validation pipeline
+npm run quality-gate      # Full validation pipeline
+npm run contract-check    # OpenAPI compliance
+npm run env-validate      # Environment consistency
 ```
 
 **Agent Development Workflow:**
-1. Pick Universe - Dedicated development reality
+1. Pick Agent Identity - Specialized development role
 2. Extend Foundation - Build on base classes
 3. Follow Contracts - Auto-validated API compliance
 4. Pass Quality Gates - Automated promotion criteria
@@ -108,26 +147,25 @@ make env-validate      # Environment consistency
 
 ---
 
-## 📚 Essential MANE Documentation
+## 📚 Essential AgileAI Documentation
 **Start Here for New Claude Sessions:**
-- 🔍 [MANE/CLAUDE-ONBOARDING.md](MANE/CLAUDE-ONBOARDING.md) - Quick context
-- 🏗️ [MANE/MANE-ARCHITECTURE.md](MANE/MANE-ARCHITECTURE.md) - Core principles
-- 📚 [MANE/MANE-USER-GUIDE.md](MANE/MANE-USER-GUIDE.md) - Setup guide
-- 🌳 [MANE/MANE-WORKTREES-ULTIMATE-METHODOLOGY.md](MANE/MANE-WORKTREES-ULTIMATE-METHODOLOGY.md) - Local development
-- 🐙 [MANE/MANE-GITHUB-ULTIMATE-METHODOLOGY.md](MANE/MANE-GITHUB-ULTIMATE-METHODOLOGY.md) - Distributed collaboration
-- 📋 [MANE/TECHNICAL-DECISIONS.md](MANE/TECHNICAL-DECISIONS.md) - Decision rationale
+- 🔍 [AgileAI KickStart Guide](product-management/product-management_docs/AgileAI_KickStart.md) - Quick setup guide
+- 🏗️ [Agent Specifications](product-management/product-management_docs/) - Agent documentation
+- 📚 [Project Documentation](README.md) - Complete project overview
 
-### Current Implementation Focus
-- **Branch**: `MANE_CORE` - Primary development branch. Agents fork this branch for their own developmment.
-- **Agent Organization**: 9 agents in 4 logical batches with mandatory user workflow
-- **Foundation**: Agent A COMPLETED and MERGED
-- **🚀 MILESTONE**: TypeScript to .mjs conversion COMPLETED
-  - **PR #23**: MERGED - All core files converted to native Node.js modules
-  - **Status**: ✅ PRODUCTION READY for Batch 2 deployment
-- **🎉 MILESTONE**: Issue #32 COMPLETED - Code quality improvements
-  - **PR #31**: MERGED - Logger safety and error handling
-  - **PR #33**: CREATED - Final context binding fixes
-- **Goal**: First complete XML-driven AI collaborative development system
+### Session Management
+**ALWAYS check current context at session start:**
+```javascript
+// Check active project status
+mcp__memory-bank-mcp__read_memory_bank_file({ filename: "active-context.md" })
+
+// Update context proactively when making progress
+mcp__memory-bank-mcp__update_active_context({
+  tasks: ["Current development tasks"],
+  issues: ["Known blockers or problems"],
+  nextSteps: ["Planned next actions"]
+})
+```
 
 ### Implementation Status (All tools need NEW implementation)
 
