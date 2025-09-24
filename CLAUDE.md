@@ -1,5 +1,45 @@
 # Browser Tools for Claude Code
 
+## Memory Bank MCP - Usage Guide
+
+**Purpose**: Keep essential context between sessions
+
+**Essential Workflow (BE PROACTIVE!)**:
+
+```javascript
+// Switch work mode - helps user and AI track/search dev history by category
+mcp__memory-bank-mcp__switch_mode({ mode: "code" })      // Implementing
+mcp__memory-bank-mcp__switch_mode({ mode: "debug" })     // Fixing bugs
+mcp__memory-bank-mcp__switch_mode({ mode: "architect" }) // Planning/designing
+
+// Log progress - creates searchable development timeline
+mcp__memory-bank-mcp__track_progress({
+  action: "Fixed authentication bug",
+  description: "Resolved JWT token expiration issue in login flow"
+})
+
+// Update current context - keeps AI informed of active work
+mcp__memory-bank-mcp__update_active_context({
+  tasks: ["Add user profile page", "Fix responsive layout"],
+  issues: ["CSS breaks on mobile", "Database slow on large queries"],
+  nextSteps: ["Test on staging", "Performance audit"]
+})
+
+// Record decisions - create searchable decision archive
+mcp__memory-bank-mcp__log_decision({
+  title: "State Management Choice",
+  context: "Component state getting complex",
+  decision: "Use Zustand instead of Context API"
+})
+
+// Browse history - find prev. solutions by category/keyword
+mcp__memory-bank-mcp__read_memory_bank_file({ filename: "progress.md" })
+```
+
+**When to Use**: After completing changes, making decisions, when stuck (search previous solutions), between sessions
+
+---
+
 ## Project Overview
 A powerful set of tools for you and your AI agent to visually test and debug front-end development, navigate and analyse UI and audit performance, SEO and accessibility.
 

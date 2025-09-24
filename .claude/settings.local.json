@@ -45,7 +45,9 @@
       "Bash(done)",
       "Bash(gh issue list:*)",
       "Bash(find:*)",
-      "Bash(MCP_DEBUG=1 node mcp-server/server.mjs --test-only)"
+      "Bash(MCP_DEBUG=1 node mcp-server/server.mjs --test-only)",
+      "Bash(git checkout:*)",
+      "Bash(gh pr view:*)"
     ],
     "deny": [],
     "ask": []
