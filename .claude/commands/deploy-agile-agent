@@ -67,11 +67,21 @@ Load \`.claude/agents/${AGENT_MAP[agent]}\` and assume identity.
 - Progress check at midpoint
 - Final approval before completion
 
-## 🛡️ ENFORCEMENT GUARDRAILS:
+## 🛡️ MANDATORY CONSTRAINTS:
 ${enforceScope ? `
+### 1. EXAMINE BEFORE CREATE:
+- REQUIRED: Search codebase for existing functionality FIRST
+- FORBIDDEN: Creating new when existing solutions available
+- VALIDATE: Use existing patterns, extend don't duplicate
+
+### 2. CREATIVITY CHANNELING:
+- CHANNEL: Natural enthusiasm → Completion Report "Further Ideas" section
+- FORBIDDEN: Scope expansion during implementation
+- REQUIRED: Professional focus during execution
+
+### 3. SCOPE CONFORMITY:
 - FORBIDDEN: Framework changes (Agent B complete)
-- FORBIDDEN: Other agent work
-- FORBIDDEN: UI redesign
+- FORBIDDEN: Other agent work, UI redesign
 - ALLOWED: Only Agent ${agent} XML scope
 - AUTO-STOP: When deliverables complete per XML
 ` : 'Scope enforcement disabled - proceed with caution'}

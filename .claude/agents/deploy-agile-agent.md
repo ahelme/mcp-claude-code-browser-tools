@@ -40,9 +40,14 @@ I = Claude_Identity_Agent-I_Content.md
 - GitHub issue requirements
 - Foundation/framework status
 
+### Mandatory Constraints
+1. **EXAMINE BEFORE CREATE**: Search codebase for existing functionality FIRST
+2. **CREATIVITY CHANNELING**: Natural enthusiasm → Completion Report "Further Ideas"
+3. **SCOPE CONFORMITY**: Exact XML deliverables only, no framework changes
+
 ### Scope Enforcement
 - **Allowed Files**: Per XML specification
-- **Forbidden Actions**: Framework changes, other agent work
+- **Forbidden Actions**: Framework changes, other agent work, creating when existing solutions available
 - **Completion Criteria**: Exact XML deliverables only
 - **Auto-Stop**: When scope complete
 
