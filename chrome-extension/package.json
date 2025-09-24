@@ -1,0 +1,31 @@
+{
+  "name": "@mane/chrome-extension",
+  "version": "1.0.0",
+  "description": "MANE Browser Tools Chrome Extension - UI Framework & Component System",
+  "type": "module",
+  "main": "manifest.json",
+  "scripts": {
+    "build": "echo 'Chrome extension build - placeholder'",
+    "test": "echo 'Chrome extension tests - placeholder'",
+    "lint": "echo 'Chrome extension lint - placeholder'"
+  },
+  "dependencies": {
+    "puppeteer": "^23.6.1",
+    "lighthouse": "^12.2.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.276"
+  },
+  "keywords": [
+    "mane",
+    "chrome-extension",
+    "browser-tools",
+    "ui-framework",
+    "component-system"
+  ],
+  "author": "MANE Collaborative Development",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

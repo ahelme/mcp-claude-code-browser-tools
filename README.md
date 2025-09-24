@@ -1,19 +1,27 @@
 # Browser Tools for Claude Code
 
-## Project Overview
-A powerful set of tools for you and your AI agent to visually test and debug front-end development, navigate and analyse UI and audit performance, SEO and accessibility.
+## 🚀 **AgileAI Browser Tools - Revolutionary AI Collaborative Development**
 
-Complete re-write of:
-1. AgentDesk's sophisticated Browser Tools MCP server to optimise browser-testing and front-end development - updated to June 2025 MCP spec
-2. AgentDesk's Chrome Extension to improve UI and address mcp tools no longer working
+The world's first browser tools project built using **AgileAI** - a revolutionary Agile methodology for human-AI collaborative development!
 
-## PROJECT STATUS: New Chrome Ext. Based on AgentDesk Tools
-- **IMPORTANT**: We are building a NEW browser tools implementation from scratch
-- The "working/broken tools" refer to status in the OLD AgentDesk Chrome extension
-- Our NEW implementation will use foundation infrastructure (.mjs modules) and MANE agents
-- **Current Status**: Foundation ready, agent definitions complete, tool implementation needed
-- 100% June 2025 MCP-compliant implementation
-- **MCP Method**: `mcp-claude-code-browser-tools.mjs` + `mcp-http-bridge.mjs` (port 3024)
+### **🎯 What is AgileAI?**
+AgileAI combines XML-driven architecture, specialized AI agents, break-point methodology, and complete user control to create transparent, quality-assured collaborative development.
+
+### **🛠️ Project Overview**
+A powerful set of 9 browser automation tools built collaboratively with specialized AI agents:
+- Complete re-write using AgileAI methodology
+- 100% June 2025 MCP specification compliant
+- Chrome extension with modern Manifest V3 architecture
+
+### **🚀 Quick Start with AgileAI**
+Ready to experience revolutionary AI collaboration? See **[AgileAI_KickStart.md](product-management/product-management_docs/AgileAI_KickStart.md)** for 5-minute setup!
+
+## PROJECT STATUS: AgileAI Ready!
+- **REVOLUTIONARY**: World's first Agile methodology for human-AI collaborative development
+- **8 Claude Identity Agents**: Ready for interactive collaboration (GitHub Issues #40-47)
+- **Next Priority**: Agent B - Framework Specialist for Chrome extension architecture
+- **Implementation**: 100% June 2025 MCP-compliant with AgileAI break-point methodology
+- **MCP Method**: `mcp-server/server.mjs` + `mcp-server/http-bridge.mjs` (port 3024)
 
 ### 🦁 MANE FOUNDATION INFRASTRUCTURE COMPLETE ✅
 **World's first complete AI collaborative development platform!**
@@ -194,7 +202,7 @@ Option to run direct http connection via **Port 3026**
 ```bash
 
 # Starts the direct MCP HTTP bridge on port 3026
-./mcp-server/scripts/start-direct-browser-tools.sh
+./mcp-server/mcp-server/start-direct-browser-tools.sh
 
 # Test Direct HTTP bridge (port 3026)
 curl http://localhost:3026/health
@@ -354,8 +362,8 @@ Guide to usage of available tools: TOOLS_GUIDE.md
 - `mcp-server/start.sh` - Start script for MCP
 
 ### BACKUP: Direct Method (Port 3026)
-- `mcp-server/scripts/direct-http-bridge.js` - Direct HTTP bridge
-- `mcp-server/scripts/start-direct-browser-tools.sh` - Start script for direct
+- `mcp-server/mcp-server/direct-http-bridge.js` - Direct HTTP bridge
+- `mcp-server/mcp-server/start-direct-browser-tools.sh` - Start script for direct
 
 ### Configuration, Files & Directories
 - `~/.claude/mcp.json` - ==(DANGEROUS TO MODIFY)== User-level MCP configuration (Claude Code) 
@@ -427,7 +435,7 @@ To modify MCP server configurations:
       "type": "stdio",
       "command": "node",
       "args": [
-        "scripts/claude-code-browser-tools.js"
+        "mcp-server/claude-code-browser-tools.js"
       ],
       "env": {
         "BROWSER_TOOLS_PORT": "3024",

@@ -8,12 +8,42 @@ Complete re-write of:
 2. AgentDesk's Chrome Extension: improve UI and address mcp tools no longer working
 
 
-## PROJECT STATUS: New Implementation
-- **Building NEW browser tools from scratch** using foundation infrastructure (.mjs modules)
-- "Broken/working tools" refer to OLD AgentDesk Chrome extension status
-- **Current Status**: Foundation ready, agent definitions complete, tool implementation needed
+## 🚀 PROJECT STATUS: AgileAI Ready!
+
+**REVOLUTIONARY DEVELOPMENT**: World's first Agile methodology for human-AI collaborative development!
+
+### ✅ **AgileAI Methodology Complete**
+- **AgileAI_KickStart.md** - 5-minute setup guide for immediate use
+- **Complete documentation suite** in `product-management/product-management_docs/`
+- **8 Claude Identity Agents** ready for interactive collaboration
+- **GitHub Issues #40-47** with comprehensive specifications
+
+### ✅ **Current Implementation Status**
+- **Foundation Infrastructure**: Agent A completed and operational (.mjs modules)
+- **Next Priority**: Agent B - Framework Specialist (GitHub Issue #40)
 - **Implementation**: 100% June 2025 MCP-compliant
 - **Method**: `mcp-server/server.mjs` + `mcp-server/http-bridge.mjs` (port 3024)
+
+### 🎯 **Ready to Start AgileAI Development**
+Simply say: *"Claude, please assume the identity of Agent B - Framework Specialist and start AgileAI development for GitHub Issue #40"*
+
+## ⚠️ CRITICAL: MCP Server Read-Only Policy
+
+**IMPORTANT FOR ALL AGENTS**: The `/mcp-server/` directory is **READ-ONLY** and **MUST NOT BE MODIFIED** by agents working on this project.
+
+### 🚫 **DO NOT**:
+- Modify any files in `/mcp-server/`
+- Add new files to `/mcp-server/`
+- Update dependencies in `/mcp-server/package.json`
+- Change configuration in `/mcp-server/`
+
+### ✅ **DO**:
+- Work in `/chrome-extension/` for UI and component development
+- Use `/MANE/` for architecture and documentation
+- Create new files in appropriate project directories
+- Report any MCP server issues to the user
+
+**WHY**: The MCP server provides stable infrastructure that multiple projects depend on. Changes require careful coordination and testing.
 
 ## 🦁 MANE SYSTEM OPERATIONAL
 
@@ -237,7 +267,7 @@ Update Chrome extension port when switching projects.
 ## Alternative Direct HTTP (Backup)
 If MCP server fails, use direct HTTP on port 3026:
 ```bash
-./mcp-server/scripts/start-direct-browser-tools.sh
+./mcp-server/mcp-server/start-direct-browser-tools.sh
 curl http://localhost:3026/health
 ```
 
@@ -258,7 +288,7 @@ browser-tools-setup/
 │   ├── server.mjs           # Main MCP server
 │   ├── http-bridge.mjs      # HTTP bridge (3024)
 │   ├── start.sh             # Start script
-│   └── scripts/             # Additional server scripts
+│   └── mcp-server/             # Additional server scripts
 ├── product-management/     # Product management tools
 │   └── mcp-servers/        # Product management MCP servers
 │       └── memory-bank/    # Session persistence
