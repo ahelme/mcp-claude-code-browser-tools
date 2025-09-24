@@ -48,7 +48,8 @@
       "Bash(MCP_DEBUG=1 node mcp-server/server.mjs --test-only)",
       "Bash(git checkout:*)",
       "Bash(gh pr view:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Bash(gh issue edit:*)"
     ],
     "deny": [],
     "ask": []
@@ -67,12 +68,12 @@
     "network-tools",
     "memory"
   ],
-  "commands": {
-    "deploy-agile-agent": ".claude/commands/deploy-agile-agent"
-  },
   "statusLine": {
     "type": "command",
     "command": "claude-statusline status"
+  },
+  "commands": {
+    "deploy-agile-agent": ".claude/commands/deploy-agile-agent"
   },
   "verbose": true
 }
