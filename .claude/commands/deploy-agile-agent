@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+
+// Deploy AgileAI Agent - Universal Scope-Controlled Deployment
+// Usage: /deploy-agile-agent --agent=C --issue=41 --enforce-xml-scope=YES
+
+const AGENT_MAP = {
+  A: 'Claude_Identity_Agent-A_Foundation.md',
+  B: 'Claude_Identity_Agent-B_Framework.md',
+  C: 'Claude_Identity_Agent-C_Navigation.md',
+  D: 'Claude_Identity_Agent-D_Screenshot.md',
+  E: 'Claude_Identity_Agent-E_Interaction.md',
+  F: 'Claude_Identity_Agent-F_Evaluation.md',
+  G: 'Claude_Identity_Agent-G_Audit.md',
+  H: 'Claude_Identity_Agent-H_Console.md',
+  I: 'Claude_Identity_Agent-I_Content.md'
+};
+
+async function deployAgent() {
+  // Parse arguments
+  const args = process.argv.slice(2).join(' ');
+  const agentMatch = args.match(/--agent=([A-I])/);
+  const issueMatch = args.match(/--issue=(\d+)/);
+  const scopeMatch = args.match(/--enforce-xml-scope=(YES|NO)/);
+
+  const agent = agentMatch?.[1];
+  const issue = issueMatch?.[1];
+  const enforceScope = scopeMatch?.[1] === 'YES';
+
+  if (!agent || !issue) {
+    console.error('❌ Usage: /deploy-agile-agent --agent=C --issue=41 --enforce-xml-scope=YES');
+    process.exit(1);
+  }
+
+  console.log(`🚀 DEPLOYING AGENT ${agent} - SCOPE CONTROLLED DEPLOYMENT`);
+  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+
+  // Step 1: Load XML Scope
+  console.log(`📋 LOADING XML SCOPE FOR AGENT ${agent}...`);
+
+  const xmlPrompt = `
+# 🎯 UNIVERSAL AGILE AGENT DEPLOYMENT
+
+**AGENT**: ${agent}
+**GITHUB ISSUE**: #${issue}
+**SCOPE ENFORCEMENT**: ${enforceScope ? 'ACTIVE ✅' : 'DISABLED ❌'}
+
+## 🔍 CRITICAL LOADING SEQUENCE:
+
+### 1. XML Scope Analysis
+Read \`MANE/browser-tools-mane-project.xml\` and find Agent ${agent} definition.
+Extract EXACT scope, deliverables, and boundaries.
+
+### 2. GitHub Issue Validation
+Load GitHub issue #${issue} requirements and specifications.
+
+### 3. Scope Contract Generation
+Create user-approval contract showing:
+- ✅ WILL DO: (from XML + GitHub issue)
+- ❌ WON'T DO: (scope boundaries)
+- 🎯 COMPLETION: (exact deliverables)
+
+### 4. Agent Identity Assumption
+Load \`.claude/agents/${AGENT_MAP[agent]}\` and assume identity.
+
+### 5. Break-Point System Activation
+- User approval before starting
+- Progress check at midpoint
+- Final approval before completion
+
+## 🛡️ ENFORCEMENT GUARDRAILS:
+${enforceScope ? `
+- FORBIDDEN: Framework changes (Agent B complete)
+- FORBIDDEN: Other agent work
+- FORBIDDEN: UI redesign
+- ALLOWED: Only Agent ${agent} XML scope
+- AUTO-STOP: When deliverables complete per XML
+` : 'Scope enforcement disabled - proceed with caution'}
+
+**PROCEED WITH AGENT ${agent} DEPLOYMENT?**
+Please confirm scope contract before agent assumes identity.
+`;
+
+  console.log(xmlPrompt);
+}
+
+deployAgent().catch(console.error);
