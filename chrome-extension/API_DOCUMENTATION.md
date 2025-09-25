@@ -18,703 +18,370 @@ const handler = new NavigationHandler();
 
 **Initializes**:
 - Retry strategy with exponential backoff (5s cap)
-- Dynamic memory cleanup system
-- Listener pool management (max 5 concurrent)
-- WebSocket communication handlers
+- Thread-safe navigation configuration
+- Dynamic listener pool management (max 5 concurrent)
+- Memory monitoring with cleanup automation
 
-#### Properties
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `isNavigating` | boolean | Current navigation state |
-| `navigationTimeout` | number | Timeout in milliseconds (1000-60000) |
-| `maxRetries` | number | Maximum retry attempts (default: 2) |
-| `maxConcurrentListeners` | number | Listener pool limit (default: 5) |
-| `listenerPool` | Map | Active listener management pool |
-| `retryAttempts` | number | Current retry count |
-
-#### Core Methods
+#### Public Methods
 
 ##### handleNavigationRequest(message, sendResponse)
-Process navigation requests from WebSocket/MCP server.
+Primary method for processing navigation requests from the MCP server.
 
 **Parameters**:
-```javascript
-message = {
-  url: string,              // Target URL
-  requestId: string,        // Unique request identifier
-  timeout?: number          // Custom timeout (1000-60000ms)
-}
+- `message` (Object): Navigation request containing URL and options
+  - `url` (string): Target URL to navigate to
+  - `timeout` (number, optional): Navigation timeout (1000-60000ms, default: 10000ms)
+  - `waitForNetworkIdle` (boolean, optional): Wait for network idle before completing
+  - `retries` (number, optional): Retry attempts (0-2, default: 2)
 
-sendResponse = function     // Callback for response
-```
+**Returns**: Promise resolving to navigation result
 
 **Example**:
 ```javascript
-handler.handleNavigationRequest({
+await handler.handleNavigationRequest({
   url: "https://example.com",
-  requestId: "nav_001",
-  timeout: 15000
-}, (response) => {
-  console.log('Navigation result:', response);
-});
-```
-
-**Response Format**:
-```javascript
-{
-  success: boolean,
-  url?: string,             // Original URL
-  finalUrl?: string,        // Final URL after redirects
-  title?: string,           // Page title
-  loadTime?: number,        // Navigation time in ms
-  error?: string,           // Error message if failed
-  timestamp: number,        // Response timestamp
-  source: "NavigationHandler",
-  version: "1.1.0",
-  requestId: string
-}
+  timeout: 15000,
+  waitForNetworkIdle: true,
+  retries: 1
+}, sendResponse);
 ```
 
 ##### validateUrl(url)
-Validate URL format and security compliance.
+Enhanced URL validation with security checks and normalization.
 
 **Parameters**:
 - `url` (string): URL to validate
 
 **Returns**:
-```javascript
-{
-  isValid: boolean,
-  url?: string,             // Normalized URL if valid
-  error?: string            // Error description if invalid
-}
-```
+- `{ isValid: boolean, normalized?: string, error?: string }`
 
-**Security Rules**:
-- ✅ Allowed: `http:`, `https:`, `devtools:` (in Chrome context)
-- ❌ Blocked: `file:`, `chrome:`, `data:`, `javascript:`, etc.
+**Security Features**:
+- Protocol validation (http/https only)
+- Malformed URL detection
+- XSS prevention
+- Port validation
 
 **Example**:
 ```javascript
-const result = handler.validateUrl("javascript:alert(1)");
-// Returns: { isValid: false, error: "Protocol javascript: not supported" }
-
-const valid = handler.validateUrl("https://example.com");
-// Returns: { isValid: true, url: "https://example.com" }
+const result = handler.validateUrl("http://example.com:3000");
+// Returns: { isValid: true, normalized: "http://example.com:3000/" }
 ```
 
 ##### normalizeUrl(url)
-Normalize URL for consistent handling.
+Smart URL normalization with localhost handling.
 
 **Parameters**:
 - `url` (string): URL to normalize
 
-**Returns**:
-- `string`: Normalized URL
-
-**Normalization Rules**:
-- Add `https://` if no protocol specified
-- Remove trailing slashes (except root)
-- Convert to lowercase hostname
-- Preserve query parameters and hash
-
-**Example**:
-```javascript
-handler.normalizeUrl("example.com/path/");
-// Returns: "https://example.com/path"
-
-handler.normalizeUrl("HTTPS://EXAMPLE.COM/");
-// Returns: "https://example.com"
-```
-
-##### getNavigationState()
-Get current navigation and listener pool state.
-
-**Returns**:
-```javascript
-{
-  isNavigating: boolean,
-  hasActiveController: boolean,
-  activeListenerCount: number,
-  listenerPoolStatus: {
-    totalListeners: number,
-    maxListeners: number,
-    utilizationPercent: number,
-    lastCleanup: number,     // ms since last cleanup
-    listeners: Array<{
-      id: string,
-      description: string,
-      age: number,           // ms since creation
-      calls: number,         // usage count
-      lastUsed: number,      // ms since last call
-      isActive: boolean
-    }>
-  }
-}
-```
-
-**Example**:
-```javascript
-const state = handler.getNavigationState();
-console.log(`Active listeners: ${state.activeListenerCount}/${state.listenerPoolStatus.maxListeners}`);
-console.log(`Pool utilization: ${state.listenerPoolStatus.utilizationPercent}%`);
-```
-
-#### Listener Pool Management
-
-##### createManagedListener(listenerFunction, description)
-Create a managed listener with automatic cleanup and usage tracking.
-
-**Parameters**:
-- `listenerFunction` (Function): Listener callback
-- `description` (string): Debug description
-
-**Returns**:
-```javascript
-{
-  id: string,               // Unique listener ID
-  listener: Function,       // Wrapped listener function
-  remove: () => boolean,    // Remove listener method
-  isActive: () => boolean   // Check if still active
-}
-```
+**Returns**: Normalized URL string
 
 **Features**:
-- Usage tracking (call count, last used time)
-- Automatic stale listener cleanup
-- Pool size enforcement
-- Memory leak prevention
+- Automatic protocol detection
+- Localhost special handling
+- Port validation
+- Trailing slash normalization
 
-**Example**:
-```javascript
-const managedListener = handler.createManagedListener(
-  (tabId, changeInfo, tab) => {
-    console.log('Tab updated:', tabId);
-  },
-  'custom-tab-monitor'
-);
-
-// Use the wrapped listener
-chrome.tabs.onUpdated.addListener(managedListener.listener);
-
-// Clean up when done
-managedListener.remove();
-```
-
-##### removeListener(listenerId)
-Remove a specific listener from the pool.
-
-**Parameters**:
-- `listenerId` (string): Listener ID from `createManagedListener`
-
-**Returns**:
-- `boolean`: Success status
-
-##### cleanupStaleListeners()
-Force cleanup of stale listeners.
-
-**Cleanup Criteria**:
-- Age > 5 minutes AND inactive > 1 minute
-- Never used AND age > 2 minutes
-
-**Example**:
-```javascript
-// Manual cleanup
-handler.cleanupStaleListeners();
-
-// Check cleanup effectiveness
-const beforeSize = handler.listenerPool.size;
-handler.cleanupStaleListeners();
-const afterSize = handler.listenerPool.size;
-console.log(`Cleaned up ${beforeSize - afterSize} listeners`);
-```
-
-##### getListenerPoolStatus()
-Get detailed listener pool analytics.
-
-**Returns**: See `listenerPoolStatus` in `getNavigationState()`
-
-#### Retry & Recovery Methods
-
-##### navigateToUrlWithRetry(url)
-Navigate with automatic retry logic.
-
-**Parameters**:
-- `url` (string): Normalized URL
-
-**Returns**: Promise resolving to navigation result
-
-**Retry Strategy**:
-- Max attempts: 2 retries (3 total)
-- Exponential backoff: 2^attempt * 1000ms
-- Delay cap: 5000ms maximum
-- Only retry on network/timeout errors
-
-**Example**:
-```javascript
-try {
-  const result = await handler.navigateToUrlWithRetry("https://unreliable-site.com");
-  console.log('Navigation succeeded:', result);
-} catch (error) {
-  console.log('Navigation failed after retries:', error.message);
-}
-```
-
-##### cancelNavigation()
-Cancel ongoing navigation with proper cleanup.
-
-**Actions**:
-- Abort current navigation controller
-- Remove active listeners
-- Reset navigation state
-- Update UI status
-
-**Example**:
-```javascript
-// Cancel stuck navigation
-handler.cancelNavigation();
-
-// Verify cleanup
-const state = handler.getNavigationState();
-console.log('Navigation active:', state.isNavigating); // Should be false
-```
-
-##### destroy()
-Completely destroy handler and cleanup all resources.
-
-**Cleanup Actions**:
-- Cancel active navigations
-- Remove all listeners from pool
-- Clear cleanup intervals
-- Reset internal state
-
-**Example**:
-```javascript
-// Clean shutdown
-handler.destroy();
-
-// Create fresh instance
-window.navigationHandler = new NavigationHandler();
-```
-
----
-
-## Performance Optimization Features
-
-### Dynamic Memory Cleanup
-
-**Algorithm**: Load-based cleanup intervals
-```javascript
-const poolSize = handler.listenerPool.size;
-let cleanupInterval;
-
-if (poolSize === 0) {
-  cleanupInterval = 120000;      // 2 minutes when idle
-} else if (poolSize < 3) {
-  cleanupInterval = 60000;       // 1 minute for light load
-} else if (poolSize < 5) {
-  cleanupInterval = 30000;       // 30 seconds for moderate load
-} else {
-  cleanupInterval = 10000;       // 10 seconds for heavy load
-}
-```
-
-**Benefits**:
-- Reduces unnecessary cleanup cycles when idle
-- Increases cleanup frequency under load
-- Prevents memory accumulation during stress
-
-### Retry Strategy with Delay Capping
-
-**Implementation**:
-```javascript
-for (let attempt = 0; attempt <= maxRetries; attempt++) {
-  if (attempt > 0) {
-    const baseDelay = 1000;
-    const exponentialDelay = Math.pow(2, attempt) * baseDelay;
-    const cappedDelay = Math.min(exponentialDelay, 5000);
-    await sleep(cappedDelay);
-  }
-
-  // Attempt navigation...
-}
-```
-
-**Delay Schedule**:
-- Attempt 1: 0ms (immediate)
-- Attempt 2: 2000ms delay
-- Attempt 3: 4000ms delay (capped at 5000ms)
-
-### Listener Pool Management
-
-**Pool Lifecycle**:
-1. **Creation**: Assign unique ID, track metadata
-2. **Usage**: Monitor call count and timing
-3. **Cleanup**: Remove based on age and inactivity
-4. **Limits**: Enforce maximum concurrent listeners
-
-**Metadata Tracking**:
-```javascript
-const listenerData = {
-  id: `listener_${++idCounter}_${Date.now()}`,
-  function: originalFunction,
-  description: userDescription,
-  createdAt: Date.now(),
-  isActive: true,
-  usage: {
-    calls: 0,
-    lastUsed: Date.now()
-  }
-};
-```
-
----
-
-## WebSocket Message Protocol
-
-### Navigation Request
-```json
-{
-  "action": "navigate",
-  "url": "https://example.com",
-  "requestId": "nav_123",
-  "timeout": 10000
-}
-```
-
-### Navigation Response
-```json
-{
-  "type": "navigationResult",
-  "success": true,
-  "url": "https://example.com",
-  "finalUrl": "https://example.com/",
-  "title": "Example Domain",
-  "loadTime": 1234,
-  "timestamp": 1758804884049,
-  "source": "NavigationHandler",
-  "version": "1.1.0",
-  "handledAt": 1758804884049,
-  "handledBy": "NavigationHandler v1.1.0",
-  "requestId": "nav_123"
-}
-```
-
-### Error Response
-```json
-{
-  "type": "navigationResult",
-  "success": false,
-  "error": "Protocol file: not allowed for security reasons",
-  "timestamp": 1758804537735,
-  "source": "NavigationHandler",
-  "version": "1.1.0",
-  "requestId": "nav_123"
-}
-```
-
----
-
-## Test Suites API
-
-### PerformanceStressTester
-
-Comprehensive performance validation suite.
-
-```javascript
-const tester = new PerformanceStressTester();
-
-// Run all tests
-const results = await tester.runAllTests();
-
-// Access performance metrics
-console.log('Memory usage:', results.performanceMetrics.memoryUsage);
-console.log('Listener counts:', results.performanceMetrics.listenerCounts);
-console.log('Cleanup cycles:', results.performanceMetrics.cleanupCycles);
-```
-
-**Test Categories**:
-- Concurrent navigation handling
-- Memory leak detection
-- Performance benchmarking
-- Listener pool stress testing
-- Retry strategy validation
-- Dynamic cleanup efficiency
-- Resource cleanup verification
-- Edge case scenarios
-
-### URLValidationTester
-
-URL security and format validation tests.
-
-```javascript
-const urlTester = new URLValidationTester();
-const results = await urlTester.runAllTests();
-
-// Check security validation
-const securityTests = results.filter(r =>
-  r.testName.includes('Security')
-);
-```
-
-**Test Categories**:
-- Basic valid URL formats
-- Invalid URL rejection
-- Security protocol blocking
-- Protocol handling and normalization
-- Hostname validation
-- Edge cases and boundary conditions
-- URL normalization consistency
-
-### IntegrationTestRunner
-
-Coordinated test execution and reporting.
-
-```javascript
-const runner = new IntegrationTestRunner();
-
-// Run all available test suites
-const results = await runner.runAllTestSuites();
-
-// Get summary
-const summary = runner.getResultsSummary();
-console.log(`Overall status: ${summary.status}`);
-console.log(`Pass rate: ${summary.overallPassRate}%`);
-
-// Export for analysis
-const exportData = runner.exportResults('json');
-```
+##### cleanup()
+Enhanced cleanup with memory monitoring and leak prevention.
 
 **Features**:
-- Automatic test suite discovery
-- Unified reporting across suites
-- Performance metrics aggregation
-- Achievement analysis
-- Export capabilities
+- Clears all active navigation listeners
+- Resets internal state safely
+- Prevents memory leaks
+- Thread-safe operation
+
+**Example**:
+```javascript
+handler.cleanup(); // Safe cleanup of all resources
+```
 
 ---
 
-## Error Codes & Messages
+### InteractionHandler
+
+Handles browser interactions (click, type, wait) with CSP-safe execution.
+
+#### Constructor
+```javascript
+const interactions = new InteractionHandler();
+```
+
+**Initializes**:
+- CSP-safe script executor with fallbacks
+- Dynamic cleanup timer (60s idle → 5s heavy load)
+- Active wait operation tracking
+- Orphaned operation prevention
+
+#### Public Methods
+
+##### handleClick(selector, options)
+Enhanced click handling with better element targeting.
+
+**Parameters**:
+- `selector` (string): CSS selector for target element
+- `options` (Object, optional):
+  - `timeout` (number): Wait timeout for element (default: 5000ms)
+  - `waitForVisible` (boolean): Ensure element is visible (default: true)
+  - `scrollIntoView` (boolean): Scroll to element (default: true)
+
+**Returns**: Promise resolving to click result
+
+**Example**:
+```javascript
+await interactions.handleClick("#submit-button", {
+  timeout: 10000,
+  waitForVisible: true,
+  scrollIntoView: true
+});
+```
+
+##### handleType(selector, text, options)
+Enhanced typing with better error handling.
+
+**Parameters**:
+- `selector` (string): CSS selector for input element
+- `text` (string): Text to type
+- `options` (Object, optional):
+  - `timeout` (number): Wait timeout for element
+  - `clearFirst` (boolean): Clear existing text (default: true)
+  - `typeDelay` (number): Delay between keystrokes (default: 10ms)
+
+**Example**:
+```javascript
+await interactions.handleType("#email-input", "user@example.com", {
+  clearFirst: true,
+  typeDelay: 50
+});
+```
+
+##### handleWait(selector, options)
+Advanced wait conditions with multiple strategies.
+
+**Parameters**:
+- `selector` (string): CSS selector or wait condition
+- `options` (Object, optional):
+  - `timeout` (number): Maximum wait time (default: 10000ms)
+  - `visible` (boolean): Wait for visibility (default: true)
+  - `enabled` (boolean): Wait for enabled state
+  - `text` (string): Wait for specific text content
+  - `count` (number): Wait for specific element count
+
+**Example**:
+```javascript
+await interactions.handleWait(".loading-spinner", {
+  visible: false,
+  timeout: 30000
+});
+```
+
+---
+
+## Performance Features
+
+### Retry Strategy
+- Exponential backoff with smart delay calculation
+- Maximum 2 retry attempts for transient failures
+- 5-second delay cap to prevent excessive waiting
+- Intelligent retry decision based on error type
+
+### Memory Management
+- Dynamic cleanup intervals (60s → 5s under load)
+- Automatic orphaned operation detection
+- Listener pool management (max 5 concurrent)
+- Memory leak prevention with monitoring
+
+### Thread-Safe Operations
+- Race condition prevention in navigation state
+- Atomic timeout configuration updates
+- Safe listener registration/removal
+- Concurrent operation coordination
+
+### CSP Compliance
+- Multiple fallback execution methods
+- Safe script injection techniques
+- Content Security Policy compliance
+- Error handling for restricted environments
+
+---
+
+## Error Handling
 
 ### Navigation Errors
+```javascript
+{
+  success: false,
+  error: "Navigation timeout after 10000ms",
+  errorCode: "TIMEOUT",
+  url: "https://example.com",
+  timestamp: "2025-09-26T03:19:45.123Z"
+}
+```
 
-| Error | Code | Description | Recovery |
-|-------|------|-------------|----------|
-| `Navigation already in progress` | BUSY | Multiple concurrent navigation | Wait or cancel current |
-| `URL is required for navigation` | INVALID_INPUT | Missing URL parameter | Provide valid URL |
-| `Navigation timeout after Xms` | TIMEOUT | Operation exceeded timeout | Retry with longer timeout |
-| `No active tab found` | NO_TAB | Chrome DevTools tab unavailable | Reopen DevTools |
+### Interaction Errors
+```javascript
+{
+  success: false,
+  error: "Element not found: #missing-button",
+  errorCode: "ELEMENT_NOT_FOUND",
+  selector: "#missing-button",
+  timestamp: "2025-09-26T03:19:45.123Z"
+}
+```
 
-### URL Validation Errors
-
-| Error | Code | Description | Fix |
-|-------|------|-------------|-----|
-| `Protocol X not allowed for security reasons` | BLOCKED_PROTOCOL | Dangerous protocol blocked | Use http/https |
-| `Data URLs not allowed for security reasons` | BLOCKED_DATA | Data URLs blocked | Use regular URLs |
-| `Invalid URL format: X` | MALFORMED | URL parsing failed | Check URL syntax |
-| `Invalid hostname` | INVALID_HOST | Hostname validation failed | Provide valid hostname |
-
-### Performance Errors
-
-| Error | Code | Description | Action |
-|-------|------|-------------|--------|
-| `Listener pool approaching maximum capacity` | POOL_LIMIT | Near listener limit | Cleanup will auto-trigger |
-| `Memory usage exceeding baseline by X%` | MEMORY_LEAK | Potential memory leak | Force cleanup |
-| `Cleanup cycle failed: X` | CLEANUP_ERROR | Cleanup process error | Manual intervention |
+### Common Error Codes
+- `TIMEOUT` - Operation exceeded timeout limit
+- `ELEMENT_NOT_FOUND` - Target element not found in DOM
+- `INVALID_URL` - URL validation failed
+- `NAVIGATION_FAILED` - Browser navigation failed
+- `CSP_VIOLATION` - Content Security Policy blocked operation
+- `NETWORK_ERROR` - Network connectivity issue
 
 ---
 
-## Configuration Options
+## Configuration
 
-### Default Settings
+### Timeout Settings
 ```javascript
-const defaultConfig = {
-  // Navigation
-  navigationTimeout: 10000,        // 10 seconds
-  maxRetries: 2,                   // 2 retry attempts
-
-  // Listener Pool
-  maxConcurrentListeners: 5,       // Pool size limit
-  listenerMaxAge: 300000,          // 5 minutes max age
-  listenerInactivityTimeout: 60000,// 1 minute inactivity
-
-  // Cleanup
-  cleanupIntervals: {
-    idle: 120000,                  // 2 minutes
-    light: 60000,                  // 1 minute
-    moderate: 30000,               // 30 seconds
-    heavy: 10000                   // 10 seconds
-  },
-
-  // Retry Strategy
-  retryBaseDelay: 1000,            // 1 second base
-  retryMaxDelay: 5000,             // 5 second cap
-  retryableErrorPatterns: [
-    "timeout", "network", "connection",
-    "unreachable", "temporary"
-  ]
+const TIMEOUTS = {
+  MIN: 1000,              // Minimum timeout (1 second)
+  MAX: 60000,             // Maximum timeout (60 seconds)
+  DEFAULT: 10000,         // Default navigation timeout
+  STATUS_CLEAR_DELAY: 3000 // Status message clear delay
 };
 ```
 
-### Customization
+### Retry Configuration
 ```javascript
-// Custom timeout for specific operations
-handler.navigationTimeout = 30000; // 30 seconds
+const RETRY_CONFIG = {
+  MAX_RETRIES: 2,         // Maximum retry attempts
+  BASE_DELAY: 1000,       // Base delay for exponential backoff
+  MAX_DELAY: 5000,        // Maximum delay cap
+  BACKOFF_MULTIPLIER: 2   // Exponential backoff multiplier
+};
+```
 
-// Adjust retry behavior
-handler.maxRetries = 3;            // More attempts
-
-// Modify pool limits
-handler.maxConcurrentListeners = 10; // Larger pool
-
-// Force cleanup frequency
-handler.cleanupStaleListeners();   // Manual trigger
+### Memory Management
+```javascript
+const MEMORY_CONFIG = {
+  CLEANUP_INTERVAL_IDLE: 60000,    // 60s cleanup when idle
+  CLEANUP_INTERVAL_ACTIVE: 5000,   // 5s cleanup when active
+  MAX_CONCURRENT_LISTENERS: 5,     // Max listener pool size
+  MEMORY_THRESHOLD_MB: 50          // Memory warning threshold
+};
 ```
 
 ---
 
-## Integration Examples
+## Usage Examples
 
-### MCP Server Integration
-```python
-# Python MCP server example
-async def navigate_browser(url: str, timeout: int = 10000):
-    """Navigate browser via Chrome extension."""
+### Basic Navigation
+```javascript
+// Simple navigation with default settings
+await navigate("https://example.com");
 
-    message = {
-        "action": "navigate",
-        "url": url,
-        "requestId": f"mcp_{int(time.time())}",
-        "timeout": timeout
-    }
+// Navigation with custom timeout
+await navigate("https://example.com", { timeout: 15000 });
 
-    # Send via WebSocket to Chrome extension
-    await websocket.send(json.dumps(message))
-
-    # Wait for response
-    response = await websocket.recv()
-    return json.loads(response)
+// Navigation with network idle wait
+await navigate("https://example.com", {
+  waitForNetworkIdle: true,
+  timeout: 20000
+});
 ```
 
-### Direct Extension Usage
+### Element Interactions
 ```javascript
-// Access global handler
-const handler = window.navigationHandler;
+// Click button and wait for page change
+await click("#submit-button");
+await waitFor("#success-message");
 
-// Custom navigation with monitoring
-async function monitoredNavigation(url) {
-  const startState = handler.getNavigationState();
+// Type in form field with custom delay
+await type("#username", "testuser", { typeDelay: 100 });
 
-  console.log('Pre-navigation state:', startState);
+// Wait for element to disappear
+await waitFor(".loading-spinner", { visible: false });
+```
 
-  return new Promise((resolve, reject) => {
-    handler.handleNavigationRequest({
-      url: url,
-      requestId: `monitored_${Date.now()}`,
-      timeout: 15000
-    }, (response) => {
-      const endState = handler.getNavigationState();
-
-      console.log('Post-navigation state:', endState);
-      console.log('Listener pool utilization:',
-        endState.listenerPoolStatus.utilizationPercent + '%');
-
-      if (response.success) {
-        resolve(response);
-      } else {
-        reject(new Error(response.error));
-      }
-    });
-  });
-}
-
-// Usage
+### Advanced Scenarios
+```javascript
+// Navigation with retry and custom error handling
 try {
-  const result = await monitoredNavigation('https://example.com');
-  console.log('Navigation completed:', result.finalUrl);
+  await navigate("https://unstable-site.com", {
+    timeout: 10000,
+    retries: 2
+  });
 } catch (error) {
-  console.error('Navigation failed:', error.message);
-}
-```
-
-### Performance Monitoring
-```javascript
-// Continuous performance monitoring
-class NavigationMonitor {
-  constructor(handler) {
-    this.handler = handler;
-    this.metrics = [];
-    this.startMonitoring();
-  }
-
-  startMonitoring() {
-    setInterval(() => {
-      const state = this.handler.getNavigationState();
-      const memory = performance.memory ? {
-        used: performance.memory.usedJSHeapSize,
-        total: performance.memory.totalJSHeapSize
-      } : null;
-
-      this.metrics.push({
-        timestamp: Date.now(),
-        activeListeners: state.activeListenerCount,
-        poolUtilization: state.listenerPoolStatus.utilizationPercent,
-        memory: memory,
-        isNavigating: state.isNavigating
-      });
-
-      // Keep last 100 data points
-      if (this.metrics.length > 100) {
-        this.metrics.shift();
-      }
-
-    }, 5000); // Every 5 seconds
-  }
-
-  getReport() {
-    return {
-      averageListeners: this.metrics.reduce((sum, m) =>
-        sum + m.activeListeners, 0) / this.metrics.length,
-
-      peakUtilization: Math.max(...this.metrics.map(m =>
-        m.poolUtilization)),
-
-      navigationTime: this.metrics.filter(m =>
-        m.isNavigating).length * 5 // seconds
-    };
+  if (error.errorCode === 'TIMEOUT') {
+    console.log('Site took too long to load');
   }
 }
 
-// Start monitoring
-const monitor = new NavigationMonitor(window.navigationHandler);
-
-// Get performance report
-setTimeout(() => {
-  console.log('Performance report:', monitor.getReport());
-}, 60000);
+// Complex interaction sequence
+await navigate("https://form-site.com");
+await click("#cookie-accept");
+await type("#email", "user@example.com");
+await click("#subscribe");
+await waitFor("#confirmation", { timeout: 15000 });
 ```
 
 ---
 
-## Version History
+## Best Practices
 
-### v1.1.0 (September 2025)
-- ✅ Advanced retry strategy with delay capping
-- ✅ Dynamic memory cleanup based on load
-- ✅ Listener pool management system
-- ✅ Comprehensive performance monitoring
-- ✅ Enhanced error handling and recovery
-- ✅ DevTools URL support in Chrome extension context
+### Performance Optimization
+1. Use appropriate timeouts (don't set unnecessarily high)
+2. Enable network idle waiting for dynamic content
+3. Limit concurrent operations to prevent resource exhaustion
+4. Clean up resources when done with navigation handlers
 
-### v1.0.0 (Base Implementation)
-- Basic navigation functionality
-- URL validation and security
-- WebSocket communication
-- Error handling
+### Error Handling
+1. Always wrap navigation/interaction calls in try-catch
+2. Check error codes for specific handling logic
+3. Implement retry logic for transient failures
+4. Log errors with sufficient context for debugging
+
+### Memory Management
+1. Create handler instances only when needed
+2. Call cleanup() when finished with handlers
+3. Monitor memory usage in long-running scenarios
+4. Avoid creating excessive concurrent operations
+
+### Security
+1. Validate all URLs before navigation
+2. Use CSP-compliant script execution methods
+3. Avoid executing untrusted JavaScript code
+4. Handle sensitive data appropriately in interactions
 
 ---
 
-**API Version**: 1.1.0
-**Last Updated**: September 2025
-**Compatibility**: Chrome Extension Manifest V3
+## Troubleshooting
+
+### Common Issues
+
+**Navigation Timeout**
+- Check network connectivity
+- Increase timeout for slow-loading sites
+- Verify URL accessibility
+- Consider network idle waiting
+
+**Element Not Found**
+- Verify CSS selector accuracy
+- Wait for dynamic content to load
+- Check for frame/iframe context
+- Use more specific selectors
+
+**CSP Violations**
+- Script execution may be blocked
+- Use alternative interaction methods
+- Check Content Security Policy headers
+- Enable CSP-safe execution mode
+
+**Memory Leaks**
+- Call cleanup() on handlers
+- Limit concurrent operations
+- Monitor memory usage patterns
+- Enable automatic cleanup timers
+
+---
+
+Generated: 2025-09-26 | Version: 1.1.0 | Performance Optimized
