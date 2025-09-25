@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "🚀 Starting MCP Browser Tools (Method 1: MCP Server)"
+echo "🚀 Starting MCP Browser Tools (Using MCP Server)"
 echo "=================================================="
 echo ""
-echo "⚠️  This starts the MCP HTTP Bridge on port 3024"
-echo "   Claude Code will auto-start the MCP Server when you use browser tools"
+echo "⚠️  This starts the MCP HTTP Bridge on configured port (default port 3024)"
+echo "   Claude Code will auto-start the MCP Server when you use browser tools (check local .mcp.json for config)"
 echo ""
 
 # Check if port 3024 is in use
@@ -28,16 +28,16 @@ if lsof -i :3024 >/dev/null 2>&1; then
     fi
 fi
 
-echo "🚀 Starting MCP HTTP Bridge on port 3024..."
-node http-bridge.mjs &
+echo "🚀 Starting MCP HTTP Bridge on configured port..."
+node mcp-server/http-bridge.mjs &
 MCP_BRIDGE_PID=$!
 
 echo "✅ MCP HTTP Bridge started (PID: $MCP_BRIDGE_PID)"
 echo ""
 echo "📌 Next steps:"
-echo "1. Install Chrome extension from: https://browsertools.agentdesk.ai/"
-echo "2. Set extension port to: 3024"
-echo "3. Use browser tools in Claude Code - MCP server will auto-start"
+echo "1. Install Chrome extension from: https://github.com/ahelme/mcp-claude-code-browser-tools/tree/main/chrome-extension"
+echo "2. Set extension port to e.g. 3024"
+echo "3. Use browser tools in Claude Code - MCP server will auto-start (check local .mcp.json for config)"
 echo ""
 echo "🔍 Check status:"
 echo "   curl http://localhost:3024/health"

@@ -254,8 +254,14 @@ chmod +x mcp-server/start.sh
 
 4. **Start HTTP Bridge** (port 3024, NEW terminal):
 ```bash
+# PREFERRED METHOD - Use the script
 ./mcp-server/start.sh
 ```
+
+**⚠️ CRITICAL - Working Directory Matters:**
+- ✅ **Use script method**: `./mcp-server/start.sh` (handles working directory correctly)
+- ✅ **Or run directly**: `node mcp-server/http-bridge.mjs` (from project root)
+- ❌ **Never do**: `cd mcp-server && node http-bridge.mjs` (wrong working directory)
 
 5. **Install Chrome Extension**: https://browsertools.agentdesk.ai/
 

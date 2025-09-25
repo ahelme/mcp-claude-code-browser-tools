@@ -14,19 +14,35 @@
 
 // Interaction states and error codes
 const InteractionResults = {
-  SUCCESS: 'success',
-  ELEMENT_NOT_FOUND: 'element_not_found',
-  SELECTOR_INVALID: 'selector_invalid',
-  TIMEOUT: 'timeout',
-  PERMISSION_DENIED: 'permission_denied',
-  UNKNOWN_ERROR: 'unknown_error'
+  SUCCESS: "success",
+  ELEMENT_NOT_FOUND: "element_not_found",
+  SELECTOR_INVALID: "selector_invalid",
+  TIMEOUT: "timeout",
+  PERMISSION_DENIED: "permission_denied",
+  UNKNOWN_ERROR: "unknown_error",
 };
 
 // Interaction handler class
 class InteractionHandler {
   constructor() {
-    console.log('🖱️ InteractionHandler initialized');
+    console.log("🖱️ InteractionHandler initialized with CSP-safe execution");
     this.activeWaits = new Map(); // Track active wait operations
+    this.cleanupInterval = null;
+    this.lastCleanupTime = Date.now();
+
+    // Initialize CSP-safe script executor
+    this.scriptExecutor = new (globalThis.CSPSafeScriptExecutor ||
+      function () {
+        // Fallback executor if module not loaded
+        this.executeScript = async (tabId, script) => {
+          throw new Error(
+            "CSP-safe executor not available - script execution disabled",
+          );
+        };
+      })();
+
+    // Start dynamic cleanup timer
+    this.startDynamicCleanup();
   }
 
   /**
@@ -35,16 +51,16 @@ class InteractionHandler {
    * @returns {Object} Result object with success/error details
    */
   async handleClick(params) {
-    console.log('🖱️ Handling click action:', params);
+    console.log("🖱️ Handling click action:", params);
 
     try {
       const { selector } = params;
 
-      if (!selector || typeof selector !== 'string') {
+      if (!selector || typeof selector !== "string") {
         return {
           success: false,
           result: InteractionResults.SELECTOR_INVALID,
-          error: 'Selector is required and must be a string'
+          error: "Selector is required and must be a string",
         };
       }
 
@@ -76,11 +92,11 @@ class InteractionHandler {
               };
             }
 
-            // Scroll element into view if needed
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Scroll element into view if needed (instant for programmatic interactions)
+            element.scrollIntoView({ behavior: 'instant', block: 'center' });
 
-            // Wait a moment for scroll to complete
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Brief wait for instant scroll to complete
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             // Trigger click event
             element.click();
@@ -107,15 +123,14 @@ class InteractionHandler {
         })();
       `);
 
-      console.log('🖱️ Click result:', result);
+      console.log("🖱️ Click result:", result);
       return result;
-
     } catch (error) {
-      console.error('❌ Click error:', error);
+      console.error("❌ Click error:", error);
       return {
         success: false,
         result: InteractionResults.UNKNOWN_ERROR,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -126,24 +141,24 @@ class InteractionHandler {
    * @returns {Object} Result object with success/error details
    */
   async handleType(params) {
-    console.log('⌨️ Handling type action:', params);
+    console.log("⌨️ Handling type action:", params);
 
     try {
       const { selector, text, clear = false } = params;
 
-      if (!selector || typeof selector !== 'string') {
+      if (!selector || typeof selector !== "string") {
         return {
           success: false,
           result: InteractionResults.SELECTOR_INVALID,
-          error: 'Selector is required and must be a string'
+          error: "Selector is required and must be a string",
         };
       }
 
-      if (!text || typeof text !== 'string') {
+      if (!text || typeof text !== "string") {
         return {
           success: false,
           result: InteractionResults.SELECTOR_INVALID,
-          error: 'Text is required and must be a string'
+          error: "Text is required and must be a string",
         };
       }
 
@@ -227,15 +242,14 @@ class InteractionHandler {
         })();
       `);
 
-      console.log('⌨️ Type result:', result);
+      console.log("⌨️ Type result:", result);
       return result;
-
     } catch (error) {
-      console.error('❌ Type error:', error);
+      console.error("❌ Type error:", error);
       return {
         success: false,
         result: InteractionResults.UNKNOWN_ERROR,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -246,23 +260,26 @@ class InteractionHandler {
    * @returns {Object} Result object with success/error details
    */
   async handleWait(params) {
-    console.log('⏳ Handling wait action:', params);
+    console.log("⏳ Handling wait action:", params);
 
     try {
       const { selector, timeout = 30000 } = params;
 
-      if (!selector || typeof selector !== 'string') {
+      if (!selector || typeof selector !== "string") {
         return {
           success: false,
           result: InteractionResults.SELECTOR_INVALID,
-          error: 'Selector is required and must be a string'
+          error: "Selector is required and must be a string",
         };
       }
 
-      const maxTimeout = Math.min(timeout, 60000); // Max 60 seconds
+      // Enforce minimum 1000ms and maximum 60000ms
+      const maxTimeout = Math.max(1000, Math.min(timeout, 60000));
       const waitId = `wait_${Date.now()}_${Math.random()}`;
 
-      console.log(`⏳ Starting wait for selector: ${selector} (timeout: ${maxTimeout}ms)`);
+      console.log(
+        `⏳ Starting wait for selector: ${selector} (timeout: ${maxTimeout}ms)`,
+      );
 
       // Store active wait operation
       this.activeWaits.set(waitId, { selector, startTime: Date.now() });
@@ -271,29 +288,27 @@ class InteractionHandler {
         const result = await this.waitForElement(selector, maxTimeout);
         this.activeWaits.delete(waitId);
 
-        console.log('⏳ Wait result:', result);
+        console.log("⏳ Wait result:", result);
         return result;
-
       } catch (error) {
         this.activeWaits.delete(waitId);
 
-        if (error.message === 'timeout') {
+        if (error.message === "timeout") {
           return {
             success: false,
             result: InteractionResults.TIMEOUT,
-            error: `Element not found within ${maxTimeout}ms: ${selector}`
+            error: `Element not found within ${maxTimeout}ms: ${selector}`,
           };
         }
 
         throw error;
       }
-
     } catch (error) {
-      console.error('❌ Wait error:', error);
+      console.error("❌ Wait error:", error);
       return {
         success: false,
         result: InteractionResults.UNKNOWN_ERROR,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -314,7 +329,7 @@ class InteractionHandler {
           const elapsed = Date.now() - startTime;
 
           if (elapsed >= timeout) {
-            reject(new Error('timeout'));
+            reject(new Error("timeout"));
             return;
           }
 
@@ -357,14 +372,13 @@ class InteractionHandler {
               message: `Element found after ${elapsed}ms`,
               elementInfo: result.elementInfo,
               visible: result.visible,
-              waitTime: elapsed
+              waitTime: elapsed,
             });
             return;
           }
 
           // Element not found yet, continue waiting
           setTimeout(checkElement, interval);
-
         } catch (error) {
           reject(error);
         }
@@ -376,39 +390,48 @@ class InteractionHandler {
   }
 
   /**
-   * Execute JavaScript in the current tab
+   * Execute JavaScript in the current tab with CSP-safe fallbacks
    * @param {string} script - JavaScript code to execute
    * @returns {Promise<any>} Execution result
    */
   async executeInCurrentTab(script) {
-    return new Promise((resolve, reject) => {
+    try {
       // Get the current tab ID from DevTools
       const tabId = chrome.devtools?.inspectedWindow?.tabId;
 
       if (!tabId) {
-        reject(new Error('No active tab found'));
-        return;
+        throw new Error("No active tab found");
       }
 
-      chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        func: function(scriptToExecute) {
-          return eval(scriptToExecute);
-        },
-        args: [script]
-      }, (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
+      console.log("🔧 Attempting CSP-safe script execution...");
 
-        if (result && result[0]) {
-          resolve(result[0].result);
-        } else {
-          reject(new Error('No result from script execution'));
-        }
+      // Use CSP-safe executor with automatic fallbacks
+      const result = await this.scriptExecutor.executeScript(tabId, script, {
+        timeout: 10000,
+        retries: 2,
       });
-    });
+
+      console.log("✅ Script executed successfully");
+      return result;
+    } catch (error) {
+      console.error("❌ CSP-safe script execution failed:", error.message);
+
+      // Provide fallback result for interaction operations
+      if (script.includes("querySelector") && script.includes("click")) {
+        console.warn(
+          "⚠️ Using interaction fallback - actual click may not have occurred",
+        );
+        return {
+          success: false,
+          error: `Script execution failed: ${error.message}`,
+          fallbackUsed: true,
+          recommendation:
+            "Try using Chrome DevTools Protocol or content script injection",
+        };
+      }
+
+      throw new Error(`Script execution failed: ${error.message}`);
+    }
   }
 
   /**
@@ -421,7 +444,7 @@ class InteractionHandler {
       activeWaits.push({
         id: waitId,
         selector: waitInfo.selector,
-        elapsed: Date.now() - waitInfo.startTime
+        elapsed: Date.now() - waitInfo.startTime,
       });
     }
     return activeWaits;
@@ -434,9 +457,79 @@ class InteractionHandler {
     console.log(`⏳ Canceling ${this.activeWaits.size} active wait operations`);
     this.activeWaits.clear();
   }
+
+  /**
+   * Start dynamic cleanup based on operation load
+   */
+  startDynamicCleanup() {
+    const scheduleNextCleanup = () => {
+      // Dynamic interval based on current load
+      const operationCount = this.activeWaits.size;
+      let interval;
+
+      if (operationCount === 0) {
+        interval = 60000; // 1 minute when idle
+      } else if (operationCount < 5) {
+        interval = 30000; // 30 seconds for light load
+      } else if (operationCount < 15) {
+        interval = 15000; // 15 seconds for moderate load
+      } else {
+        interval = 5000; // 5 seconds for heavy load
+      }
+
+      this.cleanupInterval = setTimeout(() => {
+        this.cleanupOrphanedOperations();
+        scheduleNextCleanup(); // Schedule next cleanup
+      }, interval);
+
+      console.log(
+        `🔄 Next cleanup scheduled in ${interval / 1000}s (${operationCount} active operations)`,
+      );
+    };
+
+    scheduleNextCleanup();
+  }
+
+  /**
+   * Clean up orphaned wait operations that exceed maximum timeout
+   */
+  cleanupOrphanedOperations() {
+    const now = Date.now();
+    const maxAge = 120000; // 2 minutes maximum age
+    let cleaned = 0;
+
+    for (const [waitId, waitInfo] of this.activeWaits.entries()) {
+      const age = now - waitInfo.startTime;
+      if (age > maxAge) {
+        console.log(
+          `🧹 Cleaning up orphaned wait operation: ${waitId} (age: ${age}ms)`,
+        );
+        this.activeWaits.delete(waitId);
+        cleaned++;
+      }
+    }
+
+    if (cleaned > 0) {
+      console.log(`🧹 Cleaned up ${cleaned} orphaned wait operations`);
+    }
+
+    this.lastCleanupTime = now;
+  }
+
+  /**
+   * Destroy handler and cleanup resources
+   */
+  destroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    this.activeWaits.clear();
+    console.log("🖱️ InteractionHandler destroyed");
+  }
 }
 
 // Create global instance
 window.interactionHandler = new InteractionHandler();
 
-console.log('🖱️ Interactions module loaded successfully');
+console.log("🖱️ Interactions module loaded successfully");
