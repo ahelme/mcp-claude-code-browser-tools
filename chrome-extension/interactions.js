@@ -81,11 +81,11 @@ class InteractionHandler {
               };
             }
 
-            // Scroll element into view if needed
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Scroll element into view if needed (instant for programmatic interactions)
+            element.scrollIntoView({ behavior: 'instant', block: 'center' });
 
-            // Wait a moment for scroll to complete
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Brief wait for instant scroll to complete
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             // Trigger click event
             element.click();

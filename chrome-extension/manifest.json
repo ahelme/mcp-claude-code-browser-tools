@@ -5,7 +5,7 @@
   "manifest_version": 3,
   "devtools_page": "devtools.html",
   "permissions": ["activeTab", "storage", "tabs", "scripting"],
-  "host_permissions": ["http://localhost:*", "ws://localhost:*"],
+  "host_permissions": ["http://localhost/*"],
   "background": {
     "service_worker": "background.js"
   },
