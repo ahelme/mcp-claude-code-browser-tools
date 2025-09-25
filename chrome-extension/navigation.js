@@ -865,38 +865,8 @@ class NavigationHandler {
   }
 
   /**
-   * Get listener pool status for debugging and monitoring
-   *
-   * Provides comprehensive information about the current state of the listener pool,
-   * including utilization metrics, individual listener details, and cleanup timing.
-   * Useful for debugging memory issues and monitoring system performance.
-   *
-   * @returns {Object} Pool status information containing:
-   *   - totalListeners: {number} Current number of active listeners
-   *   - maxListeners: {number} Maximum allowed concurrent listeners
-   *   - utilizationPercent: {number} Pool utilization as percentage (0-100)
-   *   - lastCleanup: {number} Milliseconds since last cleanup operation
-   *   - listeners: {Array<Object>} Array of listener details with:
-   *     - id: {string} Unique listener identifier
-   *     - description: {string} Debug description
-   *     - age: {number} Milliseconds since creation
-   *     - calls: {number} Number of times listener was called
-   *     - lastUsed: {number} Milliseconds since last call
-   *     - isActive: {boolean} Whether listener is still active
-   *
-   * @example
-   * const status = handler.getListenerPoolStatus();
-   * console.log(`Pool utilization: ${status.utilizationPercent}%`);
-   * console.log(`Active listeners: ${status.totalListeners}/${status.maxListeners}`);
-   *
-   * // Check individual listeners
-   * status.listeners.forEach(listener => {
-   *   if (listener.age > 300000) { // Older than 5 minutes
-   *     console.warn(`Old listener detected: ${listener.id}`);
-   *   }
-   * });
-   *
-   * @since 1.1.0
+   * Get listener pool status for debugging
+   * @returns {Object} Pool status information
    */
   getListenerPoolStatus() {
     const now = Date.now();
