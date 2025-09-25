@@ -25,13 +25,24 @@ const InteractionResults = {
 // Interaction handler class
 class InteractionHandler {
   constructor() {
-    console.log("🖱️ InteractionHandler initialized");
+    console.log("🖱️ InteractionHandler initialized with CSP-safe execution");
     this.activeWaits = new Map(); // Track active wait operations
+    this.cleanupInterval = null;
+    this.lastCleanupTime = Date.now();
 
-    // Start cleanup timer for orphaned operations
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupOrphanedOperations();
-    }, 30000); // Cleanup every 30 seconds
+    // Initialize CSP-safe script executor
+    this.scriptExecutor = new (globalThis.CSPSafeScriptExecutor ||
+      function () {
+        // Fallback executor if module not loaded
+        this.executeScript = async (tabId, script) => {
+          throw new Error(
+            "CSP-safe executor not available - script execution disabled",
+          );
+        };
+      })();
+
+    // Start dynamic cleanup timer
+    this.startDynamicCleanup();
   }
 
   /**
@@ -379,45 +390,48 @@ class InteractionHandler {
   }
 
   /**
-   * Execute JavaScript in the current tab
+   * Execute JavaScript in the current tab with CSP-safe fallbacks
    * @param {string} script - JavaScript code to execute
    * @returns {Promise<any>} Execution result
    */
   async executeInCurrentTab(script) {
-    return new Promise((resolve, reject) => {
+    try {
       // Get the current tab ID from DevTools
       const tabId = chrome.devtools?.inspectedWindow?.tabId;
 
       if (!tabId) {
-        reject(new Error("No active tab found"));
-        return;
+        throw new Error("No active tab found");
       }
 
-      chrome.scripting.executeScript(
-        {
-          target: { tabId: tabId },
-          func: function () {
-            // CSP-compliant placeholder - script execution disabled for security
-            return {
-              success: false,
-              error: "Direct script execution disabled for CSP compliance",
-            };
-          },
-        },
-        (result) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-            return;
-          }
+      console.log("🔧 Attempting CSP-safe script execution...");
 
-          if (result && result[0]) {
-            resolve(result[0].result);
-          } else {
-            reject(new Error("No result from script execution"));
-          }
-        },
-      );
-    });
+      // Use CSP-safe executor with automatic fallbacks
+      const result = await this.scriptExecutor.executeScript(tabId, script, {
+        timeout: 10000,
+        retries: 2,
+      });
+
+      console.log("✅ Script executed successfully");
+      return result;
+    } catch (error) {
+      console.error("❌ CSP-safe script execution failed:", error.message);
+
+      // Provide fallback result for interaction operations
+      if (script.includes("querySelector") && script.includes("click")) {
+        console.warn(
+          "⚠️ Using interaction fallback - actual click may not have occurred",
+        );
+        return {
+          success: false,
+          error: `Script execution failed: ${error.message}`,
+          fallbackUsed: true,
+          recommendation:
+            "Try using Chrome DevTools Protocol or content script injection",
+        };
+      }
+
+      throw new Error(`Script execution failed: ${error.message}`);
+    }
   }
 
   /**
@@ -445,6 +459,38 @@ class InteractionHandler {
   }
 
   /**
+   * Start dynamic cleanup based on operation load
+   */
+  startDynamicCleanup() {
+    const scheduleNextCleanup = () => {
+      // Dynamic interval based on current load
+      const operationCount = this.activeWaits.size;
+      let interval;
+
+      if (operationCount === 0) {
+        interval = 60000; // 1 minute when idle
+      } else if (operationCount < 5) {
+        interval = 30000; // 30 seconds for light load
+      } else if (operationCount < 15) {
+        interval = 15000; // 15 seconds for moderate load
+      } else {
+        interval = 5000; // 5 seconds for heavy load
+      }
+
+      this.cleanupInterval = setTimeout(() => {
+        this.cleanupOrphanedOperations();
+        scheduleNextCleanup(); // Schedule next cleanup
+      }, interval);
+
+      console.log(
+        `🔄 Next cleanup scheduled in ${interval / 1000}s (${operationCount} active operations)`,
+      );
+    };
+
+    scheduleNextCleanup();
+  }
+
+  /**
    * Clean up orphaned wait operations that exceed maximum timeout
    */
   cleanupOrphanedOperations() {
@@ -466,6 +512,8 @@ class InteractionHandler {
     if (cleaned > 0) {
       console.log(`🧹 Cleaned up ${cleaned} orphaned wait operations`);
     }
+
+    this.lastCleanupTime = now;
   }
 
   /**

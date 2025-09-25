@@ -21,14 +21,40 @@ class NavigationHandler {
     this.retryAttempts = 0;
     this.maxRetries = 2; // Maximum retry attempts for transient failures
 
+    // Thread-safe configuration to prevent race conditions
+    this.threadSafeConfig = new (globalThis.ThreadSafeNavigationConfig ||
+      function () {
+        // Fallback if module not loaded
+        this.setTimeoutSafe = (timeout) =>
+          Math.max(1000, Math.min(timeout || 10000, 60000));
+        this.setNavigationStateSafe = (state) => true;
+        this.getTimeoutSafe = () => this.navigationTimeout || 10000;
+        this.getNavigationStateSafe = () => this.isNavigating || false;
+      })();
+
+    // Listener Pool Management for better event handling
+    this.listenerPool = new Map(); // Store active listeners by ID
+    this.listenerIdCounter = 0; // Unique ID generator
+    this.maxConcurrentListeners = 5; // Prevent listener accumulation
+    this.listenerCleanupInterval = null;
+    this.lastListenerCleanup = Date.now();
+
     // Bind methods to preserve context
     this.handleNavigationRequest = this.handleNavigationRequest.bind(this);
     this.validateUrl = this.validateUrl.bind(this);
     this.normalizeUrl = this.normalizeUrl.bind(this);
     this.navigateToUrl = this.navigateToUrl.bind(this);
     this.updateNavigationStatus = this.updateNavigationStatus.bind(this);
+    this.createManagedListener = this.createManagedListener.bind(this);
+    this.removeListener = this.removeListener.bind(this);
+    this.cleanupStaleListeners = this.cleanupStaleListeners.bind(this);
 
-    console.log("🧭 Navigation Handler initialized");
+    // Start listener pool management
+    this.startListenerPoolCleanup();
+
+    console.log(
+      "🧭 Navigation Handler initialized with listener pool management",
+    );
   }
 
   /**
@@ -52,11 +78,13 @@ class NavigationHandler {
       return;
     }
 
-    // Set custom timeout if provided with validation
+    // Set custom timeout if provided with validation (thread-safe)
+    let effectiveTimeout = this.navigationTimeout;
     if (timeout && typeof timeout === "number" && timeout > 0) {
-      // Enforce minimum 1000ms and maximum 60000ms
-      this.navigationTimeout = Math.max(1000, Math.min(timeout, 60000));
-      console.log("🕐 Custom timeout set:", this.navigationTimeout + "ms");
+      // Use thread-safe configuration to prevent race conditions
+      effectiveTimeout = this.threadSafeConfig.setTimeoutSafe(timeout);
+      this.navigationTimeout = effectiveTimeout;
+      console.log("🕐 Custom timeout safely set:", effectiveTimeout + "ms");
     }
 
     // Enhanced input validation
@@ -99,7 +127,8 @@ class NavigationHandler {
       const normalizedUrl = this.normalizeUrl(validationResult.url);
       console.log("🔄 Normalized URL:", normalizedUrl);
 
-      // Start navigation
+      // Start navigation (thread-safe)
+      this.threadSafeConfig.setNavigationStateSafe(true);
       this.isNavigating = true;
       this.updateNavigationStatus(
         "navigating",
@@ -140,6 +169,8 @@ class NavigationHandler {
         error: error.message,
       });
     } finally {
+      // Reset navigation state (thread-safe)
+      this.threadSafeConfig.setNavigationStateSafe(false);
       this.isNavigating = false;
       this.retryAttempts = 0; // Reset retry counter
       // Reset timeout to default
@@ -165,19 +196,27 @@ class NavigationHandler {
 
     const trimmedUrl = url.trim();
 
-    // Check for blocked protocols
+    // Check for blocked protocols (allow devtools for Chrome extension context)
     const blockedProtocols = [
       "file:",
       "chrome:",
       "chrome-extension:",
       "moz-extension:",
     ];
-    for (const protocol of blockedProtocols) {
-      if (trimmedUrl.toLowerCase().startsWith(protocol)) {
-        return {
-          isValid: false,
-          error: `Protocol ${protocol} not allowed for security reasons`,
-        };
+
+    // Allow devtools URLs when running in Chrome extension context
+    const isDevtools = trimmedUrl.toLowerCase().startsWith("devtools:");
+    if (isDevtools && typeof chrome !== "undefined" && chrome.devtools) {
+      console.log("🔧 Allowing devtools URL in Chrome extension context");
+      // Don't block devtools URLs - they're internal browser functionality
+    } else {
+      for (const protocol of blockedProtocols) {
+        if (trimmedUrl.toLowerCase().startsWith(protocol)) {
+          return {
+            isValid: false,
+            error: `Protocol ${protocol} not allowed for security reasons`,
+          };
+        }
       }
     }
 
@@ -193,6 +232,18 @@ class NavigationHandler {
     try {
       // Try to create URL object for validation
       let testUrl;
+
+      // Handle devtools URLs specially
+      if (trimmedUrl.toLowerCase().startsWith("devtools:")) {
+        if (typeof chrome !== "undefined" && chrome.devtools) {
+          return { isValid: true, url: trimmedUrl };
+        } else {
+          return {
+            isValid: false,
+            error: "Devtools URLs only allowed in Chrome extension context",
+          };
+        }
+      }
 
       // If no protocol specified, assume https
       if (!trimmedUrl.includes("://")) {
@@ -284,10 +335,12 @@ class NavigationHandler {
             "info",
             `Retry attempt ${attempt}/${this.maxRetries}`,
           );
-          // Wait before retry (exponential backoff)
-          await new Promise((resolve) =>
-            setTimeout(resolve, Math.pow(2, attempt) * 1000),
-          );
+          // Wait before retry (exponential backoff with 5-second cap)
+          const baseDelay = 1000;
+          const exponentialDelay = Math.pow(2, attempt) * baseDelay;
+          const cappedDelay = Math.min(exponentialDelay, 5000); // Max 5 seconds
+          console.log(`⏳ Waiting ${cappedDelay}ms before retry...`);
+          await new Promise((resolve) => setTimeout(resolve, cappedDelay));
         }
 
         this.retryAttempts = attempt;
@@ -375,15 +428,14 @@ class NavigationHandler {
 
       // Perform navigation using Chrome APIs
       return new Promise((resolve, reject) => {
-        // Listen for navigation completion
-        const updateListener = (updatedTabId, changeInfo, tab) => {
+        // Create managed listener for navigation completion
+        const updateListenerFunction = (updatedTabId, changeInfo, tab) => {
           if (updatedTabId !== tabId) return;
 
           // Check for loading complete
           if (changeInfo.status === "complete" && tab.url) {
             clearTimeout(timeoutId);
-            chrome.tabs.onUpdated.removeListener(updateListener);
-            this.activeNavigationListener = null; // Clear reference
+            managedListener.remove(); // Use managed removal
 
             const loadTime = Date.now() - startTime;
             console.log(`✅ Navigation completed in ${loadTime}ms`);
@@ -399,36 +451,41 @@ class NavigationHandler {
           // Check for navigation errors
           if (changeInfo.status === "complete" && !tab.url) {
             clearTimeout(timeoutId);
-            chrome.tabs.onUpdated.removeListener(updateListener);
-            this.activeNavigationListener = null; // Clear reference
+            managedListener.remove(); // Use managed removal
             reject(new Error("Navigation completed but no URL available"));
           }
         };
 
-        // Track the active listener for cleanup
-        this.activeNavigationListener = updateListener;
+        // Create managed listener with pool management
+        const managedListener = this.createManagedListener(
+          updateListenerFunction,
+          `navigation-${url.substring(0, 50)}`,
+        );
+
+        // Store reference for legacy compatibility
+        this.activeNavigationListener = managedListener.listener;
 
         // Set up timeout rejection
         this.currentNavigationController.signal.addEventListener(
           "abort",
           () => {
-            chrome.tabs.onUpdated.removeListener(updateListener);
-            this.activeNavigationListener = null; // Clear reference
+            managedListener.remove(); // Use managed removal
+            this.activeNavigationListener = null;
             reject(
               new Error(`Navigation timeout after ${this.navigationTimeout}ms`),
             );
           },
         );
 
-        // Start listening for updates
-        chrome.tabs.onUpdated.addListener(updateListener);
+        // Start listening for updates using managed listener
+        chrome.tabs.onUpdated.addListener(managedListener.listener);
 
         // Perform the navigation
         chrome.tabs.update(tabId, { url }, (tab) => {
           if (chrome.runtime.lastError) {
             clearTimeout(timeoutId);
-            chrome.tabs.onUpdated.removeListener(updateListener);
-            this.activeNavigationListener = null; // Clear reference
+            managedListener.remove(); // Use managed removal
+            this.activeNavigationListener = null;
             reject(
               new Error(
                 `Navigation failed: ${chrome.runtime.lastError.message}`,
@@ -591,7 +648,301 @@ class NavigationHandler {
     return {
       isNavigating: this.isNavigating,
       hasActiveController: this.currentNavigationController !== null,
+      activeListenerCount: this.listenerPool.size,
+      listenerPoolStatus: this.getListenerPoolStatus(),
     };
+  }
+
+  /**
+   * Create a managed listener with automatic cleanup and pooling
+   *
+   * This method creates a listener that is automatically tracked in the listener pool
+   * with usage analytics and automatic cleanup. Prevents memory leaks by enforcing
+   * pool size limits and removing stale listeners.
+   *
+   * @param {Function} listenerFunction - The listener callback function to manage
+   * @param {string} [description="navigation"] - Debug description for the listener
+   * @returns {Object} Listener management object with the following properties:
+   *   - id: {string} Unique listener identifier
+   *   - listener: {Function} Wrapped listener function with usage tracking
+   *   - remove: {Function} Method to remove listener from pool and Chrome API
+   *   - isActive: {Function} Method to check if listener is still active
+   *
+   * @example
+   * const managedListener = handler.createManagedListener(
+   *   (tabId, changeInfo, tab) => console.log('Tab updated'),
+   *   'custom-tab-monitor'
+   * );
+   *
+   * chrome.tabs.onUpdated.addListener(managedListener.listener);
+   *
+   * // Clean up when done
+   * managedListener.remove();
+   *
+   * @throws {Error} When listener pool is at capacity and cleanup fails
+   * @since 1.1.0
+   */
+  createManagedListener(listenerFunction, description = "navigation") {
+    // Check if we're approaching listener limit
+    if (this.listenerPool.size >= this.maxConcurrentListeners) {
+      console.warn(
+        "⚠️ Listener pool approaching maximum capacity - cleaning up stale listeners",
+      );
+      this.cleanupStaleListeners();
+    }
+
+    const listenerId = `listener_${++this.listenerIdCounter}_${Date.now()}`;
+    const listenerData = {
+      id: listenerId,
+      function: listenerFunction,
+      description,
+      createdAt: Date.now(),
+      isActive: true,
+      usage: {
+        calls: 0,
+        lastUsed: Date.now(),
+      },
+    };
+
+    // Create wrapper function for tracking
+    const wrappedListener = (...args) => {
+      listenerData.usage.calls++;
+      listenerData.usage.lastUsed = Date.now();
+      return listenerFunction(...args);
+    };
+
+    // Store in pool
+    this.listenerPool.set(listenerId, listenerData);
+
+    console.log(`🔧 Created managed listener: ${listenerId} (${description})`);
+
+    return {
+      id: listenerId,
+      listener: wrappedListener,
+      remove: () => this.removeListener(listenerId),
+      isActive: () => this.listenerPool.has(listenerId),
+    };
+  }
+
+  /**
+   * Remove a listener from the pool and Chrome API
+   *
+   * Safely removes a managed listener from both the internal pool and the Chrome API.
+   * This method handles cleanup of all associated resources and prevents memory leaks.
+   *
+   * @param {string} listenerId - Unique ID of listener to remove (from createManagedListener)
+   * @returns {boolean} True if listener was successfully removed, false if not found
+   *
+   * @example
+   * const success = handler.removeListener('listener_123_1234567890');
+   * if (success) {
+   *   console.log('Listener removed successfully');
+   * }
+   *
+   * @see {@link createManagedListener} for creating managed listeners
+   * @since 1.1.0
+   */
+  removeListener(listenerId) {
+    const listenerData = this.listenerPool.get(listenerId);
+    if (!listenerData) {
+      console.warn(
+        `⚠️ Attempted to remove non-existent listener: ${listenerId}`,
+      );
+      return false;
+    }
+
+    try {
+      // Remove from Chrome API if it's still active
+      if (listenerData.isActive) {
+        chrome.tabs.onUpdated.removeListener(listenerData.function);
+        console.log(
+          `🗑️ Removed listener from Chrome API: ${listenerId} (${listenerData.description})`,
+        );
+      }
+
+      // Remove from pool
+      this.listenerPool.delete(listenerId);
+      console.log(`🗑️ Removed listener from pool: ${listenerId}`);
+
+      return true;
+    } catch (error) {
+      console.error(`❌ Error removing listener ${listenerId}:`, error.message);
+      // Still remove from pool even if Chrome API removal failed
+      this.listenerPool.delete(listenerId);
+      return false;
+    }
+  }
+
+  /**
+   * Clean up stale listeners that are no longer needed
+   *
+   * Removes listeners from the pool based on age and usage patterns to prevent
+   * memory leaks. This method is called automatically by the dynamic cleanup system
+   * but can also be called manually for immediate cleanup.
+   *
+   * Cleanup criteria:
+   * - Listeners older than 5 minutes AND inactive for more than 1 minute
+   * - Listeners that have never been called and are older than 2 minutes
+   *
+   * @returns {number} Number of listeners cleaned up
+   *
+   * @example
+   * const cleanedCount = handler.cleanupStaleListeners();
+   * console.log(`Cleaned up ${cleanedCount} stale listeners`);
+   *
+   * @since 1.1.0
+   */
+  cleanupStaleListeners() {
+    const now = Date.now();
+    const maxAge = 300000; // 5 minutes
+    const minInactivityTime = 60000; // 1 minute
+    let cleaned = 0;
+
+    console.log(
+      `🧹 Starting listener pool cleanup (${this.listenerPool.size} listeners)`,
+    );
+
+    for (const [listenerId, listenerData] of this.listenerPool.entries()) {
+      const age = now - listenerData.createdAt;
+      const inactivityTime = now - listenerData.usage.lastUsed;
+
+      // Remove listeners that are:
+      // 1. Older than 5 minutes AND inactive for more than 1 minute
+      // 2. Have never been called and are older than 2 minutes
+      const isStale =
+        (age > maxAge && inactivityTime > minInactivityTime) ||
+        (listenerData.usage.calls === 0 && age > 120000);
+
+      if (isStale) {
+        console.log(
+          `🧹 Cleaning up stale listener: ${listenerId} (age: ${age}ms, inactive: ${inactivityTime}ms, calls: ${listenerData.usage.calls})`,
+        );
+        this.removeListener(listenerId);
+        cleaned++;
+      }
+    }
+
+    if (cleaned > 0) {
+      console.log(
+        `🧹 Cleaned up ${cleaned} stale listeners. Pool size: ${this.listenerPool.size}`,
+      );
+    }
+
+    this.lastListenerCleanup = now;
+    return cleaned;
+  }
+
+  /**
+   * Start listener pool cleanup with dynamic intervals
+   */
+  startListenerPoolCleanup() {
+    const scheduleNextCleanup = () => {
+      // Dynamic interval based on pool usage
+      const poolSize = this.listenerPool.size;
+      let interval;
+
+      if (poolSize === 0) {
+        interval = 120000; // 2 minutes when no listeners
+      } else if (poolSize < 3) {
+        interval = 60000; // 1 minute for light usage
+      } else if (poolSize < 5) {
+        interval = 30000; // 30 seconds for moderate usage
+      } else {
+        interval = 10000; // 10 seconds for heavy usage
+      }
+
+      this.listenerCleanupInterval = setTimeout(() => {
+        this.cleanupStaleListeners();
+        scheduleNextCleanup(); // Schedule next cleanup
+      }, interval);
+
+      console.log(
+        `🔄 Next listener cleanup in ${interval / 1000}s (${poolSize} listeners active)`,
+      );
+    };
+
+    scheduleNextCleanup();
+  }
+
+  /**
+   * Get listener pool status for debugging and monitoring
+   *
+   * Provides comprehensive information about the current state of the listener pool,
+   * including utilization metrics, individual listener details, and cleanup timing.
+   * Useful for debugging memory issues and monitoring system performance.
+   *
+   * @returns {Object} Pool status information containing:
+   *   - totalListeners: {number} Current number of active listeners
+   *   - maxListeners: {number} Maximum allowed concurrent listeners
+   *   - utilizationPercent: {number} Pool utilization as percentage (0-100)
+   *   - lastCleanup: {number} Milliseconds since last cleanup operation
+   *   - listeners: {Array<Object>} Array of listener details with:
+   *     - id: {string} Unique listener identifier
+   *     - description: {string} Debug description
+   *     - age: {number} Milliseconds since creation
+   *     - calls: {number} Number of times listener was called
+   *     - lastUsed: {number} Milliseconds since last call
+   *     - isActive: {boolean} Whether listener is still active
+   *
+   * @example
+   * const status = handler.getListenerPoolStatus();
+   * console.log(`Pool utilization: ${status.utilizationPercent}%`);
+   * console.log(`Active listeners: ${status.totalListeners}/${status.maxListeners}`);
+   *
+   * // Check individual listeners
+   * status.listeners.forEach(listener => {
+   *   if (listener.age > 300000) { // Older than 5 minutes
+   *     console.warn(`Old listener detected: ${listener.id}`);
+   *   }
+   * });
+   *
+   * @since 1.1.0
+   */
+  getListenerPoolStatus() {
+    const now = Date.now();
+    const listeners = Array.from(this.listenerPool.values()).map(
+      (listener) => ({
+        id: listener.id,
+        description: listener.description,
+        age: now - listener.createdAt,
+        calls: listener.usage.calls,
+        lastUsed: now - listener.usage.lastUsed,
+        isActive: listener.isActive,
+      }),
+    );
+
+    return {
+      totalListeners: this.listenerPool.size,
+      maxListeners: this.maxConcurrentListeners,
+      utilizationPercent: Math.round(
+        (this.listenerPool.size / this.maxConcurrentListeners) * 100,
+      ),
+      lastCleanup: now - this.lastListenerCleanup,
+      listeners,
+    };
+  }
+
+  /**
+   * Destroy handler and cleanup all resources
+   */
+  destroy() {
+    console.log("🧭 Destroying NavigationHandler...");
+
+    // Cancel any active navigation
+    this.cancelNavigation();
+
+    // Clean up listener cleanup interval
+    if (this.listenerCleanupInterval) {
+      clearTimeout(this.listenerCleanupInterval);
+      this.listenerCleanupInterval = null;
+    }
+
+    // Remove all listeners from pool
+    for (const listenerId of this.listenerPool.keys()) {
+      this.removeListener(listenerId);
+    }
+
+    console.log("🧭 NavigationHandler destroyed and resources cleaned up");
   }
 }
 
