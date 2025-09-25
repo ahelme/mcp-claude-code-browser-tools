@@ -157,12 +157,17 @@ chmod +x mcp-server/start.sh
 starts on **Port 3024
 
 ```bash
-# Start MCP HTTP bridge (for Claude Code)
+# Start MCP HTTP bridge (for Claude Code) - PREFERRED METHOD
 ./mcp-server/start.sh
+
+# CRITICAL - Working Directory Matters:
+# ✅ Use script: ./mcp-server/start.sh (handles working directory correctly)
+# ✅ Or direct: node mcp-server/http-bridge.mjs (from project root)
+# ❌ Never: cd mcp-server && node http-bridge.mjs (wrong working directory)
 ```
 
-5. **Download/install Browser Tools Chrome extension** 
-from https://browsertools.agentdesk.ai/
+5. **Download/install Browser Tools Chrome extension**
+from https://github.com/ahelme/mcp-claude-code-browser-tools/tree/main/chrome-extension
 
 6. **Activate Chrome Extension**: 
 Open Developer Tools (F12) & select Browser Tools tab 

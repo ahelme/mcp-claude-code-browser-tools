@@ -29,7 +29,7 @@ if lsof -i :3024 >/dev/null 2>&1; then
 fi
 
 echo "🚀 Starting MCP HTTP Bridge on configured port..."
-node http-bridge.mjs &
+node mcp-server/http-bridge.mjs &
 MCP_BRIDGE_PID=$!
 
 echo "✅ MCP HTTP Bridge started (PID: $MCP_BRIDGE_PID)"
