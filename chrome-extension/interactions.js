@@ -27,6 +27,11 @@ class InteractionHandler {
   constructor() {
     console.log("🖱️ InteractionHandler initialized");
     this.activeWaits = new Map(); // Track active wait operations
+
+    // Start cleanup timer for orphaned operations
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupOrphanedOperations();
+    }, 30000); // Cleanup every 30 seconds
   }
 
   /**
@@ -257,7 +262,8 @@ class InteractionHandler {
         };
       }
 
-      const maxTimeout = Math.min(timeout, 60000); // Max 60 seconds
+      // Enforce minimum 1000ms and maximum 60000ms
+      const maxTimeout = Math.max(1000, Math.min(timeout, 60000));
       const waitId = `wait_${Date.now()}_${Math.random()}`;
 
       console.log(
@@ -436,6 +442,42 @@ class InteractionHandler {
   cancelAllWaits() {
     console.log(`⏳ Canceling ${this.activeWaits.size} active wait operations`);
     this.activeWaits.clear();
+  }
+
+  /**
+   * Clean up orphaned wait operations that exceed maximum timeout
+   */
+  cleanupOrphanedOperations() {
+    const now = Date.now();
+    const maxAge = 120000; // 2 minutes maximum age
+    let cleaned = 0;
+
+    for (const [waitId, waitInfo] of this.activeWaits.entries()) {
+      const age = now - waitInfo.startTime;
+      if (age > maxAge) {
+        console.log(
+          `🧹 Cleaning up orphaned wait operation: ${waitId} (age: ${age}ms)`,
+        );
+        this.activeWaits.delete(waitId);
+        cleaned++;
+      }
+    }
+
+    if (cleaned > 0) {
+      console.log(`🧹 Cleaned up ${cleaned} orphaned wait operations`);
+    }
+  }
+
+  /**
+   * Destroy handler and cleanup resources
+   */
+  destroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    this.activeWaits.clear();
+    console.log("🖱️ InteractionHandler destroyed");
   }
 }
 

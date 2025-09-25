@@ -17,6 +17,9 @@ class NavigationHandler {
     this.isNavigating = false;
     this.navigationTimeout = 10000; // 10 second timeout
     this.currentNavigationController = null;
+    this.activeNavigationListener = null; // Track active listener for cleanup
+    this.retryAttempts = 0;
+    this.maxRetries = 2; // Maximum retry attempts for transient failures
 
     // Bind methods to preserve context
     this.handleNavigationRequest = this.handleNavigationRequest.bind(this);
@@ -49,9 +52,10 @@ class NavigationHandler {
       return;
     }
 
-    // Set custom timeout if provided
+    // Set custom timeout if provided with validation
     if (timeout && typeof timeout === "number" && timeout > 0) {
-      this.navigationTimeout = Math.min(timeout, 60000); // Max 60 seconds
+      // Enforce minimum 1000ms and maximum 60000ms
+      this.navigationTimeout = Math.max(1000, Math.min(timeout, 60000));
       console.log("🕐 Custom timeout set:", this.navigationTimeout + "ms");
     }
 
@@ -103,8 +107,8 @@ class NavigationHandler {
       );
       this.addLogEntry("info", `Navigating to: ${normalizedUrl}`);
 
-      // Perform navigation
-      const result = await this.navigateToUrl(normalizedUrl);
+      // Perform navigation with retry logic
+      const result = await this.navigateToUrlWithRetry(normalizedUrl);
 
       if (result.success) {
         console.log("✅ Navigation successful");
@@ -137,6 +141,7 @@ class NavigationHandler {
       });
     } finally {
       this.isNavigating = false;
+      this.retryAttempts = 0; // Reset retry counter
       // Reset timeout to default
       this.navigationTimeout = 10000;
 
@@ -262,6 +267,86 @@ class NavigationHandler {
   }
 
   /**
+   * Navigation with retry logic for transient failures
+   * @param {string} url - Normalized URL to navigate to
+   * @returns {Promise<Object>} Navigation result
+   */
+  async navigateToUrlWithRetry(url) {
+    let lastError = null;
+
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          console.log(
+            `🔄 Navigation retry attempt ${attempt}/${this.maxRetries} for: ${url}`,
+          );
+          this.addLogEntry(
+            "info",
+            `Retry attempt ${attempt}/${this.maxRetries}`,
+          );
+          // Wait before retry (exponential backoff)
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, attempt) * 1000),
+          );
+        }
+
+        this.retryAttempts = attempt;
+        const result = await this.navigateToUrl(url);
+
+        if (result.success) {
+          return result;
+        }
+
+        lastError = new Error(result.error);
+
+        // Check if error is retryable (network/timeout issues)
+        const isRetryable =
+          result.error &&
+          (result.error.includes("timeout") ||
+            result.error.includes("Network") ||
+            result.error.includes("ERR_") ||
+            result.error.includes("connection"));
+
+        if (!isRetryable || attempt === this.maxRetries) {
+          return result;
+        }
+      } catch (error) {
+        lastError = error;
+        console.warn(
+          `⚠️ Navigation attempt ${attempt + 1} failed:`,
+          error.message,
+        );
+
+        // Don't retry on non-recoverable errors
+        if (attempt === this.maxRetries || !this.isRetryableError(error)) {
+          throw error;
+        }
+      }
+    }
+
+    throw lastError || new Error("Navigation failed after all retry attempts");
+  }
+
+  /**
+   * Check if an error is retryable
+   * @param {Error} error - Error to check
+   * @returns {boolean} Whether error is retryable
+   */
+  isRetryableError(error) {
+    const retryablePatterns = [
+      "timeout",
+      "network",
+      "connection",
+      "unreachable",
+      "temporary",
+    ];
+
+    return retryablePatterns.some((pattern) =>
+      error.message.toLowerCase().includes(pattern),
+    );
+  }
+
+  /**
    * Perform the actual navigation
    * @param {string} url - Normalized URL to navigate to
    * @returns {Promise<Object>} Navigation result
@@ -298,6 +383,7 @@ class NavigationHandler {
           if (changeInfo.status === "complete" && tab.url) {
             clearTimeout(timeoutId);
             chrome.tabs.onUpdated.removeListener(updateListener);
+            this.activeNavigationListener = null; // Clear reference
 
             const loadTime = Date.now() - startTime;
             console.log(`✅ Navigation completed in ${loadTime}ms`);
@@ -314,15 +400,20 @@ class NavigationHandler {
           if (changeInfo.status === "complete" && !tab.url) {
             clearTimeout(timeoutId);
             chrome.tabs.onUpdated.removeListener(updateListener);
+            this.activeNavigationListener = null; // Clear reference
             reject(new Error("Navigation completed but no URL available"));
           }
         };
+
+        // Track the active listener for cleanup
+        this.activeNavigationListener = updateListener;
 
         // Set up timeout rejection
         this.currentNavigationController.signal.addEventListener(
           "abort",
           () => {
             chrome.tabs.onUpdated.removeListener(updateListener);
+            this.activeNavigationListener = null; // Clear reference
             reject(
               new Error(`Navigation timeout after ${this.navigationTimeout}ms`),
             );
@@ -337,6 +428,7 @@ class NavigationHandler {
           if (chrome.runtime.lastError) {
             clearTimeout(timeoutId);
             chrome.tabs.onUpdated.removeListener(updateListener);
+            this.activeNavigationListener = null; // Clear reference
             reject(
               new Error(
                 `Navigation failed: ${chrome.runtime.lastError.message}`,
@@ -416,7 +508,7 @@ class NavigationHandler {
   }
 
   /**
-   * Cancel any ongoing navigation
+   * Cancel any ongoing navigation with proper cleanup
    */
   cancelNavigation() {
     if (this.currentNavigationController) {
@@ -425,7 +517,18 @@ class NavigationHandler {
       this.currentNavigationController = null;
     }
 
+    // Clean up any lingering event listeners
+    if (this.activeNavigationListener) {
+      try {
+        chrome.tabs.onUpdated.removeListener(this.activeNavigationListener);
+        this.activeNavigationListener = null;
+      } catch (error) {
+        console.warn("⚠️ Failed to remove navigation listener:", error.message);
+      }
+    }
+
     this.isNavigating = false;
+    this.navigationTimeout = 10000; // Reset to default
     this.updateNavigationStatus("ready", "Navigation cancelled");
   }
 
