@@ -536,31 +536,84 @@ function getConsoleLogs() {
 }
 
 function clearLogs() {
-  elements.logsDisplay.innerHTML =
-    '<div class="log-entry log-info">Logs cleared...</div>';
+  // CSP-compliant DOM manipulation
+  elements.logsDisplay.textContent = "";
+  const clearedDiv = document.createElement("div");
+  clearedDiv.className = "log-entry log-info";
+  clearedDiv.textContent = "Logs cleared...";
+  elements.logsDisplay.appendChild(clearedDiv);
   addLogEntry("info", "Logs cleared");
 }
 
 function handleWebSocketMessage(message) {
   console.log("📨 Handling WebSocket message:", message);
 
+  // Enhanced message validation
+  if (!message || typeof message !== "object") {
+    const error = "Invalid message format received";
+    console.error("❌", error);
+    addLogEntry("error", error);
+    return;
+  }
+
+  const messageType = message.type || message.action;
+  const requestId = message.requestId || `unknown_${Date.now()}`;
+
+  addLogEntry("info", `Processing ${messageType} request (ID: ${requestId})`);
+
   // Handle different message types and actions
-  switch (message.type || message.action) {
+  switch (messageType) {
     case "navigate":
       // Navigation request from MCP server
       if (navigationHandler) {
         navigationHandler.handleNavigationRequest(message, (response) => {
-          // Send response back via WebSocket
-          if (wsManager) {
-            wsManager.send({
-              type: "navigationResult",
-              ...response,
-            });
+          // Enhanced response handling with error recovery
+          try {
+            if (wsManager && wsManager.isConnected) {
+              const enhancedResponse = {
+                type: "navigationResult",
+                ...response,
+                handledAt: Date.now(),
+                handledBy: "NavigationHandler v1.1.0",
+              };
+
+              wsManager.send(enhancedResponse);
+              addLogEntry(
+                "info",
+                `Navigation response sent for request ${requestId}: ${response.success ? "SUCCESS" : "FAILED"}`,
+              );
+            } else {
+              throw new Error("WebSocket not available for response");
+            }
+          } catch (error) {
+            console.error("❌ Failed to send navigation response:", error);
+            addLogEntry(
+              "error",
+              `Failed to send response for request ${requestId}: ${error.message}`,
+            );
+
+            // Try to recover WebSocket connection
+            if (wsManager && !wsManager.isConnected) {
+              addLogEntry("info", "Attempting to reconnect WebSocket...");
+              wsManager.connect();
+            }
           }
         });
       } else {
-        console.error("❌ Navigation handler not available");
-        addLogEntry("error", "Navigation handler not available");
+        const errorMsg = "Navigation handler not available";
+        console.error("❌", errorMsg);
+        addLogEntry("error", errorMsg);
+
+        // Send error response if possible
+        if (wsManager && wsManager.isConnected) {
+          wsManager.send({
+            type: "navigationResult",
+            success: false,
+            error: errorMsg,
+            requestId,
+            timestamp: Date.now(),
+          });
+        }
       }
       break;
 
@@ -596,10 +649,25 @@ function handleWebSocketMessage(message) {
       break;
 
     default:
-      console.log(
-        "🤔 Unknown message type/action:",
-        message.type || message.action,
-      );
+      const unknownType = messageType || "undefined";
+      const warningMsg = `Unknown message type/action: ${unknownType}`;
+      console.warn("🤔", warningMsg);
+      addLogEntry("error", warningMsg);
+
+      // Send error response for unknown message types if possible
+      if (wsManager && wsManager.isConnected && requestId !== "undefined") {
+        wsManager.send({
+          type: "unknownMessageError",
+          success: false,
+          error: `Unsupported message type: ${unknownType}`,
+          requestId,
+          timestamp: Date.now(),
+          originalMessage: {
+            type: message.type,
+            action: message.action,
+          },
+        });
+      }
   }
 }
 
@@ -732,12 +800,13 @@ if (chrome.runtime.getManifest().name.includes("Development")) {
   }, 1000);
 }
 
-// Auto-discover server on load (quiet mode)
-setTimeout(() => {
-  if (!isConnected) {
-    console.log("🔍 Auto-discovering server...");
-    discoverServer(true);
-  }
-}, 2000);
+// Disable auto-connection for now to allow extension to load
+console.log("🔍 Auto-discovery disabled - manual connection required");
+// setTimeout(() => {
+//   if (!isConnected) {
+//     console.log("🔍 Auto-discovering server...");
+//     discoverServer(true);
+//   }
+// }, 2000);
 
 console.log("🎯 Panel script loaded successfully");

@@ -240,8 +240,18 @@ function sendNotification(method, params) {
   debugLog(`Sent notification: ${method}`);
 }
 
-// Call browser-tools HTTP server
-async function callBrowserTools(action, params) {
+// Generate unique request ID for tracking
+function generateRequestId() {
+  return `mcp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Call browser-tools HTTP server with enhanced tracking
+async function callBrowserTools(action, params, toolName) {
+  const requestId = generateRequestId();
+  const startTime = Date.now();
+
+  debugLog(`🚀 MCP Request ${requestId}: ${toolName} -> ${action}`, JSON.stringify(params));
+
   return new Promise((resolve, reject) => {
     const port = process.env.MCP_HTTP_BRIDGE_PORT || "3024";
 
@@ -260,13 +270,23 @@ async function callBrowserTools(action, params) {
 
     const endpoint = endpointMap[action];
     if (!endpoint) {
-      reject(new Error(`Unknown action: ${action}`));
+      const errorMsg = `Unknown action: ${action}`;
+      debugLog(`❌ Request ${requestId} failed: ${errorMsg}`);
+      reject(new Error(errorMsg));
       return;
     }
 
-    const data = JSON.stringify(params || {});
+    // Enhanced params with request tracking
+    const enhancedParams = {
+      ...params,
+      requestId,
+      timeout: params.timeout || 30000,
+      source: "MCP Server"
+    };
 
-    debugLog(`Calling browser-tools: ${action} -> ${endpoint} on port ${port}`);
+    const data = JSON.stringify(enhancedParams);
+
+    debugLog(`🔄 Request ${requestId}: ${action} -> ${endpoint} on port ${port}`);
 
     const options = {
       hostname: "localhost",
@@ -291,18 +311,27 @@ async function callBrowserTools(action, params) {
       });
 
       res.on("end", () => {
+        const duration = Date.now() - startTime;
         try {
           const result = JSON.parse(responseData);
           debugLog(
-            `Browser-tools response: ${JSON.stringify(result).substring(0, 200)}`,
+            `✅ Request ${requestId} completed in ${duration}ms: ${JSON.stringify(result).substring(0, 200)}`,
           );
 
           if (result.error) {
+            debugLog(`❌ Request ${requestId} returned error: ${result.error}`);
             reject(new Error(result.error));
           } else {
-            resolve(result);
+            debugLog(`🎉 Request ${requestId} successful`);
+            resolve({
+              ...result,
+              requestId,
+              duration,
+              timestamp: Date.now()
+            });
           }
         } catch (e) {
+          debugLog(`❌ Request ${requestId} parsing failed: ${e.message}`);
           reject(
             new Error(`Invalid response from browser-tools: ${e.message}`),
           );
@@ -311,7 +340,8 @@ async function callBrowserTools(action, params) {
     });
 
     req.on("error", (e) => {
-      debugLog(`Browser-tools connection error: ${e.message}`);
+      const duration = Date.now() - startTime;
+      debugLog(`❌ Request ${requestId} connection error after ${duration}ms: ${e.message}`);
       reject(
         new Error(
           `Browser-tools server not available on port ${port}: ${e.message}`,
@@ -320,8 +350,10 @@ async function callBrowserTools(action, params) {
     });
 
     req.on("timeout", () => {
+      const duration = Date.now() - startTime;
+      debugLog(`⏰ Request ${requestId} timeout after ${duration}ms`);
       req.destroy();
-      reject(new Error("Browser-tools request timeout"));
+      reject(new Error(`Browser-tools request timeout after ${duration}ms`));
     });
 
     // Only write data for POST requests
@@ -421,7 +453,7 @@ async function handleRequest(request) {
         }
 
         try {
-          const result = await callBrowserTools(action, args);
+          const result = await callBrowserTools(action, args, name);
 
           // Format response per 2025-06-18 spec
           const response = {

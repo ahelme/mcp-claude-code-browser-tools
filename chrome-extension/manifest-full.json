@@ -1,0 +1,23 @@
+{
+  "name": "Browser Tools MCP - MVP Edition",
+  "version": "2.0.0",
+  "description": "Complete rebuild of Browser Tools MCP server for Claude Code integration with responsive UI and WebSocket communication",
+  "manifest_version": 3,
+  "devtools_page": "devtools.html",
+  "permissions": [
+    "activeTab",
+    "debugger",
+    "storage",
+    "tabs",
+    "tabCapture",
+    "windows",
+    "scripting"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: blob:; connect-src 'self' ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*;"
+  }
+}

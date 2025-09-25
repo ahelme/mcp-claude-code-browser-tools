@@ -14,18 +14,18 @@
 
 // Interaction states and error codes
 const InteractionResults = {
-  SUCCESS: 'success',
-  ELEMENT_NOT_FOUND: 'element_not_found',
-  SELECTOR_INVALID: 'selector_invalid',
-  TIMEOUT: 'timeout',
-  PERMISSION_DENIED: 'permission_denied',
-  UNKNOWN_ERROR: 'unknown_error'
+  SUCCESS: "success",
+  ELEMENT_NOT_FOUND: "element_not_found",
+  SELECTOR_INVALID: "selector_invalid",
+  TIMEOUT: "timeout",
+  PERMISSION_DENIED: "permission_denied",
+  UNKNOWN_ERROR: "unknown_error",
 };
 
 // Interaction handler class
 class InteractionHandler {
   constructor() {
-    console.log('🖱️ InteractionHandler initialized');
+    console.log("🖱️ InteractionHandler initialized");
     this.activeWaits = new Map(); // Track active wait operations
   }
 
@@ -35,16 +35,16 @@ class InteractionHandler {
    * @returns {Object} Result object with success/error details
    */
   async handleClick(params) {
-    console.log('🖱️ Handling click action:', params);
+    console.log("🖱️ Handling click action:", params);
 
     try {
       const { selector } = params;
 
-      if (!selector || typeof selector !== 'string') {
+      if (!selector || typeof selector !== "string") {
         return {
           success: false,
           result: InteractionResults.SELECTOR_INVALID,
-          error: 'Selector is required and must be a string'
+          error: "Selector is required and must be a string",
         };
       }
 
@@ -107,15 +107,14 @@ class InteractionHandler {
         })();
       `);
 
-      console.log('🖱️ Click result:', result);
+      console.log("🖱️ Click result:", result);
       return result;
-
     } catch (error) {
-      console.error('❌ Click error:', error);
+      console.error("❌ Click error:", error);
       return {
         success: false,
         result: InteractionResults.UNKNOWN_ERROR,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -126,24 +125,24 @@ class InteractionHandler {
    * @returns {Object} Result object with success/error details
    */
   async handleType(params) {
-    console.log('⌨️ Handling type action:', params);
+    console.log("⌨️ Handling type action:", params);
 
     try {
       const { selector, text, clear = false } = params;
 
-      if (!selector || typeof selector !== 'string') {
+      if (!selector || typeof selector !== "string") {
         return {
           success: false,
           result: InteractionResults.SELECTOR_INVALID,
-          error: 'Selector is required and must be a string'
+          error: "Selector is required and must be a string",
         };
       }
 
-      if (!text || typeof text !== 'string') {
+      if (!text || typeof text !== "string") {
         return {
           success: false,
           result: InteractionResults.SELECTOR_INVALID,
-          error: 'Text is required and must be a string'
+          error: "Text is required and must be a string",
         };
       }
 
@@ -227,15 +226,14 @@ class InteractionHandler {
         })();
       `);
 
-      console.log('⌨️ Type result:', result);
+      console.log("⌨️ Type result:", result);
       return result;
-
     } catch (error) {
-      console.error('❌ Type error:', error);
+      console.error("❌ Type error:", error);
       return {
         success: false,
         result: InteractionResults.UNKNOWN_ERROR,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -246,23 +244,25 @@ class InteractionHandler {
    * @returns {Object} Result object with success/error details
    */
   async handleWait(params) {
-    console.log('⏳ Handling wait action:', params);
+    console.log("⏳ Handling wait action:", params);
 
     try {
       const { selector, timeout = 30000 } = params;
 
-      if (!selector || typeof selector !== 'string') {
+      if (!selector || typeof selector !== "string") {
         return {
           success: false,
           result: InteractionResults.SELECTOR_INVALID,
-          error: 'Selector is required and must be a string'
+          error: "Selector is required and must be a string",
         };
       }
 
       const maxTimeout = Math.min(timeout, 60000); // Max 60 seconds
       const waitId = `wait_${Date.now()}_${Math.random()}`;
 
-      console.log(`⏳ Starting wait for selector: ${selector} (timeout: ${maxTimeout}ms)`);
+      console.log(
+        `⏳ Starting wait for selector: ${selector} (timeout: ${maxTimeout}ms)`,
+      );
 
       // Store active wait operation
       this.activeWaits.set(waitId, { selector, startTime: Date.now() });
@@ -271,29 +271,27 @@ class InteractionHandler {
         const result = await this.waitForElement(selector, maxTimeout);
         this.activeWaits.delete(waitId);
 
-        console.log('⏳ Wait result:', result);
+        console.log("⏳ Wait result:", result);
         return result;
-
       } catch (error) {
         this.activeWaits.delete(waitId);
 
-        if (error.message === 'timeout') {
+        if (error.message === "timeout") {
           return {
             success: false,
             result: InteractionResults.TIMEOUT,
-            error: `Element not found within ${maxTimeout}ms: ${selector}`
+            error: `Element not found within ${maxTimeout}ms: ${selector}`,
           };
         }
 
         throw error;
       }
-
     } catch (error) {
-      console.error('❌ Wait error:', error);
+      console.error("❌ Wait error:", error);
       return {
         success: false,
         result: InteractionResults.UNKNOWN_ERROR,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -314,7 +312,7 @@ class InteractionHandler {
           const elapsed = Date.now() - startTime;
 
           if (elapsed >= timeout) {
-            reject(new Error('timeout'));
+            reject(new Error("timeout"));
             return;
           }
 
@@ -357,14 +355,13 @@ class InteractionHandler {
               message: `Element found after ${elapsed}ms`,
               elementInfo: result.elementInfo,
               visible: result.visible,
-              waitTime: elapsed
+              waitTime: elapsed,
             });
             return;
           }
 
           // Element not found yet, continue waiting
           setTimeout(checkElement, interval);
-
         } catch (error) {
           reject(error);
         }
@@ -386,28 +383,34 @@ class InteractionHandler {
       const tabId = chrome.devtools?.inspectedWindow?.tabId;
 
       if (!tabId) {
-        reject(new Error('No active tab found'));
+        reject(new Error("No active tab found"));
         return;
       }
 
-      chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        func: function(scriptToExecute) {
-          return eval(scriptToExecute);
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tabId },
+          func: function () {
+            // CSP-compliant placeholder - script execution disabled for security
+            return {
+              success: false,
+              error: "Direct script execution disabled for CSP compliance",
+            };
+          },
         },
-        args: [script]
-      }, (result) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
+        (result) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
 
-        if (result && result[0]) {
-          resolve(result[0].result);
-        } else {
-          reject(new Error('No result from script execution'));
-        }
-      });
+          if (result && result[0]) {
+            resolve(result[0].result);
+          } else {
+            reject(new Error("No result from script execution"));
+          }
+        },
+      );
     });
   }
 
@@ -421,7 +424,7 @@ class InteractionHandler {
       activeWaits.push({
         id: waitId,
         selector: waitInfo.selector,
-        elapsed: Date.now() - waitInfo.startTime
+        elapsed: Date.now() - waitInfo.startTime,
       });
     }
     return activeWaits;
@@ -439,4 +442,4 @@ class InteractionHandler {
 // Create global instance
 window.interactionHandler = new InteractionHandler();
 
-console.log('🖱️ Interactions module loaded successfully');
+console.log("🖱️ Interactions module loaded successfully");

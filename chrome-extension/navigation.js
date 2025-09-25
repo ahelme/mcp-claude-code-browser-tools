@@ -34,16 +34,36 @@ class NavigationHandler {
    * @param {Function} sendResponse - Response callback function
    */
   async handleNavigationRequest(message, sendResponse) {
-    const { url } = message;
+    const { url, requestId, timeout } = message;
 
-    console.log("🧭 Navigation request received:", url);
+    console.log("🧭 Navigation request received:", { url, requestId, timeout });
 
-    // Validate input
+    // Enhanced message validation
+    if (!message || typeof message !== "object") {
+      const error = "Invalid message format - expected object";
+      console.error("❌ Navigation error:", error);
+      this.sendNavigationResponse(sendResponse, requestId, {
+        success: false,
+        error,
+      });
+      return;
+    }
+
+    // Set custom timeout if provided
+    if (timeout && typeof timeout === "number" && timeout > 0) {
+      this.navigationTimeout = Math.min(timeout, 60000); // Max 60 seconds
+      console.log("🕐 Custom timeout set:", this.navigationTimeout + "ms");
+    }
+
+    // Enhanced input validation
     if (!url) {
       const error = "URL is required for navigation";
       console.error("❌ Navigation error:", error);
       this.addLogEntry("error", error);
-      sendResponse({ success: false, error });
+      this.sendNavigationResponse(sendResponse, requestId, {
+        success: false,
+        error,
+      });
       return;
     }
 
@@ -52,7 +72,10 @@ class NavigationHandler {
       const error = "Navigation already in progress";
       console.warn("⚠️ Navigation warning:", error);
       this.addLogEntry("error", error);
-      sendResponse({ success: false, error });
+      this.sendNavigationResponse(sendResponse, requestId, {
+        success: false,
+        error,
+      });
       return;
     }
 
@@ -62,7 +85,10 @@ class NavigationHandler {
       if (!validationResult.isValid) {
         console.error("❌ URL validation failed:", validationResult.error);
         this.addLogEntry("error", `Invalid URL: ${validationResult.error}`);
-        sendResponse({ success: false, error: validationResult.error });
+        this.sendNavigationResponse(sendResponse, requestId, {
+          success: false,
+          error: validationResult.error,
+        });
         return;
       }
 
@@ -71,7 +97,10 @@ class NavigationHandler {
 
       // Start navigation
       this.isNavigating = true;
-      this.updateNavigationStatus("navigating", `Navigating to ${normalizedUrl}...`);
+      this.updateNavigationStatus(
+        "navigating",
+        `Navigating to ${normalizedUrl}...`,
+      );
       this.addLogEntry("info", `Navigating to: ${normalizedUrl}`);
 
       // Perform navigation
@@ -81,26 +110,36 @@ class NavigationHandler {
         console.log("✅ Navigation successful");
         this.addLogEntry("info", `Successfully navigated to: ${normalizedUrl}`);
         this.updateNavigationStatus("success", `Loaded: ${normalizedUrl}`);
-        sendResponse({
+        this.sendNavigationResponse(sendResponse, requestId, {
           success: true,
           url: normalizedUrl,
           finalUrl: result.finalUrl,
           title: result.title,
-          loadTime: result.loadTime
+          loadTime: result.loadTime,
+          timestamp: Date.now(),
         });
       } else {
         console.error("❌ Navigation failed:", result.error);
         this.addLogEntry("error", `Navigation failed: ${result.error}`);
         this.updateNavigationStatus("error", `Failed: ${result.error}`);
-        sendResponse({ success: false, error: result.error });
+        this.sendNavigationResponse(sendResponse, requestId, {
+          success: false,
+          error: result.error,
+        });
       }
     } catch (error) {
       console.error("❌ Navigation error:", error);
       this.addLogEntry("error", `Navigation error: ${error.message}`);
       this.updateNavigationStatus("error", error.message);
-      sendResponse({ success: false, error: error.message });
+      this.sendNavigationResponse(sendResponse, requestId, {
+        success: false,
+        error: error.message,
+      });
     } finally {
       this.isNavigating = false;
+      // Reset timeout to default
+      this.navigationTimeout = 10000;
+
       // Clear status after delay
       setTimeout(() => {
         this.updateNavigationStatus("ready", "Ready for navigation");
@@ -122,12 +161,17 @@ class NavigationHandler {
     const trimmedUrl = url.trim();
 
     // Check for blocked protocols
-    const blockedProtocols = ["file:", "chrome:", "chrome-extension:", "moz-extension:"];
+    const blockedProtocols = [
+      "file:",
+      "chrome:",
+      "chrome-extension:",
+      "moz-extension:",
+    ];
     for (const protocol of blockedProtocols) {
       if (trimmedUrl.toLowerCase().startsWith(protocol)) {
         return {
           isValid: false,
-          error: `Protocol ${protocol} not allowed for security reasons`
+          error: `Protocol ${protocol} not allowed for security reasons`,
         };
       }
     }
@@ -136,7 +180,7 @@ class NavigationHandler {
     if (trimmedUrl.toLowerCase().startsWith("data:")) {
       return {
         isValid: false,
-        error: "Data URLs not allowed for security reasons"
+        error: "Data URLs not allowed for security reasons",
       };
     }
 
@@ -157,7 +201,7 @@ class NavigationHandler {
       if (!allowedProtocols.includes(testUrl.protocol)) {
         return {
           isValid: false,
-          error: `Protocol ${testUrl.protocol} not supported. Use http: or https:`
+          error: `Protocol ${testUrl.protocol} not supported. Use http: or https:`,
         };
       }
 
@@ -165,7 +209,7 @@ class NavigationHandler {
       if (!testUrl.hostname || testUrl.hostname.length === 0) {
         return {
           isValid: false,
-          error: "Invalid hostname"
+          error: "Invalid hostname",
         };
       }
 
@@ -173,7 +217,7 @@ class NavigationHandler {
     } catch (error) {
       return {
         isValid: false,
-        error: `Invalid URL format: ${error.message}`
+        error: `Invalid URL format: ${error.message}`,
       };
     }
   }
@@ -193,15 +237,26 @@ class NavigationHandler {
       const urlObj = new URL(url);
 
       // Remove trailing slash for consistency (except for root)
-      if (urlObj.pathname === "/" && urlObj.search === "" && urlObj.hash === "") {
+      if (
+        urlObj.pathname === "/" &&
+        urlObj.search === "" &&
+        urlObj.hash === ""
+      ) {
         return urlObj.href;
-      } else if (urlObj.href.endsWith("/") && urlObj.search === "" && urlObj.hash === "") {
+      } else if (
+        urlObj.href.endsWith("/") &&
+        urlObj.search === "" &&
+        urlObj.hash === ""
+      ) {
         return urlObj.href.slice(0, -1);
       }
 
       return urlObj.href;
     } catch (error) {
-      console.warn("🔄 URL normalization failed, using original:", error.message);
+      console.warn(
+        "🔄 URL normalization failed, using original:",
+        error.message,
+      );
       return url;
     }
   }
@@ -251,7 +306,7 @@ class NavigationHandler {
               success: true,
               finalUrl: tab.url,
               title: tab.title,
-              loadTime
+              loadTime,
             });
           }
 
@@ -264,10 +319,15 @@ class NavigationHandler {
         };
 
         // Set up timeout rejection
-        this.currentNavigationController.signal.addEventListener("abort", () => {
-          chrome.tabs.onUpdated.removeListener(updateListener);
-          reject(new Error(`Navigation timeout after ${this.navigationTimeout}ms`));
-        });
+        this.currentNavigationController.signal.addEventListener(
+          "abort",
+          () => {
+            chrome.tabs.onUpdated.removeListener(updateListener);
+            reject(
+              new Error(`Navigation timeout after ${this.navigationTimeout}ms`),
+            );
+          },
+        );
 
         // Start listening for updates
         chrome.tabs.onUpdated.addListener(updateListener);
@@ -277,21 +337,24 @@ class NavigationHandler {
           if (chrome.runtime.lastError) {
             clearTimeout(timeoutId);
             chrome.tabs.onUpdated.removeListener(updateListener);
-            reject(new Error(`Navigation failed: ${chrome.runtime.lastError.message}`));
+            reject(
+              new Error(
+                `Navigation failed: ${chrome.runtime.lastError.message}`,
+              ),
+            );
             return;
           }
 
           console.log("🔄 Navigation started successfully");
         });
       });
-
     } catch (error) {
       const loadTime = Date.now() - startTime;
       console.error(`❌ Navigation failed after ${loadTime}ms:`, error);
       return {
         success: false,
         error: error.message,
-        loadTime
+        loadTime,
       };
     } finally {
       this.currentNavigationController = null;
@@ -314,7 +377,7 @@ class NavigationHandler {
         ready: "ready-state",
         navigating: "scanning",
         success: "connected",
-        error: "failed"
+        error: "failed",
       };
 
       const indicatorState = stateMapping[state] || "ready-state";
@@ -367,13 +430,64 @@ class NavigationHandler {
   }
 
   /**
+   * Enhanced response handler with request tracking
+   * @param {Function} sendResponse - Response callback function
+   * @param {string} requestId - Request identifier for tracking
+   * @param {Object} responseData - Response data to send
+   */
+  sendNavigationResponse(sendResponse, requestId, responseData) {
+    try {
+      // Add metadata to response
+      const enhancedResponse = {
+        ...responseData,
+        requestId,
+        timestamp: Date.now(),
+        source: "NavigationHandler",
+        version: "1.1.0",
+      };
+
+      console.log("📤 Sending navigation response:", enhancedResponse);
+
+      // Send response via callback
+      if (typeof sendResponse === "function") {
+        sendResponse(enhancedResponse);
+      } else {
+        console.warn("⚠️ No response callback provided - response not sent");
+      }
+
+      // Log response for debugging
+      this.addLogEntry(
+        "info",
+        `Response sent for request ${requestId || "unknown"}: ${responseData.success ? "SUCCESS" : "FAILED"}`,
+      );
+    } catch (error) {
+      console.error("❌ Error sending navigation response:", error);
+      this.addLogEntry("error", `Failed to send response: ${error.message}`);
+
+      // Fallback response
+      if (typeof sendResponse === "function") {
+        try {
+          sendResponse({
+            success: false,
+            error: "Response transmission failed",
+            requestId,
+            timestamp: Date.now(),
+          });
+        } catch (fallbackError) {
+          console.error("❌ Even fallback response failed:", fallbackError);
+        }
+      }
+    }
+  }
+
+  /**
    * Get current navigation state
    * @returns {Object} Current navigation state
    */
   getNavigationState() {
     return {
       isNavigating: this.isNavigating,
-      hasActiveController: this.currentNavigationController !== null
+      hasActiveController: this.currentNavigationController !== null,
     };
   }
 }
