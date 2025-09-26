@@ -37,9 +37,6 @@ jobs:
           echo "📦 Installing chrome-extension dependencies..."
           cd chrome-extension && npm ci && cd ..
 
-          echo "📦 Installing mcp-server dependencies..."
-          cd mcp-server && npm ci && cd ..
-
       - name: 📄 Validate OpenAPI Contract
         run: |
           echo "🔍 Validating REST API contract..."

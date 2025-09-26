@@ -15,10 +15,6 @@
     "@apidevtools/swagger-cli": "^4.0.4",
     "@asyncapi/cli": "^2.3.0"
   },
-  "workspaces": [
-    "chrome-extension",
-    "mcp-server"
-  ],
   "keywords": [
     "mcp",
     "browser-automation",
