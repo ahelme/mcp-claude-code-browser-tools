@@ -4,11 +4,17 @@
  * Establishes and manages WebSocket connection to HTTP bridge on port 3024.
  * Handles all real-time communication between extension and MCP server.
  *
+ * 📄 **Protocol Contract**: chrome-extension/contracts/websocket.asyncapi.yaml
+ * 🔗 **AsyncAPI Spec**: https://spec.asyncapi.com/v3.0.0/
+ * 🌐 **Documentation**: http://localhost:3020/ws-docs
+ *
  * Features:
  * - Auto-reconnection with exponential backoff
- * - Heartbeat/ping-pong for connection validation
+ * - Heartbeat/ping-pong for connection validation (30s intervals per AsyncAPI contract)
  * - Message queuing during disconnection
  * - Connection state management
+ *
+ * @see {@link ../contracts/websocket.asyncapi.yaml} Complete protocol specification
  */
 
 class WebSocketManager {
@@ -48,7 +54,9 @@ class WebSocketManager {
 
     console.log(`🔌 Connecting to WebSocket: ${this.url}`);
     console.log(
-      `📊 Connection attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts}`,
+      `📊 Connection attempt ${this.reconnectAttempts + 1}/${
+        this.maxReconnectAttempts
+      }`
     );
 
     try {
@@ -89,7 +97,7 @@ class WebSocketManager {
       this.ws.onclose = (event) => {
         console.log(`🔌 WebSocket closed: ${event.code} - ${event.reason}`);
         console.log(
-          `📊 Close details: wasClean=${event.wasClean}, code=${event.code}, reason='${event.reason}'`,
+          `📊 Close details: wasClean=${event.wasClean}, code=${event.code}, reason='${event.reason}'`
         );
         this.isConnected = false;
         this.stopHeartbeat();
@@ -101,7 +109,7 @@ class WebSocketManager {
         if (event.code !== 1000) {
           // 1000 = normal closure
           console.log(
-            `🔄 Non-normal closure detected, scheduling reconnect...`,
+            `🔄 Non-normal closure detected, scheduling reconnect...`
           );
           this.scheduleReconnect();
         } else {
@@ -113,7 +121,7 @@ class WebSocketManager {
         console.error("❌ WebSocket error:", error);
         console.error(`🔧 WebSocket URL: ${this.url}`);
         console.error(
-          `📊 Current state: ${this.ws ? this.ws.readyState : "null"}`,
+          `📊 Current state: ${this.ws ? this.ws.readyState : "null"}`
         );
         this.emit("error", error);
       };
@@ -162,7 +170,7 @@ class WebSocketManager {
   scheduleReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error(
-        `❌ Max reconnection attempts reached (${this.maxReconnectAttempts})`,
+        `❌ Max reconnection attempts reached (${this.maxReconnectAttempts})`
       );
       this.emit("maxReconnectAttemptsReached");
       return;
@@ -170,7 +178,7 @@ class WebSocketManager {
 
     this.reconnectAttempts++;
     console.log(
-      `🔄 Scheduling reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${this.reconnectDelay}ms`,
+      `🔄 Scheduling reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${this.reconnectDelay}ms`
     );
 
     setTimeout(() => {
@@ -181,7 +189,7 @@ class WebSocketManager {
     // Exponential backoff
     this.reconnectDelay = Math.min(
       this.reconnectDelay * 2,
-      this.maxReconnectDelay,
+      this.maxReconnectDelay
     );
   }
 
@@ -244,7 +252,7 @@ class WebSocketManager {
               tabId: chrome.devtools.inspectedWindow.tabId,
             });
           }
-        },
+        }
       );
     }
   }

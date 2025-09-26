@@ -1,15 +1,21 @@
 /**
  * Navigation Handler for Browser Tools MCP Extension
  *
- * Implements browser_navigate functionality for Agent G (Navigation Specialist).
+ * Implements browser_navigate functionality for Agent C (Navigation Specialist).
  * Handles URL navigation requests from the MCP server via WebSocket communication.
+ *
+ * 📄 **WebSocket Protocol**: chrome-extension/contracts/websocket.asyncapi.yaml
+ * 🔗 **AsyncAPI Spec**: https://spec.asyncapi.com/v3.0.0/
+ * 🌐 **Documentation**: http://localhost:3020/ws-docs
  *
  * Features:
  * - URL validation and normalization
- * - Navigation with proper error handling
+ * - Navigation with proper error handling (navigationResult messages per AsyncAPI)
  * - Loading state management
  * - Integration with Configuration Panel UI
- * - Real-time status updates
+ * - Real-time status updates via WebSocket
+ *
+ * @see {@link ./contracts/websocket.asyncapi.yaml} NavigationResultMessage schema
  */
 
 class NavigationHandler {
@@ -27,16 +33,16 @@ class NavigationHandler {
       function () {
         // Enhanced fallback implementation with better validation
         console.log(
-          "🔄 Using fallback ThreadSafeNavigationConfig (enhanced module not available)",
+          "🔄 Using fallback ThreadSafeNavigationConfig (enhanced module not available)"
         );
 
         this.setTimeoutSafe = (timeout) => {
           const validTimeout = Math.max(
             1000,
-            Math.min(timeout || 10000, 60000),
+            Math.min(timeout || 10000, 60000)
           );
           console.log(
-            `⏱️ ThreadSafe timeout set to ${validTimeout}ms (input: ${timeout})`,
+            `⏱️ ThreadSafe timeout set to ${validTimeout}ms (input: ${timeout})`
           );
           return validTimeout;
         };
@@ -64,7 +70,7 @@ class NavigationHandler {
     } catch (error) {
       console.error(
         "❌ Failed to initialize ThreadSafeNavigationConfig:",
-        error,
+        error
       );
       // Use minimal fallback
       this.threadSafeConfig = {
@@ -97,7 +103,7 @@ class NavigationHandler {
     this.startListenerPoolCleanup();
 
     console.log(
-      "🧭 Navigation Handler initialized with listener pool management",
+      "🧭 Navigation Handler initialized with listener pool management"
     );
   }
 
@@ -176,7 +182,7 @@ class NavigationHandler {
       this.isNavigating = true;
       this.updateNavigationStatus(
         "navigating",
-        `Navigating to ${normalizedUrl}...`,
+        `Navigating to ${normalizedUrl}...`
       );
       this.addLogEntry("info", `Navigating to: ${normalizedUrl}`);
 
@@ -355,7 +361,7 @@ class NavigationHandler {
     } catch (error) {
       console.warn(
         "🔄 URL normalization failed, using original:",
-        error.message,
+        error.message
       );
       return url;
     }
@@ -373,11 +379,11 @@ class NavigationHandler {
       try {
         if (attempt > 0) {
           console.log(
-            `🔄 Navigation retry attempt ${attempt}/${this.maxRetries} for: ${url}`,
+            `🔄 Navigation retry attempt ${attempt}/${this.maxRetries} for: ${url}`
           );
           this.addLogEntry(
             "info",
-            `Retry attempt ${attempt}/${this.maxRetries}`,
+            `Retry attempt ${attempt}/${this.maxRetries}`
           );
           // Wait before retry (exponential backoff with 5-second cap)
           const baseDelay = 1000;
@@ -411,7 +417,7 @@ class NavigationHandler {
         lastError = error;
         console.warn(
           `⚠️ Navigation attempt ${attempt + 1} failed:`,
-          error.message,
+          error.message
         );
 
         // Don't retry on non-recoverable errors
@@ -439,7 +445,7 @@ class NavigationHandler {
     ];
 
     return retryablePatterns.some((pattern) =>
-      error.message.toLowerCase().includes(pattern),
+      error.message.toLowerCase().includes(pattern)
     );
   }
 
@@ -503,7 +509,7 @@ class NavigationHandler {
         // Create managed listener with pool management
         const managedListener = this.createManagedListener(
           updateListenerFunction,
-          `navigation-${url.substring(0, 50)}`,
+          `navigation-${url.substring(0, 50)}`
         );
 
         // Store reference for legacy compatibility
@@ -516,9 +522,9 @@ class NavigationHandler {
             managedListener.remove(); // Use managed removal
             this.activeNavigationListener = null;
             reject(
-              new Error(`Navigation timeout after ${this.navigationTimeout}ms`),
+              new Error(`Navigation timeout after ${this.navigationTimeout}ms`)
             );
-          },
+          }
         );
 
         // Start listening for updates using managed listener
@@ -532,8 +538,8 @@ class NavigationHandler {
             this.activeNavigationListener = null;
             reject(
               new Error(
-                `Navigation failed: ${chrome.runtime.lastError.message}`,
-              ),
+                `Navigation failed: ${chrome.runtime.lastError.message}`
+              )
             );
             return;
           }
@@ -662,7 +668,9 @@ class NavigationHandler {
       // Log response for debugging
       this.addLogEntry(
         "info",
-        `Response sent for request ${requestId || "unknown"}: ${responseData.success ? "SUCCESS" : "FAILED"}`,
+        `Response sent for request ${requestId || "unknown"}: ${
+          responseData.success ? "SUCCESS" : "FAILED"
+        }`
       );
     } catch (error) {
       console.error("❌ Error sending navigation response:", error);
@@ -730,7 +738,7 @@ class NavigationHandler {
     // Check if we're approaching listener limit
     if (this.listenerPool.size >= this.maxConcurrentListeners) {
       console.warn(
-        "⚠️ Listener pool approaching maximum capacity - cleaning up stale listeners",
+        "⚠️ Listener pool approaching maximum capacity - cleaning up stale listeners"
       );
       this.cleanupStaleListeners();
     }
@@ -790,7 +798,7 @@ class NavigationHandler {
     const listenerData = this.listenerPool.get(listenerId);
     if (!listenerData) {
       console.warn(
-        `⚠️ Attempted to remove non-existent listener: ${listenerId}`,
+        `⚠️ Attempted to remove non-existent listener: ${listenerId}`
       );
       return false;
     }
@@ -800,7 +808,7 @@ class NavigationHandler {
       if (listenerData.isActive) {
         chrome.tabs.onUpdated.removeListener(listenerData.function);
         console.log(
-          `🗑️ Removed listener from Chrome API: ${listenerId} (${listenerData.description})`,
+          `🗑️ Removed listener from Chrome API: ${listenerId} (${listenerData.description})`
         );
       }
 
@@ -843,7 +851,7 @@ class NavigationHandler {
     let cleaned = 0;
 
     console.log(
-      `🧹 Starting listener pool cleanup (${this.listenerPool.size} listeners)`,
+      `🧹 Starting listener pool cleanup (${this.listenerPool.size} listeners)`
     );
 
     for (const [listenerId, listenerData] of this.listenerPool.entries()) {
@@ -859,7 +867,7 @@ class NavigationHandler {
 
       if (isStale) {
         console.log(
-          `🧹 Cleaning up stale listener: ${listenerId} (age: ${age}ms, inactive: ${inactivityTime}ms, calls: ${listenerData.usage.calls})`,
+          `🧹 Cleaning up stale listener: ${listenerId} (age: ${age}ms, inactive: ${inactivityTime}ms, calls: ${listenerData.usage.calls})`
         );
         this.removeListener(listenerId);
         cleaned++;
@@ -868,7 +876,7 @@ class NavigationHandler {
 
     if (cleaned > 0) {
       console.log(
-        `🧹 Cleaned up ${cleaned} stale listeners. Pool size: ${this.listenerPool.size}`,
+        `🧹 Cleaned up ${cleaned} stale listeners. Pool size: ${this.listenerPool.size}`
       );
     }
 
@@ -901,7 +909,9 @@ class NavigationHandler {
       }, interval);
 
       console.log(
-        `🔄 Next listener cleanup in ${interval / 1000}s (${poolSize} listeners active)`,
+        `🔄 Next listener cleanup in ${
+          interval / 1000
+        }s (${poolSize} listeners active)`
       );
     };
 
@@ -922,14 +932,14 @@ class NavigationHandler {
         calls: listener.usage.calls,
         lastUsed: now - listener.usage.lastUsed,
         isActive: listener.isActive,
-      }),
+      })
     );
 
     return {
       totalListeners: this.listenerPool.size,
       maxListeners: this.maxConcurrentListeners,
       utilizationPercent: Math.round(
-        (this.listenerPool.size / this.maxConcurrentListeners) * 100,
+        (this.listenerPool.size / this.maxConcurrentListeners) * 100
       ),
       lastCleanup: now - this.lastListenerCleanup,
       listeners,
