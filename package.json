@@ -1,0 +1,32 @@
+{
+  "name": "browser-tools-setup",
+  "version": "1.0.0",
+  "description": "Browser Tools MCP Server - Complete AsyncAPI WebSocket Protocol Documentation",
+  "private": true,
+  "scripts": {
+    "validate:openapi": "swagger-cli validate chrome-extension/contracts/http.yaml",
+    "validate:asyncapi": "asyncapi validate chrome-extension/contracts/websocket.asyncapi.yaml",
+    "validate:contracts": "npm run validate:openapi && npm run validate:asyncapi",
+    "test:docs": "cd chrome-extension && timeout 30s node docs-server.mjs",
+    "start:complete": "./chrome-extension/start-complete-system.sh",
+    "start:docs": "./chrome-extension/start-docs.sh"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-cli": "^4.0.4",
+    "@asyncapi/cli": "^2.3.0"
+  },
+  "workspaces": [
+    "chrome-extension",
+    "mcp-server"
+  ],
+  "keywords": [
+    "mcp",
+    "browser-automation",
+    "asyncapi",
+    "openapi",
+    "websocket",
+    "documentation"
+  ],
+  "author": "A Helme",
+  "license": "MIT"
+}

@@ -30,7 +30,15 @@ jobs:
           cache: 'npm'
 
       - name: 🔧 Install Dependencies
-        run: npm ci
+        run: |
+          echo "📦 Installing root validation dependencies..."
+          npm ci
+
+          echo "📦 Installing chrome-extension dependencies..."
+          cd chrome-extension && npm ci && cd ..
+
+          echo "📦 Installing mcp-server dependencies..."
+          cd mcp-server && npm ci && cd ..
 
       - name: 📄 Validate OpenAPI Contract
         run: |
