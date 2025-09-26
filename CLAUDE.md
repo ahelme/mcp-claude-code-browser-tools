@@ -292,13 +292,35 @@ curl http://localhost:3024/health
 MCP_DEBUG=1 node mcp-server/server.mjs
 ```
 
+## API Documentation
+
+**Interactive Swagger Documentation** available for developers and AI agents:
+
+```bash
+# Start documentation server (port 3020)
+./chrome-extension/start-docs.sh
+```
+
+**AI-Agent Discoverable Endpoints:**
+- 📚 Interactive docs: http://localhost:3020/docs
+- 📄 OpenAPI spec: http://localhost:3020/openapi.yaml
+- 🔍 JSON format: http://localhost:3020/openapi.json
+- 🤖 Health check: http://localhost:3020/health
+
+**Features:**
+- ✅ Auto-generated from OpenAPI 3.0.3 contract
+- ✅ Interactive testing directly in browser
+- ✅ Always accurate (reflects actual implementation)
+- ✅ AI-agent friendly discovery endpoints
+
 ## Multi-Project Usage (ADVANCED)
 
 Run multiple instances with custom ports via `BROWSER_TOOLS_PORT` environment variable:
 
 **Port allocation:**
-- Main project: 3024 (default)
-- Secondary projects: 3025, 3026, 3027...
+- 3020 - API Documentation Server
+- 3024 - Main project (MCP HTTP Bridge)
+- 3025, 3026, 3027+ - Secondary projects
 
 ```bash
 # Start different instances

@@ -182,6 +182,32 @@ Set via UI form field "Server Connection Settings > Server Port to **3024**"
 
 This will connect extension to Claude Code Browser Tools MCP Server (via http bridge).
 
+## 📚 API Documentation
+
+**Interactive Swagger Documentation** is available for developers and AI agents:
+
+```bash
+# Start documentation server
+./chrome-extension/start-docs.sh
+```
+
+**Available Endpoints:**
+- 📚 **Interactive docs**: http://localhost:3020/docs
+- 📄 **OpenAPI spec**: http://localhost:3020/openapi.yaml
+- 🤖 **AI-discoverable**: http://localhost:3020/health
+- 🔍 **JSON format**: http://localhost:3020/openapi.json
+
+**Features:**
+- ✅ **Auto-generated** from OpenAPI 3.0.3 contract
+- ✅ **Interactive testing** - test API directly from browser
+- ✅ **AI-agent friendly** - auto-discoverable endpoints
+- ✅ **Always accurate** - reflects actual implementation
+
+**Port Layout:**
+- **3020** - API Documentation Server
+- **3024** - MCP HTTP Bridge (main functionality)
+- **3025+** - Multi-project instances
+
 ## Testing and Debugging 
 
 Check if working:
