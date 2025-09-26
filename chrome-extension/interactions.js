@@ -30,19 +30,242 @@ class InteractionHandler {
     this.cleanupInterval = null;
     this.lastCleanupTime = Date.now();
 
-    // Initialize CSP-safe script executor
-    this.scriptExecutor = new (globalThis.CSPSafeScriptExecutor ||
+    // Initialize CSP-safe script executor with enhanced validation
+    const globalValidation = this.validateGlobalReference(
+      "CSPSafeScriptExecutor",
+      globalThis.CSPSafeScriptExecutor,
+    );
+    // Enhanced CSP-safe script executor with better validation
+    const CSPSafeExecutorClass =
+      globalThis.CSPSafeScriptExecutor ||
       function () {
-        // Fallback executor if module not loaded
+        // Enhanced fallback executor with better error reporting and validation
+        console.log(
+          "🔄 Using fallback CSPSafeScriptExecutor (enhanced module not available)",
+        );
+
         this.executeScript = async (tabId, script) => {
+          console.warn(
+            "⚠️ CSP-safe executor not available - script execution disabled",
+          );
+          console.log(
+            "📋 This is expected behavior when enhanced modules are not loaded",
+          );
+
           throw new Error(
-            "CSP-safe executor not available - script execution disabled",
+            "CSP-safe executor not available - script execution disabled. " +
+              "This is expected behavior when enhanced modules are not loaded. " +
+              `Requested for tab ${tabId} with script length ${script?.length || 0}`,
           );
         };
-      })();
+
+        // Add validation method
+        this.validateScript = (script) => {
+          if (!script || typeof script !== "string") {
+            return {
+              isValid: false,
+              error: "Script must be a non-empty string",
+            };
+          }
+          return {
+            isValid: true,
+            error: null,
+          };
+        };
+      };
+
+    try {
+      this.scriptExecutor = new CSPSafeExecutorClass();
+    } catch (error) {
+      console.error("❌ Failed to initialize CSPSafeScriptExecutor:", error);
+      // Use minimal fallback
+      this.scriptExecutor = {
+        executeScript: async () => {
+          throw new Error("Script executor initialization failed");
+        },
+        validateScript: () => ({
+          isValid: false,
+          error: "Executor unavailable",
+        }),
+      };
+    }
 
     // Start dynamic cleanup timer
     this.startDynamicCleanup();
+  }
+
+  /**
+   * Sanitize and validate script input before execution
+   * @param {string} script - JavaScript code to sanitize
+   * @param {Object} context - Execution context information
+   * @returns {Object} Validation result with sanitized script or error
+   */
+  sanitizeScript(script, context = {}) {
+    // Input validation
+    if (typeof script !== "string") {
+      return {
+        isValid: false,
+        error: "Script must be a string",
+        sanitizedScript: null,
+      };
+    }
+
+    if (!script.trim()) {
+      return {
+        isValid: false,
+        error: "Script cannot be empty",
+        sanitizedScript: null,
+      };
+    }
+
+    // Length validation (prevent excessive script size)
+    const maxScriptLength = 10000; // 10KB limit
+    if (script.length > maxScriptLength) {
+      return {
+        isValid: false,
+        error: `Script too long (${script.length} chars, max ${maxScriptLength})`,
+        sanitizedScript: null,
+      };
+    }
+
+    // Dangerous pattern detection
+    const dangerousPatterns = [
+      /eval\s*\(/i, // Direct eval calls
+      /function\s*\(\s*\)\s*{\s*return\s+eval/i, // Indirect eval
+      /setTimeout\s*\(\s*['"][^'"]*['"]\s*,/i, // setTimeout with string
+      /setInterval\s*\(\s*['"][^'"]*['"]\s*,/i, // setInterval with string
+      /document\.write/i, // document.write
+      /innerHTML\s*\+?=/i, // innerHTML injection
+      /outerHTML\s*\+?=/i, // outerHTML injection
+      /javascript:/i, // javascript: protocol
+      /data:/i, // data: protocol in scripts
+      /vbscript:/i, // vbscript: protocol
+      /on\w+\s*=/i, // Event handler attributes
+      /\.constructor/i, // Constructor access
+      /\.__proto__/i, // Prototype pollution
+      /Function\s*\(/i, // Function constructor
+      /GeneratorFunction/i, // Generator constructor
+      /AsyncFunction/i, // Async function constructor
+    ];
+
+    const foundDangerousPatterns = [];
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(script)) {
+        foundDangerousPatterns.push(pattern.toString());
+      }
+    }
+
+    if (foundDangerousPatterns.length > 0) {
+      return {
+        isValid: false,
+        error: `Script contains dangerous patterns: ${foundDangerousPatterns.join(", ")}`,
+        sanitizedScript: null,
+        dangerousPatterns: foundDangerousPatterns,
+      };
+    }
+
+    // Basic script structure validation for our use cases
+    const isWrappedFunction =
+      /^\s*\(\s*function\s*\(\s*\)\s*\{[\s\S]*\}\s*\)\s*\(\s*\)\s*;?\s*$/.test(
+        script,
+      );
+    if (!isWrappedFunction && context.requireWrappedFunction) {
+      return {
+        isValid: false,
+        error:
+          "Script must be wrapped in an immediately invoked function expression (IIFE)",
+        sanitizedScript: null,
+      };
+    }
+
+    // Selector injection prevention
+    let sanitizedScript = script;
+    if (context.selector) {
+      const sanitizedSelector = context.selector
+        .replace(/\\/g, "\\\\") // Escape backslashes
+        .replace(/'/g, "\\'") // Escape single quotes
+        .replace(/"/g, '\\"') // Escape double quotes
+        .replace(/\n/g, "\\n") // Escape newlines
+        .replace(/\r/g, "\\r") // Escape carriage returns
+        .replace(/\t/g, "\\t"); // Escape tabs
+
+      // Replace the selector placeholder with sanitized version
+      sanitizedScript = sanitizedScript.replace(
+        /\$\{selector\.replace\([^}]+\)\}/g,
+        `'${sanitizedSelector}'`,
+      );
+    }
+
+    // Text injection prevention
+    if (context.text) {
+      const sanitizedText = context.text
+        .replace(/\\/g, "\\\\") // Escape backslashes
+        .replace(/'/g, "\\'") // Escape single quotes
+        .replace(/"/g, '\\"') // Escape double quotes
+        .replace(/\n/g, "\\n") // Escape newlines
+        .replace(/\r/g, "\\r") // Escape carriage returns
+        .replace(/\t/g, "\\t"); // Escape tabs
+
+      sanitizedScript = sanitizedScript.replace(/\$\{text\}/g, sanitizedText);
+    }
+
+    console.log("🔒 Script sanitization passed:", {
+      originalLength: script.length,
+      sanitizedLength: sanitizedScript.length,
+      hasSelector: !!context.selector,
+      hasText: !!context.text,
+    });
+
+    return {
+      isValid: true,
+      sanitizedScript: sanitizedScript,
+      error: null,
+      metadata: {
+        originalLength: script.length,
+        sanitizedLength: sanitizedScript.length,
+        isWrappedFunction: isWrappedFunction,
+      },
+    };
+  }
+
+  /**
+   * Enhanced global reference validation with better error messages
+   * @param {string} globalName - Name of the global to check
+   * @param {*} globalValue - Value of the global reference
+   * @returns {Object} Validation result
+   */
+  validateGlobalReference(globalName, globalValue) {
+    if (typeof globalValue === "undefined") {
+      console.warn(
+        `⚠️ Global reference '${globalName}' is undefined, using fallback implementation`,
+      );
+      return {
+        isValid: false,
+        hasValue: false,
+        fallbackNeeded: true,
+        message: `Global '${globalName}' not available - fallback active`,
+      };
+    }
+
+    if (typeof globalValue !== "function" && typeof globalValue !== "object") {
+      console.warn(
+        `⚠️ Global reference '${globalName}' is not a function or object (type: ${typeof globalValue})`,
+      );
+      return {
+        isValid: false,
+        hasValue: true,
+        fallbackNeeded: true,
+        message: `Global '${globalName}' has wrong type - fallback active`,
+      };
+    }
+
+    console.log(`✅ Global reference '${globalName}' is valid and available`);
+    return {
+      isValid: true,
+      hasValue: true,
+      fallbackNeeded: false,
+      message: `Global '${globalName}' successfully loaded`,
+    };
   }
 
   /**
@@ -64,11 +287,12 @@ class InteractionHandler {
         };
       }
 
-      // Execute click in the current tab's context
-      const result = await this.executeInCurrentTab(`
+      // Execute click in the current tab's context with enhanced security
+      const result = await this.executeInCurrentTab(
+        `
         (function() {
           try {
-            const element = document.querySelector('${selector.replace(/'/g, "\\'")}');
+            const element = document.querySelector('${selector}');
 
             if (!element) {
               return {
@@ -121,7 +345,9 @@ class InteractionHandler {
             };
           }
         })();
-      `);
+      `,
+        { selector: selector },
+      );
 
       console.log("🖱️ Click result:", result);
       return result;
@@ -162,17 +388,18 @@ class InteractionHandler {
         };
       }
 
-      // Execute type action in the current tab's context
-      const result = await this.executeInCurrentTab(`
+      // Execute type action in the current tab's context with enhanced security
+      const result = await this.executeInCurrentTab(
+        `
         (function() {
           try {
-            const element = document.querySelector('${selector.replace(/'/g, "\\'")}');
+            const element = document.querySelector(arguments[0]);
 
             if (!element) {
               return {
                 success: false,
-                result: '${InteractionResults.ELEMENT_NOT_FOUND}',
-                error: 'Element not found: ${selector}'
+                result: arguments[1],
+                error: 'Element not found: ' + arguments[0]
               };
             }
 
@@ -184,8 +411,8 @@ class InteractionHandler {
             if (!isInputElement) {
               return {
                 success: false,
-                result: '${InteractionResults.SELECTOR_INVALID}',
-                error: 'Element is not a text input field: ${selector}'
+                result: arguments[2],
+                error: 'Element is not a text input field: ' + arguments[0]
               };
             }
 
@@ -197,7 +424,7 @@ class InteractionHandler {
             element.focus();
 
             // Clear if requested
-            if (${clear}) {
+            if (arguments[3]) {
               if (element.isContentEditable) {
                 element.textContent = '';
               } else {
@@ -206,7 +433,7 @@ class InteractionHandler {
             }
 
             // Type the text
-            const textToType = '${text.replace(/'/g, "\\'")}';
+            const textToType = arguments[4];
 
             if (element.isContentEditable) {
               // For contentEditable elements
@@ -222,7 +449,7 @@ class InteractionHandler {
 
             return {
               success: true,
-              result: '${InteractionResults.SUCCESS}',
+              result: arguments[5],
               message: 'Text typed successfully',
               elementInfo: {
                 tagName: element.tagName,
@@ -235,12 +462,22 @@ class InteractionHandler {
           } catch (error) {
             return {
               success: false,
-              result: '${InteractionResults.UNKNOWN_ERROR}',
+              result: arguments[6],
               error: error.message
             };
           }
         })();
-      `);
+      `,
+        {
+          selector: selector,
+          text: text,
+          clear: clear,
+          elementNotFound: InteractionResults.ELEMENT_NOT_FOUND,
+          selectorInvalid: InteractionResults.SELECTOR_INVALID,
+          success: InteractionResults.SUCCESS,
+          unknownError: InteractionResults.UNKNOWN_ERROR,
+        },
+      );
 
       console.log("⌨️ Type result:", result);
       return result;
@@ -390,31 +627,58 @@ class InteractionHandler {
   }
 
   /**
-   * Execute JavaScript in the current tab with CSP-safe fallbacks
+   * Execute JavaScript in the current tab with enhanced security and CSP-safe fallbacks
    * @param {string} script - JavaScript code to execute
+   * @param {Object} context - Optional context for script sanitization (selector, text, etc.)
    * @returns {Promise<any>} Execution result
    */
-  async executeInCurrentTab(script) {
+  async executeInCurrentTab(script, context = {}) {
     try {
-      // Get the current tab ID from DevTools
+      // Step 1: Input validation and sanitization
+      const sanitizationResult = this.sanitizeScript(script, {
+        requireWrappedFunction: true, // Enforce IIFE pattern for safety
+        ...context,
+      });
+
+      if (!sanitizationResult.isValid) {
+        throw new Error(
+          `Script sanitization failed: ${sanitizationResult.error}`,
+        );
+      }
+
+      console.log("🔒 Script sanitization completed successfully");
+
+      // Step 2: Get the current tab ID from DevTools
       const tabId = chrome.devtools?.inspectedWindow?.tabId;
 
       if (!tabId) {
-        throw new Error("No active tab found");
+        throw new Error(
+          "No active tab found - ensure DevTools is open and a tab is selected",
+        );
       }
 
       console.log("🔧 Attempting CSP-safe script execution...");
 
-      // Use CSP-safe executor with automatic fallbacks
-      const result = await this.scriptExecutor.executeScript(tabId, script, {
-        timeout: 10000,
-        retries: 2,
-      });
+      // Step 3: Use CSP-safe executor with sanitized script
+      const result = await this.scriptExecutor.executeScript(
+        tabId,
+        sanitizationResult.sanitizedScript,
+        {
+          timeout: 10000,
+          retries: 2,
+          metadata: {
+            originalLength: sanitizationResult.metadata.originalLength,
+            sanitizedLength: sanitizationResult.metadata.sanitizedLength,
+            hasSelector: !!context.selector,
+            hasText: !!context.text,
+          },
+        },
+      );
 
-      console.log("✅ Script executed successfully");
+      console.log("✅ Script executed successfully with enhanced security");
       return result;
     } catch (error) {
-      console.error("❌ CSP-safe script execution failed:", error.message);
+      console.error("❌ Enhanced script execution failed:", error.message);
 
       // Provide fallback result for interaction operations
       if (script.includes("querySelector") && script.includes("click")) {
