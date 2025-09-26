@@ -184,23 +184,28 @@ This will connect extension to Claude Code Browser Tools MCP Server (via http br
 
 ## 📚 API Documentation
 
-**Interactive Swagger Documentation** is available for developers and AI agents:
+**Complete Protocol Documentation** is available for developers and AI agents:
 
 ```bash
-# Start documentation server
+# Start comprehensive documentation server
 ./chrome-extension/start-docs.sh
 ```
 
 **Available Endpoints:**
-- 📚 **Interactive docs**: http://localhost:3020/docs
-- 📄 **OpenAPI spec**: http://localhost:3020/openapi.yaml
-- 🤖 **AI-discoverable**: http://localhost:3020/health
-- 🔍 **JSON format**: http://localhost:3020/openapi.json
+- 📚 **Documentation Portal**: http://localhost:3020/docs - Combined REST & WebSocket docs
+- 🔗 **REST API docs**: http://localhost:3020/rest-docs - OpenAPI/Swagger UI
+- 🔌 **WebSocket docs**: http://localhost:3020/ws-docs - AsyncAPI protocol docs
+- 📄 **OpenAPI spec**: http://localhost:3020/openapi.yaml - REST API contract
+- 📡 **AsyncAPI spec**: http://localhost:3020/asyncapi.yaml - WebSocket protocol contract
+- 🤖 **AI-discoverable**: http://localhost:3020/health - Complete protocol metadata
+- 🔍 **JSON formats**: http://localhost:3020/openapi.json | http://localhost:3020/asyncapi.json
 
 **Features:**
-- ✅ **Auto-generated** from OpenAPI 3.0.3 contract
-- ✅ **Interactive testing** - test API directly from browser
-- ✅ **AI-agent friendly** - auto-discoverable endpoints
+- ✅ **Dual Protocol Support** - REST (OpenAPI 3.0.3) + WebSocket (AsyncAPI 3.0.0)
+- ✅ **Interactive testing** - test REST API directly from browser
+- ✅ **Protocol visualization** - AsyncAPI Studio integration for WebSocket protocol
+- ✅ **AI-agent friendly** - auto-discoverable endpoints and standard formats
+- ✅ **Contract-driven** - single source of truth prevents documentation drift
 - ✅ **Always accurate** - reflects actual implementation
 
 **Port Layout:**

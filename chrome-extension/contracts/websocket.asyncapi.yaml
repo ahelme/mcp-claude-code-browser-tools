@@ -1,0 +1,383 @@
+asyncapi: 3.0.0
+
+info:
+  title: Browser Tools WebSocket Protocol
+  version: 1.1.0
+  description: |
+    WebSocket protocol for real-time communication between Chrome extension and MCP HTTP bridge.
+
+    This protocol enables:
+    - Browser automation tool coordination
+    - Real-time navigation result reporting
+    - Connection health monitoring via heartbeat
+    - Tab and URL state synchronization
+
+    Built for: Browser Tools MCP Server
+    Implementation: chrome-extension/websocket.js
+  contact:
+    name: Browser Tools Team
+    email: browsertools@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  development:
+    host: localhost:3024
+    protocol: ws
+    description: Local development WebSocket server (HTTP bridge)
+
+channels:
+  /:
+    description: Main WebSocket communication channel
+    messages:
+      ping:
+        $ref: '#/components/messages/ping'
+      pong:
+        $ref: '#/components/messages/pong'
+      tabId:
+        $ref: '#/components/messages/tabId'
+      url:
+        $ref: '#/components/messages/url'
+      navigationResult:
+        $ref: '#/components/messages/navigationResult'
+
+operations:
+  sendHeartbeat:
+    action: send
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/ping'
+    description: Send heartbeat ping every 30 seconds to maintain connection
+
+  receiveHeartbeat:
+    action: receive
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/pong'
+    description: Respond to heartbeat ping with pong
+
+  reportTabChange:
+    action: send
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/tabId'
+    description: Report current browser tab ID
+
+  reportUrlChange:
+    action: send
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/url'
+    description: Report current page URL after navigation
+
+  reportNavigationResult:
+    action: send
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/navigationResult'
+    description: Report navigation completion with performance metrics
+
+components:
+  messages:
+    ping:
+      summary: Heartbeat ping message
+      description: Sent every 30 seconds to maintain WebSocket connection
+      payload:
+        $ref: '#/components/schemas/PingMessage'
+      examples:
+        - summary: Standard heartbeat ping
+          payload:
+            action: ping
+            timestamp: 1758837904519
+
+    pong:
+      summary: Heartbeat pong response
+      description: Response to ping message for connection validation
+      payload:
+        $ref: '#/components/schemas/PongMessage'
+      examples:
+        - summary: Standard heartbeat pong
+          payload:
+            action: pong
+            timestamp: 1758823304458
+
+    tabId:
+      summary: Current tab ID update
+      description: Reports active browser tab ID for context
+      payload:
+        $ref: '#/components/schemas/TabIdMessage'
+      examples:
+        - summary: Tab change notification
+          payload:
+            type: tabId
+            tabId: 1170574166
+
+    url:
+      summary: Current URL update
+      description: Reports current page URL after navigation or tab change
+      payload:
+        $ref: '#/components/schemas/UrlMessage'
+      examples:
+        - summary: URL change notification
+          payload:
+            type: url
+            url: "https://example.com/"
+            tabId: 1170574166
+
+    navigationResult:
+      summary: Navigation completion result
+      description: |
+        Detailed navigation result with performance metrics and metadata.
+        Sent by NavigationHandler v1.1.0 after successful page navigation.
+      payload:
+        $ref: '#/components/schemas/NavigationResultMessage'
+      examples:
+        - summary: Fast navigation result
+          payload:
+            type: navigationResult
+            success: true
+            url: "https://jsonplaceholder.typicode.com/posts/1"
+            finalUrl: "https://jsonplaceholder.typicode.com/posts/1"
+            title: "jsonplaceholder.typicode.com/posts/1"
+            loadTime: 160
+            timestamp: 1758879468652
+            source: "NavigationHandler"
+            version: "1.1.0"
+            handledAt: 1758879468652
+            handledBy: "NavigationHandler v1.1.0"
+        - summary: Slow navigation result
+          payload:
+            type: navigationResult
+            success: true
+            url: "https://httpbin.org/get"
+            finalUrl: "https://httpbin.org/get"
+            title: "httpbin.org/get"
+            loadTime: 1947
+            timestamp: 1758879456681
+            source: "NavigationHandler"
+            version: "1.1.0"
+            handledAt: 1758879456681
+            handledBy: "NavigationHandler v1.1.0"
+
+  schemas:
+    PingMessage:
+      type: object
+      required:
+        - action
+        - timestamp
+      properties:
+        action:
+          type: string
+          const: ping
+          description: Message type identifier
+        timestamp:
+          type: integer
+          description: Unix timestamp when ping was sent
+          minimum: 0
+
+    PongMessage:
+      type: object
+      required:
+        - action
+        - timestamp
+      properties:
+        action:
+          type: string
+          const: pong
+          description: Message type identifier
+        timestamp:
+          type: integer
+          description: Unix timestamp when pong was sent
+          minimum: 0
+
+    TabIdMessage:
+      type: object
+      required:
+        - type
+        - tabId
+      properties:
+        type:
+          type: string
+          const: tabId
+          description: Message type identifier
+        tabId:
+          type: integer
+          description: Chrome browser tab identifier
+          minimum: 0
+
+    UrlMessage:
+      type: object
+      required:
+        - type
+        - url
+        - tabId
+      properties:
+        type:
+          type: string
+          const: url
+          description: Message type identifier
+        url:
+          type: string
+          format: uri
+          description: Current page URL
+          examples:
+            - "https://example.com/"
+            - "http://localhost:3000/"
+        tabId:
+          type: integer
+          description: Associated Chrome browser tab identifier
+          minimum: 0
+
+    NavigationResultMessage:
+      type: object
+      required:
+        - type
+        - success
+        - url
+        - finalUrl
+        - title
+        - loadTime
+        - timestamp
+        - source
+        - version
+        - handledAt
+        - handledBy
+      properties:
+        type:
+          type: string
+          const: navigationResult
+          description: Message type identifier
+        success:
+          type: boolean
+          description: Whether navigation completed successfully
+        url:
+          type: string
+          format: uri
+          description: Original requested URL
+        finalUrl:
+          type: string
+          format: uri
+          description: Final URL after redirects and processing
+        title:
+          type: string
+          description: Page title after navigation completion
+        loadTime:
+          type: integer
+          description: Navigation load time in milliseconds
+          minimum: 0
+          examples: [160, 642, 1947]
+        timestamp:
+          type: integer
+          description: Unix timestamp when navigation completed
+          minimum: 0
+        source:
+          type: string
+          description: Handler component that processed navigation
+          examples: ["NavigationHandler"]
+        version:
+          type: string
+          description: Handler version string
+          pattern: '^\d+\.\d+\.\d+$'
+          examples: ["1.1.0"]
+        handledAt:
+          type: integer
+          description: Unix timestamp when result was processed
+          minimum: 0
+        handledBy:
+          type: string
+          description: Detailed handler identification
+          examples: ["NavigationHandler v1.1.0"]
+
+  # Connection lifecycle patterns
+  connectionLifecycle:
+    description: |
+      WebSocket Connection Lifecycle:
+
+      1. **Initial Connection**
+         - Extension connects to ws://localhost:3024
+         - Sends initial tabId and url messages
+         - Starts 30-second heartbeat interval
+
+      2. **Active Communication**
+         - Heartbeat ping/pong every 30 seconds
+         - Tab/URL updates on browser navigation
+         - Navigation results from extension to bridge
+
+      3. **Reconnection Handling**
+         - Automatic reconnection on connection loss
+         - State restoration (tabId, url) after reconnect
+         - Exponential backoff (1s → 30s max delay)
+
+      **Performance Characteristics:**
+      - Fast sites: 160-200ms navigation time
+      - Medium sites: 642ms navigation time
+      - Slow sites: 1947ms navigation time
+      - Heartbeat frequency: 30-second intervals
+      - Message frequency: ~120 pings per hour + navigation events
+
+  # Error handling patterns
+  errorHandling:
+    description: |
+      Error Handling Patterns:
+
+      **Connection Errors:**
+      - Automatic reconnection with exponential backoff
+      - Maximum 10 reconnection attempts
+      - State restoration after reconnection
+
+      **Message Validation:**
+      - JSON parsing error handling
+      - Unknown message type logging
+      - Graceful degradation on protocol violations
+
+      **Navigation Errors:**
+      - TBD: Failed navigation message schema
+      - Expected: success: false with error details
+      - Timeout handling and retry logic
+
+# Security considerations
+security:
+  description: |
+    Security Model:
+
+    **Local-Only Communication:**
+    - WebSocket bound to localhost (127.0.0.1)
+    - No external network access
+    - Local trust model assumed
+
+    **Content Security Policy:**
+    - Restricted execution context
+    - No arbitrary code execution via WebSocket
+    - Message validation at application layer
+
+    **Port Binding:**
+    - Fixed port assignment (3020 docs, 3024 bridge)
+    - No authentication required for localhost
+    - Chrome extension security model applies
+
+# Quality assurance
+qualityAssurance:
+  description: |
+    Quality Assurance:
+
+    **Contract Validation:**
+    - AsyncAPI CLI validation in CI/CD pipeline
+    - Runtime message validation (optional)
+    - GitHub workflow triggers on protocol changes
+
+    **Testing Coverage:**
+    - Message schema validation
+    - Connection lifecycle testing
+    - Performance benchmark validation
+    - Error handling scenario testing
+
+    **Documentation Consistency:**
+    - Contract matches websocket.js implementation
+    - Examples derived from actual WebSocket logs
+    - AI-agent discoverable endpoint structure
