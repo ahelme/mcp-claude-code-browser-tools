@@ -91,16 +91,28 @@ jobs:
             echo "⚠️  WebSocket implementation should reference AsyncAPI contract"
           fi
 
-          # Check for required message types in WebSocket implementation
-          echo "🔍 Validating WebSocket message types..."
-          for msg_type in "ping" "pong" "tabId" "url" "navigationResult"; do
+          # Check for required message types across implementation files
+          echo "🔍 Validating WebSocket message types across implementation..."
+
+          # Check core WebSocket messages in websocket.js
+          for msg_type in "ping" "pong" "tabId" "url"; do
             if grep -q "$msg_type" chrome-extension/websocket.js; then
-              echo "✅ Message type '$msg_type' found in implementation"
+              echo "✅ Message type '$msg_type' found in websocket.js"
             else
               echo "❌ Missing message type '$msg_type' in WebSocket implementation"
               exit 1
             fi
           done
+
+          # Check navigationResult in navigation handler
+          if grep -q "navigationResult" chrome-extension/navigation.js; then
+            echo "✅ Message type 'navigationResult' found in navigation.js"
+          else
+            echo "❌ Missing message type 'navigationResult' in navigation handler"
+            exit 1
+          fi
+
+          echo "✅ All required message types found in implementation"
 
       - name: 📊 Generate Protocol Report
         run: |

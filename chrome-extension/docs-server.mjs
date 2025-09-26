@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * Comprehensive Documentation Server for MANE Browser Tools
+ * Comprehensive Documentation Server for Browser Tools
  *
  * Serves both REST (OpenAPI) and WebSocket (AsyncAPI) protocol documentation.
  * This is an AI-agent-friendly approach that provides auto-discoverable API docs.
+ *
+ * 📄 **Contract Files**:
+ *   - chrome-extension/contracts/http.yaml (OpenAPI 3.0.3)
+ *   - chrome-extension/contracts/websocket.asyncapi.yaml (AsyncAPI 3.0.0)
+ * 🔗 **Specifications**:
+ *   - OpenAPI: https://spec.openapis.org/oas/v3.0.3
+ *   - AsyncAPI: https://spec.asyncapi.com/v3.0.0/
+ * 🌐 **Live Documentation**: http://localhost:3020/docs
  *
  * Features:
  * - REST API docs (OpenAPI 3.0.3) via Swagger UI
@@ -21,6 +29,9 @@
  *   http://localhost:3020/ws-docs - WebSocket protocol documentation
  *   http://localhost:3020/openapi.yaml - REST API contract
  *   http://localhost:3020/asyncapi.yaml - WebSocket protocol contract
+ *
+ * @see {@link ./contracts/http.yaml} OpenAPI 3.0.3 REST API contract
+ * @see {@link ./contracts/websocket.asyncapi.yaml} AsyncAPI 3.0.0 WebSocket contract
  */
 
 import express from 'express';
