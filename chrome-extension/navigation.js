@@ -212,11 +212,24 @@ class NavigationHandler {
       }
     } catch (error) {
       console.error("❌ Navigation error:", error);
-      this.addLogEntry("error", `Navigation error: ${error.message}`);
-      this.updateNavigationStatus("error", error.message);
+
+      // Provide helpful message for extension context invalidation
+      let errorMessage = error.message;
+      if (
+        error.message.toLowerCase().includes("extension context invalidated")
+      ) {
+        errorMessage =
+          "Chrome extension needs reload - please refresh DevTools tab and try again";
+        console.log(
+          "💡 Suggestion: Refresh the DevTools tab to reinitialize the extension context"
+        );
+      }
+
+      this.addLogEntry("error", `Navigation error: ${errorMessage}`);
+      this.updateNavigationStatus("error", errorMessage);
       this.sendNavigationResponse(sendResponse, requestId, {
         success: false,
-        error: error.message,
+        error: errorMessage,
       });
     } finally {
       // Reset navigation state (thread-safe)
@@ -444,6 +457,25 @@ class NavigationHandler {
       "temporary",
     ];
 
+    const nonRetryablePatterns = [
+      "extension context invalidated",
+      "context invalidated",
+      "extension context",
+      "disconnected port",
+      "message port closed",
+    ];
+
+    // First check if error is explicitly non-retryable
+    if (
+      nonRetryablePatterns.some((pattern) =>
+        error.message.toLowerCase().includes(pattern)
+      )
+    ) {
+      console.log(`🚫 Non-retryable error detected: ${error.message}`);
+      return false;
+    }
+
+    // Then check if it's retryable
     return retryablePatterns.some((pattern) =>
       error.message.toLowerCase().includes(pattern)
     );
