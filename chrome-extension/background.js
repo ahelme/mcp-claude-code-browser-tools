@@ -189,7 +189,7 @@ async function handleUpdateServerUrl(message, sendResponse) {
             source,
           }),
           signal: AbortSignal.timeout(5000),
-        },
+        }
       );
 
       if (response.ok) {
@@ -215,7 +215,14 @@ async function handleUpdateServerUrl(message, sendResponse) {
 
 async function handleCaptureScreenshot(message, sendResponse) {
   try {
-    const tabId = message.tabId;
+    const {
+      tabId,
+      selector,
+      fullPage = false,
+      filename,
+      format = "png",
+      quality = 90,
+    } = message;
 
     // Get the tab
     const tab = await chrome.tabs.get(tabId);
@@ -227,7 +234,7 @@ async function handleCaptureScreenshot(message, sendResponse) {
     // Get all windows to find the one containing our tab
     const windows = await chrome.windows.getAll({ populate: true });
     const targetWindow = windows.find((w) =>
-      w.tabs.some((t) => t.id === tabId),
+      w.tabs.some((t) => t.id === tabId)
     );
 
     if (!targetWindow) {
@@ -238,10 +245,36 @@ async function handleCaptureScreenshot(message, sendResponse) {
       return;
     }
 
-    // Capture screenshot
-    const dataUrl = await chrome.tabs.captureVisibleTab(targetWindow.id, {
-      format: "png",
-    });
+    let screenshotData;
+
+    if (selector) {
+      // Element-specific screenshot - needs special handling
+      screenshotData = await captureElementScreenshot(
+        tabId,
+        selector,
+        format,
+        quality
+      );
+    } else {
+      // Full page or visible area screenshot
+      const captureOptions = {
+        format: format === "jpeg" ? "jpeg" : "png",
+      };
+
+      if (format === "jpeg" && quality) {
+        captureOptions.quality = Math.max(0, Math.min(100, quality));
+      }
+
+      screenshotData = await chrome.tabs.captureVisibleTab(
+        targetWindow.id,
+        captureOptions
+      );
+    }
+
+    if (!screenshotData) {
+      sendResponse({ success: false, error: "Failed to capture screenshot" });
+      return;
+    }
 
     // Get server settings
     const result = await chrome.storage.local.get(["browserConnectorSettings"]);
@@ -257,12 +290,16 @@ async function handleCaptureScreenshot(message, sendResponse) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          data: dataUrl,
-          path: message.screenshotPath,
+          data: screenshotData,
+          filename: filename,
+          selector: selector,
+          fullPage: fullPage,
+          format: format,
+          quality: quality,
           tabId: tabId,
           title: tab.title,
         }),
-      },
+      }
     );
 
     const result_data = await response.json();
@@ -274,6 +311,8 @@ async function handleCaptureScreenshot(message, sendResponse) {
         path: result_data.path,
         filename: result_data.filename,
         title: tab.title || "Current Tab",
+        format: format,
+        quality: quality,
       });
     } else {
       console.error("Screenshot server error:", result_data.error);
@@ -352,11 +391,17 @@ async function handleBrowserClick(message, sendResponse) {
       `
       // Use the interactions handler from interactions.js
       if (typeof window.interactionHandler !== 'undefined') {
-        return window.interactionHandler.handleClick({ selector: '${selector.replace(/'/g, "\\'")}' });
+        return window.interactionHandler.handleClick({ selector: '${selector.replace(
+          /'/g,
+          "\\'"
+        )}' });
       } else {
         // Fallback implementation if interactions.js not loaded
         try {
-          const element = document.querySelector('${selector.replace(/'/g, "\\'")}');
+          const element = document.querySelector('${selector.replace(
+            /'/g,
+            "\\'"
+          )}');
           if (!element) {
             return { success: false, error: 'Element not found: ${selector}' };
           }
@@ -376,7 +421,7 @@ async function handleBrowserClick(message, sendResponse) {
           return { success: false, error: error.message };
         }
       }
-    `,
+    `
     );
 
     console.log("🖱️ Click result:", result);
@@ -422,7 +467,10 @@ async function handleBrowserType(message, sendResponse) {
       } else {
         // Fallback implementation if interactions.js not loaded
         try {
-          const element = document.querySelector('${selector.replace(/'/g, "\\'")}');
+          const element = document.querySelector('${selector.replace(
+            /'/g,
+            "\\'"
+          )}');
           if (!element) {
             return { success: false, error: 'Element not found: ${selector}' };
           }
@@ -471,7 +519,7 @@ async function handleBrowserType(message, sendResponse) {
           return { success: false, error: error.message };
         }
       }
-    `,
+    `
     );
 
     console.log("⌨️ Type result:", result);
@@ -528,7 +576,10 @@ async function handleBrowserWait(message, sendResponse) {
                 return;
               }
 
-              const element = document.querySelector('${selector.replace(/'/g, "\\'")}');
+              const element = document.querySelector('${selector.replace(
+                /'/g,
+                "\\'"
+              )}');
 
               if (element) {
                 const rect = element.getBoundingClientRect();
@@ -560,7 +611,7 @@ async function handleBrowserWait(message, sendResponse) {
           checkElement();
         });
       }
-    `,
+    `
     );
 
     console.log("⏳ Wait result:", result);
@@ -568,6 +619,113 @@ async function handleBrowserWait(message, sendResponse) {
   } catch (error) {
     console.error("❌ Wait error:", error);
     sendResponse({ success: false, error: error.message });
+  }
+}
+
+// Element-specific screenshot capture function
+async function captureElementScreenshot(
+  tabId,
+  selector,
+  format = "png",
+  quality = 90
+) {
+  try {
+    // First, get element position and size
+    const elementInfo = await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      func: (sel) => {
+        const element = document.querySelector(sel);
+        if (!element) {
+          return { success: false, error: `Element not found: ${sel}` };
+        }
+
+        const rect = element.getBoundingClientRect();
+        const scrollX =
+          window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY =
+          window.pageYOffset || document.documentElement.scrollTop;
+
+        return {
+          success: true,
+          x: Math.round(rect.left + scrollX),
+          y: Math.round(rect.top + scrollY),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+          elementInfo: {
+            tagName: element.tagName,
+            className: element.className,
+            id: element.id,
+          },
+        };
+      },
+      args: [selector],
+    });
+
+    if (!elementInfo[0]?.result?.success) {
+      throw new Error(
+        elementInfo[0]?.result?.error || "Failed to get element info"
+      );
+    }
+
+    const { x, y, width, height } = elementInfo[0].result;
+
+    if (width <= 0 || height <= 0) {
+      throw new Error("Element has zero dimensions");
+    }
+
+    // Get the window containing the tab
+    const windows = await chrome.windows.getAll({ populate: true });
+    const targetWindow = windows.find((w) =>
+      w.tabs.some((t) => t.id === tabId)
+    );
+
+    if (!targetWindow) {
+      throw new Error("Could not find window containing the tab");
+    }
+
+    // Capture full page screenshot
+    const captureOptions = {
+      format: format === "jpeg" ? "jpeg" : "png",
+    };
+
+    if (format === "jpeg" && quality) {
+      captureOptions.quality = Math.max(0, Math.min(100, quality));
+    }
+
+    const fullScreenshot = await chrome.tabs.captureVisibleTab(
+      targetWindow.id,
+      captureOptions
+    );
+
+    // Create canvas to crop the element
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw the cropped portion
+        ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
+
+        // Convert to data URL with the requested format
+        const croppedDataUrl = canvas.toDataURL(
+          format === "jpeg" ? "image/jpeg" : "image/png",
+          format === "jpeg" ? quality / 100 : undefined
+        );
+
+        resolve(croppedDataUrl);
+      };
+
+      img.onerror = () =>
+        reject(new Error("Failed to load screenshot for cropping"));
+      img.src = fullScreenshot;
+    });
+  } catch (error) {
+    console.error("❌ Element screenshot error:", error);
+    throw error;
   }
 }
 
@@ -596,7 +754,7 @@ async function executeScriptInTab(tabId, script) {
         } else {
           reject(new Error("No result from script execution"));
         }
-      },
+      }
     );
   });
 }

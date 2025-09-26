@@ -39,13 +39,16 @@ class ScreenshotManager {
   /**
    * Main screenshot capture function
    * Supports both MCP API calls and direct panel interactions
+   * Enhanced with format options and compression
    */
   async captureScreenshot(options = {}) {
     const {
       selector = null,
       fullPage = false,
       filename = null,
-      source = "panel" // "panel" or "mcp"
+      format = "png", // "png" or "jpeg"
+      quality = 90, // 1-100 for JPEG quality
+      source = "panel", // "panel" or "mcp"
     } = options;
 
     if (this.isCapturing) {
@@ -54,14 +57,20 @@ class ScreenshotManager {
     }
 
     this.isCapturing = true;
-    console.log(`📸 Starting screenshot capture - fullPage: ${fullPage}, selector: ${selector || "none"}`);
+    console.log(
+      `📸 Starting screenshot capture - fullPage: ${fullPage}, selector: ${
+        selector || "none"
+      }`
+    );
 
     try {
       // Update UI to show capture in progress
       this.updateUI("capturing");
 
       // Generate intelligent filename
-      const smartFilename = filename || await this.generateSmartFilename(selector, fullPage);
+      const smartFilename =
+        filename ||
+        (await this.generateSmartFilename(selector, fullPage, format));
 
       // Check if we're connected to the HTTP bridge
       if (!window.wsManager || !window.wsManager.isConnected) {
@@ -70,12 +79,23 @@ class ScreenshotManager {
 
       // Method 1: Direct via background script (for UI button clicks)
       if (source === "panel") {
-        return await this.captureViaBackground(selector, fullPage, smartFilename);
+        return await this.captureViaBackground(
+          selector,
+          fullPage,
+          smartFilename,
+          format,
+          quality
+        );
       }
 
       // Method 2: Via WebSocket for MCP calls
-      return await this.captureViaWebSocket(selector, fullPage, smartFilename);
-
+      return await this.captureViaWebSocket(
+        selector,
+        fullPage,
+        smartFilename,
+        format,
+        quality
+      );
     } catch (error) {
       console.error("❌ Screenshot capture failed:", error);
       this.updateUI("error", error.message);
@@ -88,7 +108,13 @@ class ScreenshotManager {
   /**
    * Capture screenshot via background script (for panel button clicks)
    */
-  async captureViaBackground(selector, fullPage, filename) {
+  async captureViaBackground(
+    selector,
+    fullPage,
+    filename,
+    format = "png",
+    quality = 90
+  ) {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
         {
@@ -97,11 +123,15 @@ class ScreenshotManager {
           selector,
           fullPage,
           filename,
+          format,
+          quality,
           timestamp: Date.now(),
         },
         (response) => {
           if (response && response.success) {
-            console.log(`✅ Screenshot captured via background: ${response.filename}`);
+            console.log(
+              `✅ Screenshot captured via background: ${response.filename}`
+            );
             this.updateUI("success", response.filename);
             this.addToHistory(response);
             resolve(response);
@@ -119,7 +149,13 @@ class ScreenshotManager {
   /**
    * Capture screenshot via WebSocket (for MCP calls)
    */
-  async captureViaWebSocket(selector, fullPage, filename) {
+  async captureViaWebSocket(
+    selector,
+    fullPage,
+    filename,
+    format = "png",
+    quality = 90
+  ) {
     return new Promise((resolve, reject) => {
       const requestId = Date.now().toString();
       const timeout = setTimeout(() => {
@@ -128,7 +164,10 @@ class ScreenshotManager {
 
       // Set up one-time listener for screenshot response
       const messageHandler = (message) => {
-        if (message.type === "screenshot-data" && message.requestId === requestId) {
+        if (
+          message.type === "screenshot-data" &&
+          message.requestId === requestId
+        ) {
           clearTimeout(timeout);
           window.wsManager.off("message", messageHandler);
 
@@ -155,6 +194,8 @@ class ScreenshotManager {
         selector,
         fullPage,
         filename,
+        format,
+        quality,
         requestId,
         tabId: chrome.devtools.inspectedWindow.tabId,
         timestamp: Date.now(),
@@ -168,7 +209,7 @@ class ScreenshotManager {
   /**
    * Generate intelligent filename based on page content
    */
-  async generateSmartFilename(selector, fullPage) {
+  async generateSmartFilename(selector, fullPage, format = "png") {
     try {
       // Get current page info
       const pageInfo = await this.getPageInfo();
@@ -178,7 +219,9 @@ class ScreenshotManager {
 
       // Add selector info if capturing specific element
       if (selector) {
-        const selectorName = this.sanitizeFilename(selector.replace(/[#.]/g, ""));
+        const selectorName = this.sanitizeFilename(
+          selector.replace(/[#.]/g, "")
+        );
         baseName += `_${selectorName}`;
       }
 
@@ -188,16 +231,24 @@ class ScreenshotManager {
       }
 
       // Add timestamp
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, "-");
+      const timestamp = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace(/[:.]/g, "-");
 
       // Generate sequential number for this session
       const sessionCount = this.getSessionScreenshotCount(baseName);
       const paddedCount = String(sessionCount).padStart(4, "0");
 
-      return `${baseName}_${timestamp}_${paddedCount}.png`;
+      // Use correct file extension based on format
+      const extension = format === "jpeg" ? "jpg" : format;
+      return `${baseName}_${timestamp}_${paddedCount}.${extension}`;
     } catch (error) {
-      console.warn("⚠️ Could not generate smart filename, using fallback:", error);
-      return this.getFallbackFilename(selector, fullPage);
+      console.warn(
+        "⚠️ Could not generate smart filename, using fallback:",
+        error
+      );
+      return this.getFallbackFilename(selector, fullPage, format);
     }
   }
 
@@ -244,10 +295,11 @@ class ScreenshotManager {
   /**
    * Generate fallback filename if smart naming fails
    */
-  getFallbackFilename(selector, fullPage) {
+  getFallbackFilename(selector, fullPage, format = "png") {
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const type = fullPage ? "fullpage" : selector ? "element" : "page";
-    return `screenshot_${type}_${timestamp}.png`;
+    const extension = format === "jpeg" ? "jpg" : format;
+    return `screenshot_${type}_${timestamp}.${extension}`;
   }
 
   /**
@@ -420,17 +472,19 @@ const screenshotManager = new ScreenshotManager();
 window.screenshotManager = screenshotManager;
 
 // Enhanced captureScreenshot function for panel.js integration
-window.captureScreenshot = function(options = {}) {
+window.captureScreenshot = function (options = {}) {
   return screenshotManager.captureScreenshot({ ...options, source: "panel" });
 };
 
 // MCP API integration
-window.mcp_browser_screenshot = function(params = {}) {
-  const { selector, fullPage = false } = params;
+window.mcp_browser_screenshot = function (params = {}) {
+  const { selector, fullPage = false, format = "png", quality = 90 } = params;
   return screenshotManager.captureScreenshot({
     selector,
     fullPage,
-    source: "mcp"
+    format,
+    quality,
+    source: "mcp",
   });
 };
 
