@@ -22,15 +22,59 @@ class NavigationHandler {
     this.maxRetries = 2; // Maximum retry attempts for transient failures
 
     // Thread-safe configuration to prevent race conditions
-    this.threadSafeConfig = new (globalThis.ThreadSafeNavigationConfig ||
+    const ThreadSafeConfigClass =
+      globalThis.ThreadSafeNavigationConfig ||
       function () {
-        // Fallback if module not loaded
-        this.setTimeoutSafe = (timeout) =>
-          Math.max(1000, Math.min(timeout || 10000, 60000));
-        this.setNavigationStateSafe = (state) => true;
-        this.getTimeoutSafe = () => this.navigationTimeout || 10000;
-        this.getNavigationStateSafe = () => this.isNavigating || false;
-      })();
+        // Enhanced fallback implementation with better validation
+        console.log(
+          "🔄 Using fallback ThreadSafeNavigationConfig (enhanced module not available)",
+        );
+
+        this.setTimeoutSafe = (timeout) => {
+          const validTimeout = Math.max(
+            1000,
+            Math.min(timeout || 10000, 60000),
+          );
+          console.log(
+            `⏱️ ThreadSafe timeout set to ${validTimeout}ms (input: ${timeout})`,
+          );
+          return validTimeout;
+        };
+
+        this.setNavigationStateSafe = (state) => {
+          console.log(`🔄 ThreadSafe navigation state set: ${state}`);
+          return true;
+        };
+
+        this.getTimeoutSafe = () => {
+          const timeout = this.navigationTimeout || 10000;
+          console.log(`⏱️ ThreadSafe timeout retrieved: ${timeout}ms`);
+          return timeout;
+        };
+
+        this.getNavigationStateSafe = () => {
+          const state = this.isNavigating || false;
+          console.log(`🔄 ThreadSafe navigation state retrieved: ${state}`);
+          return state;
+        };
+      };
+
+    try {
+      this.threadSafeConfig = new ThreadSafeConfigClass();
+    } catch (error) {
+      console.error(
+        "❌ Failed to initialize ThreadSafeNavigationConfig:",
+        error,
+      );
+      // Use minimal fallback
+      this.threadSafeConfig = {
+        setTimeoutSafe: (timeout) =>
+          Math.max(1000, Math.min(timeout || 10000, 60000)),
+        setNavigationStateSafe: () => true,
+        getTimeoutSafe: () => 10000,
+        getNavigationStateSafe: () => false,
+      };
+    }
 
     // Listener Pool Management for better event handling
     this.listenerPool = new Map(); // Store active listeners by ID
