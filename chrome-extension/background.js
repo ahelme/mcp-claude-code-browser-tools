@@ -90,6 +90,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleBrowserWait(message, sendResponse);
       return true;
 
+    case "COPY_TO_CLIPBOARD":
+      handleCopyToClipboard(message, sendResponse);
+      return true;
+
     case "PING":
       sendResponse({ success: true, timestamp: Date.now() });
       break;
@@ -849,4 +853,31 @@ async function executeScriptInTab(tabId, script) {
       }
     );
   });
+}
+
+async function handleCopyToClipboard(message, sendResponse) {
+  try {
+    const { data } = message;
+
+    if (!data) {
+      sendResponse({ success: false, error: "No data provided" });
+      return;
+    }
+
+    // Convert data URL to blob (CSP-safe)
+    const blob = await dataURLtoBlob(data);
+
+    // Copy to clipboard using Clipboard API (works in service workers)
+    const clipboardItem = new ClipboardItem({
+      [blob.type]: blob,
+    });
+
+    await navigator.clipboard.write([clipboardItem]);
+
+    console.log("✅ Screenshot copied to clipboard");
+    sendResponse({ success: true });
+  } catch (error) {
+    console.error("❌ Failed to copy to clipboard:", error);
+    sendResponse({ success: false, error: error.message });
+  }
 }

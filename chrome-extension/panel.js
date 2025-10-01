@@ -129,7 +129,7 @@ function updateUIFromSettings() {
 
   // Initialize screenshot location display
   if (elements.screenshotPathDisplay) {
-    elements.screenshotPathDisplay.innerHTML = `📥&nbsp;&nbsp;~/Downloads/screenshots/`;
+    elements.screenshotPathDisplay.innerHTML = `📥&nbsp;&nbsp;Chrome Downloads Folder`;
   }
 
   console.log("🎨 UI updated from settings");
@@ -484,9 +484,29 @@ async function captureScreenshot() {
         result.path || "~/Downloads/screenshots/"
       );
 
-      // Copy to clipboard if requested
-      if (settings.addToClipboard) {
-        await copyScreenshotToClipboard(result.data);
+      // Copy to clipboard if requested - handled by background.js
+      if (settings.addToClipboard && result.data) {
+        chrome.runtime.sendMessage(
+          {
+            type: "COPY_TO_CLIPBOARD",
+            data: result.data,
+          },
+          (response) => {
+            if (response && response.success) {
+              console.log("[Screenshot] Copied to clipboard");
+              addLogEntry("info", "Screenshot copied to clipboard");
+            } else {
+              console.error(
+                "[Screenshot] Clipboard copy failed:",
+                response?.error
+              );
+              addLogEntry(
+                "error",
+                `Clipboard copy failed: ${response?.error || "Unknown error"}`
+              );
+            }
+          }
+        );
       }
 
       elements.screenshotBtn.textContent = "✅ Captured!";
@@ -517,32 +537,14 @@ async function changeScreenshotFolder() {
 
   addLogEntry(
     "info",
-    "Folder selection feature coming soon - screenshots currently save to ~/Downloads/screenshots/"
+    "Folder selection coming soon - screenshots currently save to Chrome Downloads Folder"
   );
 
   // TODO: Implement custom folder selection using Chrome Downloads API shelf
   // This will allow users to change the default Downloads/screenshots location
 }
 
-async function copyScreenshotToClipboard(dataUrl) {
-  try {
-    // Convert data URL to blob
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
-
-    // Copy to clipboard using modern Clipboard API
-    const clipboardItem = new ClipboardItem({
-      [blob.type]: blob,
-    });
-
-    await navigator.clipboard.write([clipboardItem]);
-    addLogEntry("info", "Screenshot copied to clipboard");
-    console.log("✅ Screenshot copied to clipboard");
-  } catch (error) {
-    console.error("❌ Failed to copy to clipboard:", error);
-    addLogEntry("error", `Failed to copy to clipboard: ${error.message}`);
-  }
-}
+// Clipboard functionality handled by background.js (service worker context has proper permissions)
 
 // Removed old functions - replaced with File System Access API approach
 

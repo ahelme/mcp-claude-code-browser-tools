@@ -12,7 +12,8 @@
     "tabCapture",
     "windows",
     "scripting",
-    "downloads"
+    "downloads",
+    "clipboardWrite"
   ],
   "host_permissions": ["<all_urls>"],
   "background": {
