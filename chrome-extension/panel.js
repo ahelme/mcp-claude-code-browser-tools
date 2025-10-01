@@ -24,6 +24,7 @@ let settings = {
   serverHost: "localhost",
   serverPort: 3024, // Updated to MCP port
   autoPaste: false,
+  addToClipboard: false,
 };
 
 let wsManager = null;
@@ -31,6 +32,9 @@ let isConnected = false;
 let isDiscoveryInProgress = false;
 let discoveryController = null;
 let navigationHandler = null;
+
+// Directory picker state (not serializable, must be requested each session)
+// Removed customDirectoryHandle - using lastScreenshotHandle instead (File System Access API)
 
 // DOM elements (will be initialized when DOM loads)
 let elements = {};
@@ -59,7 +63,8 @@ function initializeDOM() {
     scanStatus: document.getElementById("scan-status"),
     scanIndicator: document.getElementById("scan-indicator"),
     scanText: document.getElementById("scan-text"),
-    screenshotPath: document.getElementById("screenshot-path"),
+    screenshotPathDisplay: document.getElementById("screenshot-path-display"),
+    addToClipboardCb: document.getElementById("add-to-clipboard-cb"),
     autoPasteCb: document.getElementById("auto-paste-cb"),
 
     // Code & Content panel
@@ -71,6 +76,7 @@ function initializeDOM() {
     selectorInput: document.getElementById("selector-input"),
     selectBtn: document.getElementById("select-btn"),
     screenshotBtn: document.getElementById("screenshot-btn"),
+    saveAsBtn: document.getElementById("save-as-btn"),
 
     // Console & Status panel
     statusIndicator: document.getElementById("status-indicator"),
@@ -112,13 +118,19 @@ function updateUIFromSettings() {
   // Update all UI elements from settings
   elements.serverHost.value = settings.serverHost;
   elements.serverPort.value = settings.serverPort;
-  elements.screenshotPath.value = settings.screenshotPath;
+  // Screenshot path is now display-only, showing default Downloads/screenshots/
+  elements.addToClipboardCb.checked = settings.addToClipboard;
   elements.autoPasteCb.checked = settings.autoPaste;
   elements.logLimit.value = settings.logLimit;
   elements.queryLimit.value = settings.queryLimit;
   elements.showRequestHeaders.checked = settings.showRequestHeaders;
   elements.showResponseHeaders.checked = settings.showResponseHeaders;
   elements.verboseCb.checked = false; // Always start with verbose off
+
+  // Initialize screenshot location display
+  if (elements.screenshotPathDisplay) {
+    elements.screenshotPathDisplay.innerHTML = `📥&nbsp;&nbsp;~/Downloads/screenshots/`;
+  }
 
   console.log("🎨 UI updated from settings");
 }
@@ -166,7 +178,7 @@ function initializeNavigationHandler() {
     console.log("🧭 Navigation handler initialized");
   } else {
     console.warn(
-      "⚠️ NavigationHandler class not available - navigation functionality disabled",
+      "⚠️ NavigationHandler class not available - navigation functionality disabled"
     );
   }
 }
@@ -187,11 +199,13 @@ function setupEventListeners() {
 
   elements.testConnection.addEventListener("click", testConnection);
   elements.discoverServer.addEventListener("click", () =>
-    discoverServer(false),
+    discoverServer(false)
   );
 
-  elements.screenshotPath.addEventListener("change", (e) => {
-    settings.screenshotPath = e.target.value;
+  // Note: screenshotPathDisplay is read-only, no event listener needed
+
+  elements.addToClipboardCb.addEventListener("change", (e) => {
+    settings.addToClipboard = e.target.checked;
     saveSettings();
   });
 
@@ -202,6 +216,7 @@ function setupEventListeners() {
 
   // Code & Content panel events
   elements.screenshotBtn.addEventListener("click", captureScreenshot);
+  elements.saveAsBtn.addEventListener("click", changeScreenshotFolder);
   elements.evaluateBtn.addEventListener("click", evaluateJavaScript);
   elements.auditBtn.addEventListener("click", runAudit);
   elements.getContentBtn.addEventListener("click", getPageContent);
@@ -247,7 +262,9 @@ function updateConnectionStatus(connected, message) {
   elements.statusText.textContent = message;
 
   console.log(
-    `🔌 Connection status: ${connected ? "Connected" : "Disconnected"} - ${message}`,
+    `🔌 Connection status: ${
+      connected ? "Connected" : "Disconnected"
+    } - ${message}`
   );
 }
 
@@ -267,13 +284,13 @@ async function testConnection() {
   try {
     // Test HTTP health endpoint first
     console.log(
-      `🔍 Testing HTTP connection to ${settings.serverHost}:${settings.serverPort}...`,
+      `🔍 Testing HTTP connection to ${settings.serverHost}:${settings.serverPort}...`
     );
     const response = await fetch(
       `http://${settings.serverHost}:${settings.serverPort}/health`,
       {
         signal: AbortSignal.timeout(5000),
-      },
+      }
     );
 
     if (response.ok) {
@@ -284,18 +301,18 @@ async function testConnection() {
       console.log(`🔌 Testing WebSocket connection...`);
       const wsTest = await testWebSocketConnection(
         settings.serverHost,
-        settings.serverPort,
+        settings.serverPort
       );
 
       if (wsTest) {
         console.log(`✅ WebSocket connection test successful`);
         updateScanStatus(
           "connected",
-          `Connected to ${data.status || "server"}`,
+          `Connected to ${data.status || "server"}`
         );
         updateConnectionStatus(
           true,
-          `HTTP & WebSocket connected at ${settings.serverHost}:${settings.serverPort}`,
+          `HTTP & WebSocket connected at ${settings.serverHost}:${settings.serverPort}`
         );
 
         // Force WebSocket reconnection to ensure proper connection
@@ -308,20 +325,24 @@ async function testConnection() {
         updateScanStatus("failed", "HTTP OK, WebSocket failed");
         updateConnectionStatus(
           false,
-          `HTTP server found but WebSocket connection failed at ${settings.serverHost}:${settings.serverPort}`,
+          `HTTP server found but WebSocket connection failed at ${settings.serverHost}:${settings.serverPort}`
         );
       }
     } else {
       updateScanStatus("failed", `Server error: ${response.status}`);
       updateConnectionStatus(
         false,
-        `Server returned error: ${response.status}`,
+        `Server returned error: ${response.status}`
       );
     }
   } catch (error) {
-    console.error(`❌ Connection test failed:`, error);
-    updateScanStatus("failed", `Connection failed: ${error.message}`);
-    updateConnectionStatus(false, `Connection failed: ${error.message}`);
+    const errorMsg =
+      error.name === "AbortError"
+        ? `Connection timeout after 5000ms`
+        : `${error.name}: ${error.message}`;
+    console.error(`❌ Connection test failed:`, errorMsg);
+    updateScanStatus("failed", `Connection failed: ${errorMsg}`);
+    updateConnectionStatus(false, `Connection failed: ${errorMsg}`);
   }
 }
 
@@ -363,13 +384,13 @@ async function discoverServer(quietMode = false) {
 
             // Now test WebSocket connection
             console.log(
-              `🔌 Testing WebSocket connection to ${host}:${port}...`,
+              `🔌 Testing WebSocket connection to ${host}:${port}...`
             );
             const wsConnectTest = await testWebSocketConnection(host, port);
 
             if (wsConnectTest) {
               console.log(
-                `✅ WebSocket connection successful at ${host}:${port}`,
+                `✅ WebSocket connection successful at ${host}:${port}`
               );
 
               // Update settings
@@ -387,7 +408,7 @@ async function discoverServer(quietMode = false) {
               return true;
             } else {
               console.log(
-                `⚠️ HTTP found but WebSocket failed at ${host}:${port}`,
+                `⚠️ HTTP found but WebSocket failed at ${host}:${port}`
               );
             }
           }
@@ -442,39 +463,88 @@ function testWebSocketConnection(host, port) {
 }
 
 // Tool functions (placeholders for now - will be implemented by other agents)
-function captureScreenshot() {
-  if (!isConnected) {
-    addLogEntry("error", "Not connected to server");
+async function captureScreenshot() {
+  if (!window.screenshotManager) {
+    addLogEntry("error", "Screenshot manager not available");
     return;
   }
 
   elements.screenshotBtn.textContent = "Capturing...";
 
-  // Send screenshot request via background script
-  chrome.runtime.sendMessage(
-    {
-      type: "CAPTURE_SCREENSHOT",
-      tabId: chrome.devtools.inspectedWindow.tabId,
-      screenshotPath: settings.screenshotPath,
-    },
-    (response) => {
-      if (response && response.success) {
-        addLogEntry("info", `Screenshot captured: ${response.filename}`);
-        elements.screenshotBtn.textContent = "✅ Captured!";
-      } else {
-        addLogEntry(
-          "error",
-          `Screenshot failed: ${response?.error || "Unknown error"}`,
-        );
-        elements.screenshotBtn.textContent = "❌ Failed";
+  try {
+    // Use screenshot manager - automatically saves to ~/Downloads/screenshots/
+    const result = await window.screenshotManager.captureScreenshot({
+      fullPage: false,
+      source: "panel",
+    });
+
+    if (result.success) {
+      console.log(
+        "[Screenshot] Saved to:",
+        result.path || "~/Downloads/screenshots/"
+      );
+
+      // Copy to clipboard if requested
+      if (settings.addToClipboard) {
+        await copyScreenshotToClipboard(result.data);
       }
 
-      setTimeout(() => {
-        elements.screenshotBtn.textContent = "Take screenshot 📸";
-      }, 2000);
-    },
-  );
+      elements.screenshotBtn.textContent = "✅ Captured!";
+    } else {
+      console.error("[Screenshot] Capture failed:", result.error);
+      addLogEntry(
+        "error",
+        `Screenshot failed: ${result.error || "Unknown error"}`
+      );
+      elements.screenshotBtn.textContent = "❌ Failed";
+    }
+  } catch (error) {
+    console.error("[Screenshot] Error:", error);
+    addLogEntry("error", `Screenshot error: ${error.message}`);
+    elements.screenshotBtn.textContent = "❌ Failed";
+  }
+
+  setTimeout(() => {
+    elements.screenshotBtn.textContent = "Take screenshot 📸";
+  }, 2000);
 }
+
+// Screenshot save functionality - uses Chrome Downloads API via background.js
+// Screenshots automatically save to ~/Downloads/screenshots/ folder
+
+async function changeScreenshotFolder() {
+  console.log("[Screenshot] Opening folder selection dialog...");
+
+  addLogEntry(
+    "info",
+    "Folder selection feature coming soon - screenshots currently save to ~/Downloads/screenshots/"
+  );
+
+  // TODO: Implement custom folder selection using Chrome Downloads API shelf
+  // This will allow users to change the default Downloads/screenshots location
+}
+
+async function copyScreenshotToClipboard(dataUrl) {
+  try {
+    // Convert data URL to blob
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+
+    // Copy to clipboard using modern Clipboard API
+    const clipboardItem = new ClipboardItem({
+      [blob.type]: blob,
+    });
+
+    await navigator.clipboard.write([clipboardItem]);
+    addLogEntry("info", "Screenshot copied to clipboard");
+    console.log("✅ Screenshot copied to clipboard");
+  } catch (error) {
+    console.error("❌ Failed to copy to clipboard:", error);
+    addLogEntry("error", `Failed to copy to clipboard: ${error.message}`);
+  }
+}
+
+// Removed old functions - replaced with File System Access API approach
 
 function evaluateJavaScript() {
   const script = elements.jsInput.value.trim();
@@ -494,7 +564,7 @@ function evaluateJavaScript() {
   // For now, just show a placeholder
   addLogEntry(
     "info",
-    "JavaScript evaluation tool will be implemented by Agent B",
+    "JavaScript evaluation tool will be implemented by Agent B"
   );
 }
 
@@ -580,7 +650,9 @@ function handleWebSocketMessage(message) {
               wsManager.send(enhancedResponse);
               addLogEntry(
                 "info",
-                `Navigation response sent for request ${requestId}: ${response.success ? "SUCCESS" : "FAILED"}`,
+                `Navigation response sent for request ${requestId}: ${
+                  response.success ? "SUCCESS" : "FAILED"
+                }`
               );
             } else {
               throw new Error("WebSocket not available for response");
@@ -589,7 +661,7 @@ function handleWebSocketMessage(message) {
             console.error("❌ Failed to send navigation response:", error);
             addLogEntry(
               "error",
-              `Failed to send response for request ${requestId}: ${error.message}`,
+              `Failed to send response for request ${requestId}: ${error.message}`
             );
 
             // Try to recover WebSocket connection
@@ -630,6 +702,16 @@ function handleWebSocketMessage(message) {
     case "wait":
       // Wait request from MCP server
       handleInteractionRequest("BROWSER_WAIT", message, "waitResult");
+      break;
+
+    case "screenshot":
+    case "take-screenshot":
+      // Screenshot request from MCP server - delegate to screenshot manager
+      if (window.screenshotManager) {
+        window.screenshotManager.handleWebSocketMessage(message);
+      } else {
+        addLogEntry("error", "Screenshot manager not available");
+      }
       break;
 
     case "screenshot-data":
@@ -730,7 +812,7 @@ function handleInteractionRequest(messageType, message, responseType) {
           });
         }
       }
-    },
+    }
   );
 }
 
@@ -744,7 +826,7 @@ function runConnectionDiagnostics() {
   console.log(`   Host: ${settings.serverHost}`);
   console.log(`   Port: ${settings.serverPort}`);
   console.log(
-    `   Expected URL: ws://${settings.serverHost}:${settings.serverPort}/extension-ws`,
+    `   Expected URL: ws://${settings.serverHost}:${settings.serverPort}/extension-ws`
   );
 
   // 2. Check WebSocket Manager state
@@ -754,7 +836,7 @@ function runConnectionDiagnostics() {
     console.log(`   Connected: ${state.isConnected}`);
     console.log(`   Reconnect attempts: ${state.reconnectAttempts}`);
     console.log(
-      `   Ready state: ${state.readyState} (0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)`,
+      `   Ready state: ${state.readyState} (0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)`
     );
     console.log(`   Queued messages: ${state.queuedMessages}`);
   } else {
@@ -784,7 +866,7 @@ function runConnectionDiagnostics() {
   console.log("=".repeat(50));
   addLogEntry(
     "info",
-    "Connection diagnostics completed - check console for details",
+    "Connection diagnostics completed - check console for details"
   );
 }
 

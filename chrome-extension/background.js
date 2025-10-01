@@ -11,6 +11,43 @@
 // Track URLs for each tab
 const tabUrls = new Map();
 
+// Helper function: Convert data URL to Blob (CSP-safe, no fetch required)
+async function dataURLtoBlob(dataURL) {
+  return new Promise((resolve, reject) => {
+    try {
+      // Parse data URL: data:image/png;base64,iVBORw0...
+      const parts = dataURL.split(",");
+      if (parts.length !== 2) {
+        reject(new Error("Invalid data URL format"));
+        return;
+      }
+
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      if (!mimeMatch) {
+        reject(new Error("Could not extract MIME type from data URL"));
+        return;
+      }
+
+      const mime = mimeMatch[1];
+      const base64Data = parts[1];
+
+      // Decode base64 to binary
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Create blob
+      const blob = new Blob([bytes], { type: mime });
+      resolve(blob);
+    } catch (error) {
+      reject(new Error(`Failed to convert data URL to blob: ${error.message}`));
+    }
+  });
+}
+
 // Extension lifecycle
 chrome.runtime.onInstalled.addListener((details) => {
   console.log("Browser Tools MCP Extension installed/updated", details);
@@ -276,51 +313,106 @@ async function handleCaptureScreenshot(message, sendResponse) {
       return;
     }
 
-    // Get server settings
-    const result = await chrome.storage.local.get(["browserConnectorSettings"]);
-    const settings = result.browserConnectorSettings || {
-      serverHost: "localhost",
-      serverPort: 3024,
-    };
+    // Check if we should send to HTTP bridge (MCP flow) or return directly (UI flow)
+    if (message.sendToHttpBridge) {
+      // MCP flow: Send to HTTP bridge for server-side processing
+      const result = await chrome.storage.local.get([
+        "browserConnectorSettings",
+      ]);
+      const settings = result.browserConnectorSettings || {
+        serverHost: "localhost",
+        serverPort: 3024,
+      };
 
-    // Send to HTTP bridge
-    const response = await fetch(
-      `http://${settings.serverHost}:${settings.serverPort}/capture-screenshot`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: screenshotData,
-          filename: filename,
-          selector: selector,
-          fullPage: fullPage,
+      const response = await fetch(
+        `http://${settings.serverHost}:${settings.serverPort}/capture-screenshot`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            data: screenshotData,
+            filename: filename,
+            selector: selector,
+            fullPage: fullPage,
+            format: format,
+            quality: quality,
+            tabId: tabId,
+            title: tab.title,
+          }),
+          signal: AbortSignal.timeout(10000),
+        }
+      );
+
+      const result_data = await response.json();
+
+      if (result_data.success) {
+        console.log("Screenshot saved successfully:", result_data.path);
+        sendResponse({
+          success: true,
+          path: result_data.path,
+          filename: result_data.filename,
+          title: tab.title || "Current Tab",
           format: format,
           quality: quality,
-          tabId: tabId,
-          title: tab.title,
-        }),
+        });
+      } else {
+        console.error("Screenshot server error:", result_data.error);
+        sendResponse({ success: false, error: result_data.error });
       }
-    );
-
-    const result_data = await response.json();
-
-    if (result_data.success) {
-      console.log("Screenshot saved successfully:", result_data.path);
-      sendResponse({
-        success: true,
-        path: result_data.path,
-        filename: result_data.filename,
-        title: tab.title || "Current Tab",
-        format: format,
-        quality: quality,
-      });
     } else {
-      console.error("Screenshot server error:", result_data.error);
-      sendResponse({ success: false, error: result_data.error });
+      // UI flow: Save screenshot to disk using Chrome Downloads API
+      console.log(
+        "Screenshot captured via UI flow - saving to disk:",
+        filename
+      );
+
+      try {
+        // Use Chrome Downloads API directly with data URL (no blob conversion needed in service worker)
+        const downloadId = await chrome.downloads.download({
+          url: screenshotData, // Data URLs work directly in chrome.downloads.download
+          filename: `screenshots/${filename}`, // Save in screenshots subfolder
+          saveAs: false, // Use default Downloads location without prompting
+        });
+
+        console.log(
+          `✅ Screenshot saved to Downloads/screenshots/${filename} (downloadId: ${downloadId})`
+        );
+
+        sendResponse({
+          success: true,
+          data: screenshotData,
+          filename: filename,
+          path: `~/Downloads/screenshots/${filename}`,
+          downloadId: downloadId,
+          title: tab.title || "Current Tab",
+          format: format,
+          quality: quality,
+          savedToDisk: true,
+        });
+      } catch (downloadError) {
+        console.error("Error saving screenshot to disk:", downloadError);
+
+        // Fallback: Return data without saving (existing behavior)
+        console.log("Falling back to data-only response");
+        sendResponse({
+          success: true,
+          data: screenshotData,
+          filename: filename,
+          title: tab.title || "Current Tab",
+          format: format,
+          quality: quality,
+          savedToDisk: false,
+          fallbackReason: downloadError.message,
+        });
+      }
     }
   } catch (error) {
-    console.error("Error capturing screenshot:", error);
-    sendResponse({ success: false, error: error.message });
+    const errorMsg =
+      error.name === "AbortError"
+        ? `Screenshot timeout after 10000ms`
+        : `${error.name}: ${error.message}`;
+    console.error("Error capturing screenshot:", errorMsg);
+    sendResponse({ success: false, error: errorMsg });
   }
 }
 
