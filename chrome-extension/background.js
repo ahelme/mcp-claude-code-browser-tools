@@ -880,47 +880,44 @@ async function handleCopyToClipboard(message, sendResponse) {
       target: { tabId: tabId },
       func: async (dataUrl) => {
         try {
-          // Create an image element and copy it to clipboard
-          const img = new Image();
-          img.src = dataUrl;
+          // CSP-safe blob conversion (no fetch)
+          function dataURLtoBlob(dataURL) {
+            const parts = dataURL.split(",");
+            const mime = parts[0].match(/:(.*?);/)[1];
+            const binaryString = atob(parts[1]);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            return new Blob([bytes], { type: mime });
+          }
 
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-          });
+          const blob = dataURLtoBlob(dataUrl);
 
-          // Create canvas to convert image
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0);
-
-          // Convert canvas to blob
-          const blob = await new Promise((resolve) => {
-            canvas.toBlob(resolve, "image/png");
-          });
-
-          // Try modern Clipboard API first
+          // Try ClipboardItem with proper PNG MIME type
           try {
             const clipboardItem = new ClipboardItem({
               "image/png": blob,
             });
             await navigator.clipboard.write([clipboardItem]);
-            return { success: true, method: "ClipboardItem" };
+            return {
+              success: true,
+              method: "ClipboardItem API",
+              size: blob.size,
+            };
           } catch (clipboardError) {
-            // Fallback: try with canvas.toDataURL and execCommand
-            const dataUrl = canvas.toDataURL("image/png");
+            // Fallback: Use contenteditable + execCommand with img element
+            const img = document.createElement("img");
+            img.src = dataUrl;
 
-            // Create a temporary contenteditable element
             const div = document.createElement("div");
             div.contentEditable = true;
-            div.innerHTML = `<img src="${dataUrl}">`;
+            div.appendChild(img);
             document.body.appendChild(div);
 
-            // Select and copy
+            // Select the image
             const range = document.createRange();
-            range.selectNodeContents(div);
+            range.selectNode(img);
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(range);
@@ -929,9 +926,12 @@ async function handleCopyToClipboard(message, sendResponse) {
             document.body.removeChild(div);
 
             if (copied) {
-              return { success: true, method: "execCommand" };
+              return { success: true, method: "execCommand fallback" };
             } else {
-              throw new Error("execCommand copy failed");
+              return {
+                success: false,
+                error: "Both ClipboardItem and execCommand failed",
+              };
             }
           }
         } catch (error) {
@@ -945,8 +945,12 @@ async function handleCopyToClipboard(message, sendResponse) {
     if (results && results[0] && results[0].result) {
       const result = results[0].result;
       if (result.success) {
-        console.log("✅ Screenshot copied to clipboard");
-        sendResponse({ success: true });
+        console.log(
+          `✅ Screenshot copied to clipboard using: ${result.method}${
+            result.size ? ` (${result.size} bytes)` : ""
+          }`
+        );
+        sendResponse({ success: true, method: result.method });
       } else {
         console.error(
           "❌ Clipboard copy failed in page context:",

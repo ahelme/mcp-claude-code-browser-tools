@@ -216,7 +216,7 @@ function setupEventListeners() {
 
   // Code & Content panel events
   elements.screenshotBtn.addEventListener("click", captureScreenshot);
-  elements.saveAsBtn.addEventListener("click", changeScreenshotFolder);
+  // saveAsBtn removed from UI - no longer needed
   elements.evaluateBtn.addEventListener("click", evaluateJavaScript);
   elements.auditBtn.addEventListener("click", runAudit);
   elements.getContentBtn.addEventListener("click", getPageContent);
