@@ -864,18 +864,103 @@ async function handleCopyToClipboard(message, sendResponse) {
       return;
     }
 
-    // Convert data URL to blob (CSP-safe)
-    const blob = await dataURLtoBlob(data);
+    // ClipboardItem is not available in service workers
+    // Use chrome.scripting to inject clipboard code into the active tab instead
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // Copy to clipboard using Clipboard API (works in service workers)
-    const clipboardItem = new ClipboardItem({
-      [blob.type]: blob,
+    if (!tabs || tabs.length === 0) {
+      sendResponse({ success: false, error: "No active tab found" });
+      return;
+    }
+
+    const tabId = tabs[0].id;
+
+    // Inject script to copy to clipboard in page context
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      func: async (dataUrl) => {
+        try {
+          // Create an image element and copy it to clipboard
+          const img = new Image();
+          img.src = dataUrl;
+
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+          });
+
+          // Create canvas to convert image
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+
+          // Convert canvas to blob
+          const blob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, "image/png");
+          });
+
+          // Try modern Clipboard API first
+          try {
+            const clipboardItem = new ClipboardItem({
+              "image/png": blob,
+            });
+            await navigator.clipboard.write([clipboardItem]);
+            return { success: true, method: "ClipboardItem" };
+          } catch (clipboardError) {
+            // Fallback: try with canvas.toDataURL and execCommand
+            const dataUrl = canvas.toDataURL("image/png");
+
+            // Create a temporary contenteditable element
+            const div = document.createElement("div");
+            div.contentEditable = true;
+            div.innerHTML = `<img src="${dataUrl}">`;
+            document.body.appendChild(div);
+
+            // Select and copy
+            const range = document.createRange();
+            range.selectNodeContents(div);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            const copied = document.execCommand("copy");
+            document.body.removeChild(div);
+
+            if (copied) {
+              return { success: true, method: "execCommand" };
+            } else {
+              throw new Error("execCommand copy failed");
+            }
+          }
+        } catch (error) {
+          return { success: false, error: error.message };
+        }
+      },
+      args: [data],
     });
 
-    await navigator.clipboard.write([clipboardItem]);
-
-    console.log("✅ Screenshot copied to clipboard");
-    sendResponse({ success: true });
+    // Check the result from the injected script
+    if (results && results[0] && results[0].result) {
+      const result = results[0].result;
+      if (result.success) {
+        console.log("✅ Screenshot copied to clipboard");
+        sendResponse({ success: true });
+      } else {
+        console.error(
+          "❌ Clipboard copy failed in page context:",
+          result.error
+        );
+        sendResponse({ success: false, error: result.error });
+      }
+    } else {
+      console.error("❌ No result from injected script");
+      sendResponse({
+        success: false,
+        error: "No result from clipboard script",
+      });
+    }
   } catch (error) {
     console.error("❌ Failed to copy to clipboard:", error);
     sendResponse({ success: false, error: error.message });

@@ -814,9 +814,7 @@ class ScreenshotManager {
         // Show disk saving status
         if (diskStatus && diskStatus.savedToDisk) {
           buttonText = "💾 Saved!";
-          logMessage = `Screenshot saved to disk: ${
-            diskStatus.path || `Downloads/screenshots/${message}`
-          }`;
+          logMessage = `Screenshot saved to disk: ${message}`;
         } else if (diskStatus && diskStatus.savedToDisk === false) {
           buttonText = "⚠️ Captured";
           logMessage = `Screenshot captured but not saved to disk: ${
