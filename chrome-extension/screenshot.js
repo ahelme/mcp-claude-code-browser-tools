@@ -54,6 +54,7 @@ class ScreenshotManager {
     this.retryAttempts = 0;
     this.maxRetries = 2; // Maximum retry attempts for transient failures
     this.screenshotHistory = new Map();
+    this.sessionCode = this.generateSessionCode(); // Randomized session code
 
     // Thread-safe configuration to prevent race conditions
     const ThreadSafeConfigClass =
@@ -110,12 +111,13 @@ class ScreenshotManager {
       };
     }
 
-    // Listener Pool Management for better event handling
-    this.listenerPool = new Map(); // Store active listeners by ID
-    this.listenerIdCounter = 0; // Unique ID generator
-    this.maxConcurrentListeners = 5; // Prevent listener accumulation
-    this.listenerCleanupInterval = null;
-    this.lastListenerCleanup = Date.now();
+    // Listener Pool Management for better event handling (using shared utility)
+    this.listenerPool = new ListenerPoolManager({
+      max: 5,
+      maxAge: 300000, // 5 minutes
+      minInactiveTime: 60000, // 1 minute
+      debugPrefix: "[Screenshot]",
+    });
 
     // Bind methods to preserve context
     this.captureScreenshot = this.captureScreenshot.bind(this);
@@ -123,14 +125,11 @@ class ScreenshotManager {
     this.captureViaWebSocket = this.captureViaWebSocket.bind(this);
     this.generateSmartFilename = this.generateSmartFilename.bind(this);
     this.updateUI = this.updateUI.bind(this);
-    this.createManagedListener = this.createManagedListener.bind(this);
-    this.removeListener = this.removeListener.bind(this);
-    this.cleanupStaleListeners = this.cleanupStaleListeners.bind(this);
 
     this.initializeEventListeners();
 
-    // Start listener pool management
-    this.startListenerPoolCleanup();
+    // Start listener pool management (using shared utility)
+    this.listenerPool.startListenerPoolCleanup();
 
     console.log(
       "📸 Screenshot Manager initialized with enterprise-grade features"
@@ -698,34 +697,73 @@ class ScreenshotManager {
   }
 
   /**
+   * Generate randomized session code (10 characters: alphanumeric)
+   * Format: xPqj3jTa2c
+   */
+  generateSessionCode() {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let code = "";
+    for (let i = 0; i < 10; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  /**
+   * Trim page name to 4 letters (capitalize first letter)
+   * Examples: "Google" → "Goog", "github" → "Gith", "API" → "Api"
+   */
+  trimPageName(title) {
+    if (!title || title.length === 0) return "Page";
+
+    // Remove special characters and spaces, take first word
+    const cleaned = title.replace(/[^a-zA-Z0-9\s]/g, "").split(/\s+/)[0];
+    if (!cleaned || cleaned.length === 0) return "Page";
+
+    // Take first 4 characters and capitalize first letter
+    const trimmed = cleaned.substring(0, 4);
+    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+  }
+
+  /**
    * Generate intelligent filename based on page content
+   * Format: Goog_xPqj3jTa2c_25_10_02_0001.png
+   * - 4-letter page name
+   * - 10-char session code
+   * - Short date (YY_MM_DD)
+   * - 4-digit sequence number
    */
   async generateSmartFilename(selector, fullPage, format = "png") {
     try {
       // Get current page info
       const pageInfo = await this.getPageInfo();
 
-      // Generate base name from page title
-      let baseName = this.sanitizeFilename(pageInfo.title) || "screenshot";
+      // Generate 4-letter page name
+      let baseName = this.trimPageName(pageInfo.title);
 
       // Add selector info if capturing specific element
       if (selector) {
         const selectorName = this.sanitizeFilename(
           selector.replace(/[#.]/g, "")
-        );
+        ).substring(0, 4);
         baseName += `_${selectorName}`;
       }
 
       // Add fullPage indicator
       if (fullPage) {
-        baseName += "_fullpage";
+        baseName += "_full";
       }
 
-      // Add timestamp
-      const timestamp = new Date()
-        .toISOString()
-        .slice(0, 19)
-        .replace(/[:.]/g, "-");
+      // Add session code
+      baseName += `_${this.sessionCode}`;
+
+      // Add short date (YY_MM_DD)
+      const now = new Date();
+      const year = String(now.getFullYear()).slice(-2);
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const shortDate = `${year}_${month}_${day}`;
 
       // Generate sequential number for this session
       const sessionCount = this.getSessionScreenshotCount(baseName);
@@ -733,7 +771,7 @@ class ScreenshotManager {
 
       // Use correct file extension based on format
       const extension = format === "jpeg" ? "jpg" : format;
-      return `${baseName}_${timestamp}_${paddedCount}.${extension}`;
+      return `${baseName}_${shortDate}_${paddedCount}.${extension}`;
     } catch (error) {
       console.warn(
         "⚠️ Could not generate smart filename, using fallback:",
@@ -852,35 +890,53 @@ class ScreenshotManager {
 
   /**
    * Update screenshot preview in UI
+   * Shows NEXT predicted filename only
    */
-  updateScreenshotPreview(filename) {
+  async updateScreenshotPreview(filename) {
     const previewDiv = document.querySelector(".screenshot-preview");
     if (!previewDiv) return;
 
-    // Update the preview with the latest filename
-    const lastSpan = previewDiv.querySelector(".screenshot-filename");
-    if (lastSpan) {
-      lastSpan.textContent = filename;
-    }
-
-    // Generate next predicted filename
-    const nextFilename = this.predictNextFilename();
-    const firstDiv = previewDiv.querySelector("div");
-    if (firstDiv) {
-      firstDiv.textContent = `Next: ${nextFilename}`;
+    // Generate next predicted filename (after current screenshot was taken)
+    const nextFilename = await this.predictNextFilename();
+    const filenameSpan = previewDiv.querySelector(".screenshot-filename");
+    if (filenameSpan) {
+      filenameSpan.textContent = nextFilename;
     }
   }
 
   /**
    * Predict the next screenshot filename for UI preview
+   * Uses actual page title and smart naming logic to show accurate preview
+   * Format: Goog_xPqj3jTa2c_25_10_02_0001.png
    */
-  predictNextFilename() {
+  async predictNextFilename() {
     try {
-      // Simple prediction based on current page
-      const timestamp = new Date().toISOString().slice(0, 10);
-      return `page-screenshot_${timestamp}_0001.png`;
+      // Get actual page info (same logic as generateSmartFilename)
+      const pageInfo = await this.getPageInfo();
+
+      // Generate 4-letter page name
+      const baseName = this.trimPageName(pageInfo.title);
+
+      // Add session code
+      const baseWithSession = `${baseName}_${this.sessionCode}`;
+
+      // Add short date (YY_MM_DD)
+      const now = new Date();
+      const year = String(now.getFullYear()).slice(-2);
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const shortDate = `${year}_${month}_${day}`;
+
+      // Get NEXT count (current + 1 since we're predicting)
+      const currentCount =
+        this.screenshotHistory.get(`session_${baseWithSession}`) || 0;
+      const nextCount = currentCount + 1;
+      const paddedCount = String(nextCount).padStart(4, "0");
+
+      return `${baseWithSession}_${shortDate}_${paddedCount}.png`;
     } catch (error) {
-      return "screenshot_next.png";
+      console.warn("⚠️ Could not predict next filename:", error);
+      return "Page_session_25_10_02_0001.png";
     }
   }
 
@@ -1034,237 +1090,8 @@ class ScreenshotManager {
     return Array.from(this.screenshotHistory.entries());
   }
 
-  /**
-   * Create a managed listener with automatic cleanup and pooling
-   *
-   * This method creates a listener that is automatically tracked in the listener pool
-   * with usage analytics and automatic cleanup. Prevents memory leaks by enforcing
-   * pool size limits and removing stale listeners.
-   *
-   * @param {Function} listenerFunction - The listener callback function to manage
-   * @param {string} [description="screenshot"] - Debug description for the listener
-   * @returns {Object} Listener management object with the following properties:
-   *   - id: {string} Unique listener identifier
-   *   - listener: {Function} Wrapped listener function with usage tracking
-   *   - remove: {Function} Method to remove listener from pool and Chrome API
-   *   - isActive: {Function} Method to check if listener is still active
-   *
-   * @example
-   * const managedListener = manager.createManagedListener(
-   *   (message) => console.log('Screenshot message received'),
-   *   'screenshot-websocket-listener'
-   * );
-   *
-   * window.wsManager.on('message', managedListener.listener);
-   *
-   * // Clean up when done
-   * managedListener.remove();
-   *
-   * @throws {Error} When listener pool is at capacity and cleanup fails
-   * @since 1.2.0
-   */
-  createManagedListener(listenerFunction, description = "screenshot") {
-    // Check if we're approaching listener limit
-    if (this.listenerPool.size >= this.maxConcurrentListeners) {
-      console.warn(
-        "⚠️ Listener pool approaching maximum capacity - cleaning up stale listeners"
-      );
-      this.cleanupStaleListeners();
-    }
-
-    const listenerId = `listener_${++this.listenerIdCounter}_${Date.now()}`;
-    const listenerData = {
-      id: listenerId,
-      function: listenerFunction,
-      description,
-      createdAt: Date.now(),
-      isActive: true,
-      usage: {
-        calls: 0,
-        lastUsed: Date.now(),
-      },
-    };
-
-    // Create wrapper function for tracking
-    const wrappedListener = (...args) => {
-      listenerData.usage.calls++;
-      listenerData.usage.lastUsed = Date.now();
-      return listenerFunction(...args);
-    };
-
-    // Store in pool
-    this.listenerPool.set(listenerId, listenerData);
-
-    console.log(
-      `🔧 Created managed screenshot listener: ${listenerId} (${description})`
-    );
-
-    return {
-      id: listenerId,
-      listener: wrappedListener,
-      remove: () => this.removeListener(listenerId),
-      isActive: () => this.listenerPool.has(listenerId),
-    };
-  }
-
-  /**
-   * Remove a listener from the pool and cleanup resources
-   *
-   * Safely removes a managed listener from both the internal pool and any associated
-   * Chrome APIs. This method handles cleanup of all associated resources and prevents memory leaks.
-   *
-   * @param {string} listenerId - Unique ID of listener to remove (from createManagedListener)
-   * @returns {boolean} True if listener was successfully removed, false if not found
-   *
-   * @example
-   * const success = manager.removeListener('listener_123_1234567890');
-   * if (success) {
-   *   console.log('Listener removed successfully');
-   * }
-   *
-   * @since 1.2.0
-   */
-  removeListener(listenerId) {
-    const listenerData = this.listenerPool.get(listenerId);
-    if (!listenerData) {
-      console.warn(
-        `⚠️ Attempted to remove non-existent screenshot listener: ${listenerId}`
-      );
-      return false;
-    }
-
-    try {
-      // Remove from pool
-      this.listenerPool.delete(listenerId);
-      console.log(`🗑️ Removed screenshot listener from pool: ${listenerId}`);
-
-      return true;
-    } catch (error) {
-      console.error(
-        `❌ Error removing screenshot listener ${listenerId}:`,
-        error.message
-      );
-      // Still remove from pool even if other cleanup failed
-      this.listenerPool.delete(listenerId);
-      return false;
-    }
-  }
-
-  /**
-   * Clean up stale listeners that are no longer needed
-   *
-   * Removes listeners from the pool based on age and usage patterns to prevent
-   * memory leaks. This method is called automatically by the dynamic cleanup system
-   * but can also be called manually for immediate cleanup.
-   *
-   * Cleanup criteria:
-   * - Listeners older than 5 minutes AND inactive for more than 1 minute
-   * - Listeners that have never been called and are older than 2 minutes
-   *
-   * @returns {number} Number of listeners cleaned up
-   * @since 1.2.0
-   */
-  cleanupStaleListeners() {
-    const now = Date.now();
-    const maxAge = 300000; // 5 minutes
-    const minInactivityTime = 60000; // 1 minute
-    let cleaned = 0;
-
-    console.log(
-      `🧹 Starting screenshot listener pool cleanup (${this.listenerPool.size} listeners)`
-    );
-
-    for (const [listenerId, listenerData] of this.listenerPool.entries()) {
-      const age = now - listenerData.createdAt;
-      const inactivityTime = now - listenerData.usage.lastUsed;
-
-      // Remove listeners that are:
-      // 1. Older than 5 minutes AND inactive for more than 1 minute
-      // 2. Have never been called and are older than 2 minutes
-      const isStale =
-        (age > maxAge && inactivityTime > minInactivityTime) ||
-        (listenerData.usage.calls === 0 && age > 120000);
-
-      if (isStale) {
-        console.log(
-          `🧹 Cleaning up stale screenshot listener: ${listenerId} (age: ${age}ms, inactive: ${inactivityTime}ms, calls: ${listenerData.usage.calls})`
-        );
-        this.removeListener(listenerId);
-        cleaned++;
-      }
-    }
-
-    if (cleaned > 0) {
-      console.log(
-        `🧹 Cleaned up ${cleaned} stale screenshot listeners. Pool size: ${this.listenerPool.size}`
-      );
-    }
-
-    this.lastListenerCleanup = now;
-    return cleaned;
-  }
-
-  /**
-   * Start listener pool cleanup with dynamic intervals
-   */
-  startListenerPoolCleanup() {
-    const scheduleNextCleanup = () => {
-      // Dynamic interval based on pool usage
-      const poolSize = this.listenerPool.size;
-      let interval;
-
-      if (poolSize === 0) {
-        interval = 120000; // 2 minutes when no listeners
-      } else if (poolSize < 3) {
-        interval = 60000; // 1 minute for light usage
-      } else if (poolSize < 5) {
-        interval = 30000; // 30 seconds for moderate usage
-      } else {
-        interval = 10000; // 10 seconds for heavy usage
-      }
-
-      this.listenerCleanupInterval = setTimeout(() => {
-        this.cleanupStaleListeners();
-        scheduleNextCleanup(); // Schedule next cleanup
-      }, interval);
-
-      console.log(
-        `🔄 Next screenshot listener cleanup in ${
-          interval / 1000
-        }s (${poolSize} listeners active)`
-      );
-    };
-
-    scheduleNextCleanup();
-  }
-
-  /**
-   * Get listener pool status for debugging
-   * @returns {Object} Pool status information
-   */
-  getListenerPoolStatus() {
-    const now = Date.now();
-    const listeners = Array.from(this.listenerPool.values()).map(
-      (listener) => ({
-        id: listener.id,
-        description: listener.description,
-        age: now - listener.createdAt,
-        calls: listener.usage.calls,
-        lastUsed: now - listener.usage.lastUsed,
-        isActive: listener.isActive,
-      })
-    );
-
-    return {
-      totalListeners: this.listenerPool.size,
-      maxListeners: this.maxConcurrentListeners,
-      utilizationPercent: Math.round(
-        (this.listenerPool.size / this.maxConcurrentListeners) * 100
-      ),
-      lastCleanup: now - this.lastListenerCleanup,
-      listeners,
-    };
-  }
+  // Listener pool methods now delegated to shared ListenerPoolManager
+  // All methods available via this.listenerPool (createManagedListener, removeListener, etc.)
 
   /**
    * Get current capture state
@@ -1274,8 +1101,8 @@ class ScreenshotManager {
     return {
       isCapturing: this.isCapturing,
       hasActiveController: this.currentCaptureController !== null,
-      activeListenerCount: this.listenerPool.size,
-      listenerPoolStatus: this.getListenerPoolStatus(),
+      activeListenerCount: this.listenerPool.listenerPool.size,
+      listenerPoolStatus: this.listenerPool.getListenerPoolStatus(),
     };
   }
 
@@ -1291,16 +1118,8 @@ class ScreenshotManager {
       this.currentCaptureController = null;
     }
 
-    // Clean up listener cleanup interval
-    if (this.listenerCleanupInterval) {
-      clearTimeout(this.listenerCleanupInterval);
-      this.listenerCleanupInterval = null;
-    }
-
-    // Remove all listeners from pool
-    for (const listenerId of this.listenerPool.keys()) {
-      this.removeListener(listenerId);
-    }
+    // Destroy listener pool (uses shared utility)
+    this.listenerPool.destroy();
 
     console.log("📸 ScreenshotManager destroyed and resources cleaned up");
   }

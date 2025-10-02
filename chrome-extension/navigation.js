@@ -82,12 +82,13 @@ class NavigationHandler {
       };
     }
 
-    // Listener Pool Management for better event handling
-    this.listenerPool = new Map(); // Store active listeners by ID
-    this.listenerIdCounter = 0; // Unique ID generator
-    this.maxConcurrentListeners = 5; // Prevent listener accumulation
-    this.listenerCleanupInterval = null;
-    this.lastListenerCleanup = Date.now();
+    // Listener Pool Management for better event handling (using shared utility)
+    this.listenerPool = new ListenerPoolManager({
+      max: 5,
+      maxAge: 300000, // 5 minutes
+      minInactiveTime: 60000, // 1 minute
+      debugPrefix: "[Navigation]",
+    });
 
     // Bind methods to preserve context
     this.handleNavigationRequest = this.handleNavigationRequest.bind(this);
@@ -95,12 +96,9 @@ class NavigationHandler {
     this.normalizeUrl = this.normalizeUrl.bind(this);
     this.navigateToUrl = this.navigateToUrl.bind(this);
     this.updateNavigationStatus = this.updateNavigationStatus.bind(this);
-    this.createManagedListener = this.createManagedListener.bind(this);
-    this.removeListener = this.removeListener.bind(this);
-    this.cleanupStaleListeners = this.cleanupStaleListeners.bind(this);
 
-    // Start listener pool management
-    this.startListenerPoolCleanup();
+    // Start listener pool management (using shared utility)
+    this.listenerPool.startListenerPoolCleanup();
 
     console.log(
       "🧭 Navigation Handler initialized with listener pool management"
@@ -732,251 +730,13 @@ class NavigationHandler {
     return {
       isNavigating: this.isNavigating,
       hasActiveController: this.currentNavigationController !== null,
-      activeListenerCount: this.listenerPool.size,
-      listenerPoolStatus: this.getListenerPoolStatus(),
+      activeListenerCount: this.listenerPool.listenerPool.size,
+      listenerPoolStatus: this.listenerPool.getListenerPoolStatus(),
     };
   }
 
-  /**
-   * Create a managed listener with automatic cleanup and pooling
-   *
-   * This method creates a listener that is automatically tracked in the listener pool
-   * with usage analytics and automatic cleanup. Prevents memory leaks by enforcing
-   * pool size limits and removing stale listeners.
-   *
-   * @param {Function} listenerFunction - The listener callback function to manage
-   * @param {string} [description="navigation"] - Debug description for the listener
-   * @returns {Object} Listener management object with the following properties:
-   *   - id: {string} Unique listener identifier
-   *   - listener: {Function} Wrapped listener function with usage tracking
-   *   - remove: {Function} Method to remove listener from pool and Chrome API
-   *   - isActive: {Function} Method to check if listener is still active
-   *
-   * @example
-   * const managedListener = handler.createManagedListener(
-   *   (tabId, changeInfo, tab) => console.log('Tab updated'),
-   *   'custom-tab-monitor'
-   * );
-   *
-   * chrome.tabs.onUpdated.addListener(managedListener.listener);
-   *
-   * // Clean up when done
-   * managedListener.remove();
-   *
-   * @throws {Error} When listener pool is at capacity and cleanup fails
-   * @since 1.1.0
-   */
-  createManagedListener(listenerFunction, description = "navigation") {
-    // Check if we're approaching listener limit
-    if (this.listenerPool.size >= this.maxConcurrentListeners) {
-      console.warn(
-        "⚠️ Listener pool approaching maximum capacity - cleaning up stale listeners"
-      );
-      this.cleanupStaleListeners();
-    }
-
-    const listenerId = `listener_${++this.listenerIdCounter}_${Date.now()}`;
-    const listenerData = {
-      id: listenerId,
-      function: listenerFunction,
-      description,
-      createdAt: Date.now(),
-      isActive: true,
-      usage: {
-        calls: 0,
-        lastUsed: Date.now(),
-      },
-    };
-
-    // Create wrapper function for tracking
-    const wrappedListener = (...args) => {
-      listenerData.usage.calls++;
-      listenerData.usage.lastUsed = Date.now();
-      return listenerFunction(...args);
-    };
-
-    // Store in pool
-    this.listenerPool.set(listenerId, listenerData);
-
-    console.log(`🔧 Created managed listener: ${listenerId} (${description})`);
-
-    return {
-      id: listenerId,
-      listener: wrappedListener,
-      remove: () => this.removeListener(listenerId),
-      isActive: () => this.listenerPool.has(listenerId),
-    };
-  }
-
-  /**
-   * Remove a listener from the pool and Chrome API
-   *
-   * Safely removes a managed listener from both the internal pool and the Chrome API.
-   * This method handles cleanup of all associated resources and prevents memory leaks.
-   *
-   * @param {string} listenerId - Unique ID of listener to remove (from createManagedListener)
-   * @returns {boolean} True if listener was successfully removed, false if not found
-   *
-   * @example
-   * const success = handler.removeListener('listener_123_1234567890');
-   * if (success) {
-   *   console.log('Listener removed successfully');
-   * }
-   *
-   * @see {@link createManagedListener} for creating managed listeners
-   * @since 1.1.0
-   */
-  removeListener(listenerId) {
-    const listenerData = this.listenerPool.get(listenerId);
-    if (!listenerData) {
-      console.warn(
-        `⚠️ Attempted to remove non-existent listener: ${listenerId}`
-      );
-      return false;
-    }
-
-    try {
-      // Remove from Chrome API if it's still active
-      if (listenerData.isActive) {
-        chrome.tabs.onUpdated.removeListener(listenerData.function);
-        console.log(
-          `🗑️ Removed listener from Chrome API: ${listenerId} (${listenerData.description})`
-        );
-      }
-
-      // Remove from pool
-      this.listenerPool.delete(listenerId);
-      console.log(`🗑️ Removed listener from pool: ${listenerId}`);
-
-      return true;
-    } catch (error) {
-      console.error(`❌ Error removing listener ${listenerId}:`, error.message);
-      // Still remove from pool even if Chrome API removal failed
-      this.listenerPool.delete(listenerId);
-      return false;
-    }
-  }
-
-  /**
-   * Clean up stale listeners that are no longer needed
-   *
-   * Removes listeners from the pool based on age and usage patterns to prevent
-   * memory leaks. This method is called automatically by the dynamic cleanup system
-   * but can also be called manually for immediate cleanup.
-   *
-   * Cleanup criteria:
-   * - Listeners older than 5 minutes AND inactive for more than 1 minute
-   * - Listeners that have never been called and are older than 2 minutes
-   *
-   * @returns {number} Number of listeners cleaned up
-   *
-   * @example
-   * const cleanedCount = handler.cleanupStaleListeners();
-   * console.log(`Cleaned up ${cleanedCount} stale listeners`);
-   *
-   * @since 1.1.0
-   */
-  cleanupStaleListeners() {
-    const now = Date.now();
-    const maxAge = 300000; // 5 minutes
-    const minInactivityTime = 60000; // 1 minute
-    let cleaned = 0;
-
-    console.log(
-      `🧹 Starting listener pool cleanup (${this.listenerPool.size} listeners)`
-    );
-
-    for (const [listenerId, listenerData] of this.listenerPool.entries()) {
-      const age = now - listenerData.createdAt;
-      const inactivityTime = now - listenerData.usage.lastUsed;
-
-      // Remove listeners that are:
-      // 1. Older than 5 minutes AND inactive for more than 1 minute
-      // 2. Have never been called and are older than 2 minutes
-      const isStale =
-        (age > maxAge && inactivityTime > minInactivityTime) ||
-        (listenerData.usage.calls === 0 && age > 120000);
-
-      if (isStale) {
-        console.log(
-          `🧹 Cleaning up stale listener: ${listenerId} (age: ${age}ms, inactive: ${inactivityTime}ms, calls: ${listenerData.usage.calls})`
-        );
-        this.removeListener(listenerId);
-        cleaned++;
-      }
-    }
-
-    if (cleaned > 0) {
-      console.log(
-        `🧹 Cleaned up ${cleaned} stale listeners. Pool size: ${this.listenerPool.size}`
-      );
-    }
-
-    this.lastListenerCleanup = now;
-    return cleaned;
-  }
-
-  /**
-   * Start listener pool cleanup with dynamic intervals
-   */
-  startListenerPoolCleanup() {
-    const scheduleNextCleanup = () => {
-      // Dynamic interval based on pool usage
-      const poolSize = this.listenerPool.size;
-      let interval;
-
-      if (poolSize === 0) {
-        interval = 120000; // 2 minutes when no listeners
-      } else if (poolSize < 3) {
-        interval = 60000; // 1 minute for light usage
-      } else if (poolSize < 5) {
-        interval = 30000; // 30 seconds for moderate usage
-      } else {
-        interval = 10000; // 10 seconds for heavy usage
-      }
-
-      this.listenerCleanupInterval = setTimeout(() => {
-        this.cleanupStaleListeners();
-        scheduleNextCleanup(); // Schedule next cleanup
-      }, interval);
-
-      console.log(
-        `🔄 Next listener cleanup in ${
-          interval / 1000
-        }s (${poolSize} listeners active)`
-      );
-    };
-
-    scheduleNextCleanup();
-  }
-
-  /**
-   * Get listener pool status for debugging
-   * @returns {Object} Pool status information
-   */
-  getListenerPoolStatus() {
-    const now = Date.now();
-    const listeners = Array.from(this.listenerPool.values()).map(
-      (listener) => ({
-        id: listener.id,
-        description: listener.description,
-        age: now - listener.createdAt,
-        calls: listener.usage.calls,
-        lastUsed: now - listener.usage.lastUsed,
-        isActive: listener.isActive,
-      })
-    );
-
-    return {
-      totalListeners: this.listenerPool.size,
-      maxListeners: this.maxConcurrentListeners,
-      utilizationPercent: Math.round(
-        (this.listenerPool.size / this.maxConcurrentListeners) * 100
-      ),
-      lastCleanup: now - this.lastListenerCleanup,
-      listeners,
-    };
-  }
+  // Listener pool methods now delegated to shared ListenerPoolManager
+  // All methods available via this.listenerPool (createManagedListener, removeListener, etc.)
 
   /**
    * Destroy handler and cleanup all resources
@@ -987,16 +747,8 @@ class NavigationHandler {
     // Cancel any active navigation
     this.cancelNavigation();
 
-    // Clean up listener cleanup interval
-    if (this.listenerCleanupInterval) {
-      clearTimeout(this.listenerCleanupInterval);
-      this.listenerCleanupInterval = null;
-    }
-
-    // Remove all listeners from pool
-    for (const listenerId of this.listenerPool.keys()) {
-      this.removeListener(listenerId);
-    }
+    // Destroy listener pool (uses shared utility)
+    this.listenerPool.destroy();
 
     console.log("🧭 NavigationHandler destroyed and resources cleaned up");
   }

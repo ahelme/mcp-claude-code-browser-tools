@@ -624,7 +624,7 @@
                 id="add-to-clipboard-cb"
                 style="margin-right: 2px"
               />
-              Add to Clipboard
+              Copy to Clipboard
             </label>
             <label
               style="
@@ -681,9 +681,9 @@
           <div style="width: 65%">
             <div class="screenshot-preview">
               <div>
-                Last:
+                Next:
                 <span class="screenshot-filename"
-                  >GitHub_Repository_2025-09-17_0003.png</span
+                  >Goog_xPqj3jTa2c_25_10_02_0001.png</span
                 >
               </div>
             </div>
@@ -845,10 +845,16 @@
       </div>
     </div>
     <!-- Include JavaScript files -->
+    <!-- Shared utilities (loaded first) -->
+    <script src="shared/listener-pool.js"></script>
+
+    <!-- Feature modules -->
     <script src="websocket.js"></script>
     <script src="navigation.js"></script>
     <script src="screenshot.js"></script>
     <script src="interactions.js"></script>
+
+    <!-- Main orchestrator (loaded last) -->
     <script src="panel.js"></script>
   </body>
 </html>
