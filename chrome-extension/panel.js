@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initializeNavigationHandler();
   initializeVisualMessagePanel();
   setupEventListeners();
+  setupRuntimeMessageListener();
 
   console.log("✅ Browser Tools Panel initialized");
 });
@@ -319,6 +320,55 @@ function setupEventListeners() {
   });
 
   console.log("🎯 Event listeners setup complete");
+}
+
+/**
+ * Setup runtime message listener for background script messages
+ */
+function setupRuntimeMessageListener() {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("📨 Panel received runtime message:", message);
+
+    switch (message.type) {
+      case "ELEMENT_SCREENSHOT_CAPTURED":
+        // Forward to visual message panel
+        if (visualMessagePanel) {
+          visualMessagePanel.addScreenshot({
+            filename: message.data.filename,
+            timestamp: message.data.timestamp,
+            path: message.data.dataUrl, // Use dataUrl as path for now
+            dataUrl: message.data.dataUrl,
+            selector: message.data.selector,
+            bounds: message.data.bounds,
+            autoSelect: true, // Auto-select newly captured screenshots
+          });
+          addLogEntry(
+            "success",
+            `📸 Element screenshot added: ${message.data.filename}`
+          );
+        }
+        break;
+
+      case "ELEMENT_SELECTED":
+        // Element was selected - reset picker button state
+        if (visualMessagePanel) {
+          visualMessagePanel.isPickerActive = false;
+          visualMessagePanel.updatePickerButtonState(false);
+        }
+        addLogEntry(
+          "info",
+          `🎯 Element selected: ${message.data.selector || "unknown"}`
+        );
+        break;
+
+      default:
+        console.log("⚠️ Unknown runtime message type:", message.type);
+    }
+
+    return true; // Keep message channel open for async responses
+  });
+
+  console.log("📬 Runtime message listener setup complete");
 }
 
 function updateWebSocketConnection() {

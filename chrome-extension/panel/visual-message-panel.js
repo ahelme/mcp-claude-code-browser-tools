@@ -477,7 +477,7 @@ class VisualMessagePanel {
 
   /**
    * Add a new screenshot to the list (called by screenshot capture)
-   * @param {Object} screenshot - Screenshot object
+   * @param {Object} screenshot - Screenshot object with optional autoSelect flag
    */
   addScreenshot(screenshot) {
     this.screenshots.unshift(screenshot); // Add to beginning
@@ -488,6 +488,19 @@ class VisualMessagePanel {
     }
 
     this.renderScreenshotList();
+
+    // Auto-select if requested
+    if (screenshot.autoSelect && this.elements.screenshotList) {
+      // Find the checkbox for the newly added screenshot (index 0)
+      const firstCheckbox = this.elements.screenshotList.querySelector(
+        '.screenshot-checkbox[data-index="0"]'
+      );
+      if (firstCheckbox) {
+        firstCheckbox.checked = true;
+        this.updateSelectedCount();
+        console.log("✅ Auto-selected new screenshot:", screenshot.filename);
+      }
+    }
   }
 
   /**

@@ -1110,14 +1110,26 @@ async function handleCaptureElementScreenshot(message, sendResponse) {
       `✅ Element screenshot captured for selector: ${selector || "unknown"}`
     );
 
-    // Return screenshot with metadata
-    sendResponse({
+    const timestamp = Date.now();
+    const screenshotData = {
       success: true,
       dataUrl: dataUrl,
       selector: selector,
       bounds: bounds,
-      timestamp: Date.now(),
+      timestamp: timestamp,
+      filename: `element-${
+        selector?.replace(/[^a-z0-9]/gi, "-").substring(0, 30) || "unknown"
+      }_${Math.floor(timestamp / 1000)}s.png`,
+    };
+
+    // Send to panel for visual message list
+    chrome.runtime.sendMessage({
+      type: "ELEMENT_SCREENSHOT_CAPTURED",
+      data: screenshotData,
     });
+
+    // Return to content script
+    sendResponse(screenshotData);
   } catch (error) {
     console.error("❌ Failed to capture element screenshot:", error);
     sendResponse({ success: false, error: error.message });
