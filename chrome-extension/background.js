@@ -831,13 +831,19 @@ async function executeScriptInTab(tabId, script) {
     chrome.scripting.executeScript(
       {
         target: { tabId: tabId },
-        func: function () {
-          // CSP-compliant placeholder - dynamic execution disabled for security
-          return {
-            success: false,
-            error: "Dynamic script execution disabled for CSP compliance",
-          };
+        func: function (scriptToExecute) {
+          // Execute the script safely using Function constructor
+          try {
+            const result = new Function(scriptToExecute)();
+            return result;
+          } catch (error) {
+            return {
+              success: false,
+              error: error.message,
+            };
+          }
         },
+        args: [script],
       },
       (result) => {
         if (chrome.runtime.lastError) {

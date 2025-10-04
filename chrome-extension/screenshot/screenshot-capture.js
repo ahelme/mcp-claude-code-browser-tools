@@ -36,7 +36,8 @@ class ScreenshotCaptureEngine {
    * Create a new screenshot capture engine
    */
   constructor() {
-    console.log('📸 ScreenshotCaptureEngine initialized');
+    this.isCapturing = false;
+    console.log("📸 ScreenshotCaptureEngine initialized");
   }
 
   /**
@@ -70,7 +71,7 @@ class ScreenshotCaptureEngine {
     selector,
     fullPage,
     filename,
-    format = 'png',
+    format = "png",
     quality = 90,
     sendToHttpBridge = false
   ) {
@@ -79,7 +80,7 @@ class ScreenshotCaptureEngine {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage(
         {
-          type: 'CAPTURE_SCREENSHOT',
+          type: "CAPTURE_SCREENSHOT",
           tabId: chrome.devtools.inspectedWindow.tabId,
           selector,
           fullPage,
@@ -103,7 +104,7 @@ class ScreenshotCaptureEngine {
               ...response,
               loadTime: Math.round(loadTime),
               performanceMetrics: {
-                captureMethod: 'background',
+                captureMethod: "background",
                 totalTime: loadTime,
                 timestamp: Date.now(),
                 format,
@@ -115,7 +116,7 @@ class ScreenshotCaptureEngine {
 
             resolve(enhancedResponse);
           } else {
-            const error = response?.error || 'Unknown error';
+            const error = response?.error || "Unknown error";
             console.error(
               `❌ Screenshot failed via background after ${loadTime.toFixed(
                 2
@@ -126,7 +127,7 @@ class ScreenshotCaptureEngine {
               error,
               loadTime: Math.round(loadTime),
               performanceMetrics: {
-                captureMethod: 'background',
+                captureMethod: "background",
                 totalTime: loadTime,
                 timestamp: Date.now(),
                 failed: true,
@@ -167,7 +168,7 @@ class ScreenshotCaptureEngine {
     selector,
     fullPage,
     filename,
-    format = 'png',
+    format = "png",
     quality = 90
   ) {
     const startTime = performance.now();
@@ -175,17 +176,17 @@ class ScreenshotCaptureEngine {
     return new Promise((resolve, reject) => {
       const requestId = Date.now().toString();
       const timeout = setTimeout(() => {
-        reject(new Error('Screenshot request timeout'));
+        reject(new Error("Screenshot request timeout"));
       }, 30000);
 
       // Set up one-time listener for screenshot response
       const messageHandler = (message) => {
         if (
-          message.type === 'screenshot-data' &&
+          message.type === "screenshot-data" &&
           message.requestId === requestId
         ) {
           clearTimeout(timeout);
-          window.wsManager.off('message', messageHandler);
+          window.wsManager.off("message", messageHandler);
 
           const loadTime = performance.now() - startTime;
 
@@ -202,7 +203,7 @@ class ScreenshotCaptureEngine {
             path: message.path || `.screenshots/${filename}`,
             loadTime: Math.round(loadTime),
             performanceMetrics: {
-              captureMethod: 'websocket',
+              captureMethod: "websocket",
               totalTime: loadTime,
               timestamp: Date.now(),
               format,
@@ -217,11 +218,11 @@ class ScreenshotCaptureEngine {
         }
       };
 
-      window.wsManager.on('message', messageHandler);
+      window.wsManager.on("message", messageHandler);
 
       // Send screenshot request via WebSocket
       const request = {
-        type: 'take-screenshot',
+        type: "take-screenshot",
         selector,
         fullPage,
         filename,
@@ -232,8 +233,8 @@ class ScreenshotCaptureEngine {
         timestamp: Date.now(),
       };
 
-      console.log('📤 Sending screenshot request via WebSocket:', request);
-      console.log('🔍 WebSocket manager state:', {
+      console.log("📤 Sending screenshot request via WebSocket:", request);
+      console.log("🔍 WebSocket manager state:", {
         wsManager: typeof window.wsManager,
         isConnected: window.wsManager?.isConnected,
         send: typeof window.wsManager?.send,
@@ -241,9 +242,9 @@ class ScreenshotCaptureEngine {
 
       try {
         window.wsManager.send(request);
-        console.log('✅ WebSocket screenshot request sent successfully');
+        console.log("✅ WebSocket screenshot request sent successfully");
       } catch (error) {
-        console.error('❌ WebSocket send error:', error);
+        console.error("❌ WebSocket send error:", error);
         clearTimeout(timeout);
         reject(new Error(`WebSocket send failed: ${error.message}`));
         return;
@@ -273,15 +274,32 @@ class ScreenshotCaptureEngine {
    * @since 1.0.0
    */
   async handleHttpBridgeScreenshotRequest(message) {
+    // Prevent concurrent screenshot captures
+    if (this.isCapturing) {
+      console.warn(
+        "⚠️ Screenshot capture already in progress, ignoring request"
+      );
+      if (window.wsManager && window.wsManager.isConnected) {
+        window.wsManager.send({
+          type: "screenshot-data",
+          requestId: message.requestId,
+          success: false,
+          error: "Screenshot capture already in progress",
+        });
+      }
+      return;
+    }
+
     try {
-      console.log('🔄 Processing HTTP bridge screenshot request...');
+      this.isCapturing = true;
+      console.log("🔄 Processing HTTP bridge screenshot request...");
 
       // Capture screenshot using background script method
       const result = await this.captureViaBackground(
         message.selector,
         message.fullPage || false,
         `screenshot-${message.requestId || Date.now()}.png`,
-        'png',
+        "png",
         90,
         true // Send to HTTP bridge for MCP integration
       );
@@ -289,7 +307,7 @@ class ScreenshotCaptureEngine {
       if (result.success && window.wsManager && window.wsManager.isConnected) {
         // Send screenshot data back to HTTP bridge
         const response = {
-          type: 'screenshot-data',
+          type: "screenshot-data",
           requestId: message.requestId,
           data: result.data,
           filename: result.filename,
@@ -297,21 +315,21 @@ class ScreenshotCaptureEngine {
         };
 
         console.log(
-          '📤 Sending screenshot data to HTTP bridge:',
+          "📤 Sending screenshot data to HTTP bridge:",
           response.filename
         );
         window.wsManager.send(response);
       } else {
         // Send error response
         const errorResponse = {
-          type: 'screenshot-data',
+          type: "screenshot-data",
           requestId: message.requestId,
           success: false,
-          error: result.error || 'Screenshot capture failed',
+          error: result.error || "Screenshot capture failed",
         };
 
         console.error(
-          '❌ Sending screenshot error to HTTP bridge:',
+          "❌ Sending screenshot error to HTTP bridge:",
           errorResponse
         );
         if (window.wsManager && window.wsManager.isConnected) {
@@ -319,17 +337,20 @@ class ScreenshotCaptureEngine {
         }
       }
     } catch (error) {
-      console.error('❌ Error handling HTTP bridge screenshot request:', error);
+      console.error("❌ Error handling HTTP bridge screenshot request:", error);
 
       // Send error response to HTTP bridge
       if (window.wsManager && window.wsManager.isConnected) {
         window.wsManager.send({
-          type: 'screenshot-data',
+          type: "screenshot-data",
           requestId: message.requestId,
           success: false,
           error: error.message,
         });
       }
+    } finally {
+      // Always reset the capture flag
+      this.isCapturing = false;
     }
   }
 
@@ -341,12 +362,12 @@ class ScreenshotCaptureEngine {
    * @returns {boolean} True if result is valid
    */
   validateCaptureResult(result) {
-    if (!result || typeof result !== 'object') {
+    if (!result || typeof result !== "object") {
       return false;
     }
 
     if (!result.success) {
-      return result.error && typeof result.error === 'string';
+      return result.error && typeof result.error === "string";
     }
 
     // Success result must have filename
