@@ -15,10 +15,9 @@
 // Application state
 let settingsManager = null;
 let logDisplayManager = null;
+let connectionManager = null;
 let wsManager = null;
 let isConnected = false;
-let isDiscoveryInProgress = false;
-let discoveryController = null;
 let navigationHandler = null;
 
 // Directory picker state (not serializable, must be requested each session)
@@ -35,6 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await initializeSettings();
   initializeLogDisplay();
   initializeWebSocket();
+  initializeConnectionManager();
   initializeNavigationHandler();
   setupEventListeners();
 
@@ -96,11 +96,18 @@ function initializeLogDisplay() {
   logDisplayManager = new LogDisplayManager(elements.logsDisplay);
 }
 
+function initializeConnectionManager() {
+  connectionManager = new ConnectionManager(wsManager, elements, addLogEntry);
+}
+
 // Settings methods delegated to SettingsManager
 // (loadSettings, saveSettings, updateUIFromSettings)
 
 // Log methods delegated to LogDisplayManager
 // (addLogEntry, clearLogs)
+
+// Connection methods delegated to ConnectionManager
+// (testConnection, discoverServer, updateConnectionStatus, updateScanStatus)
 
 function initializeWebSocket() {
   wsManager = new WebSocketManager(
@@ -108,30 +115,50 @@ function initializeWebSocket() {
     settingsManager.get("serverPort")
   );
 
-  // Connection events
+  // Connection events (delegated to ConnectionManager after initialization)
   wsManager.on("connected", () => {
     console.log("✅ WebSocket connected!");
     isConnected = true;
-    updateConnectionStatus(true, "Connected to HTTP Bridge");
-    updateScanStatus("connected", "Connected to server");
+    if (connectionManager) {
+      connectionManager.updateConnectionStatus(
+        true,
+        "Connected to HTTP Bridge"
+      );
+      connectionManager.updateScanStatus("connected", "Connected to server");
+    }
   });
 
   wsManager.on("disconnected", () => {
     console.log("⚠️ WebSocket disconnected");
     isConnected = false;
-    updateConnectionStatus(false, "Disconnected from server");
-    updateScanStatus("failed", "Disconnected");
+    if (connectionManager) {
+      connectionManager.updateConnectionStatus(
+        false,
+        "Disconnected from server"
+      );
+      connectionManager.updateScanStatus("failed", "Disconnected");
+    }
   });
 
   wsManager.on("error", (error) => {
     console.error("❌ WebSocket error:", error);
-    updateConnectionStatus(false, `Connection error: ${error.message}`);
+    if (connectionManager) {
+      connectionManager.updateConnectionStatus(
+        false,
+        `Connection error: ${error.message}`
+      );
+    }
   });
 
   wsManager.on("maxReconnectAttemptsReached", () => {
     console.error("❌ Max reconnection attempts reached");
-    updateConnectionStatus(false, "Connection failed - max retries reached");
-    updateScanStatus("failed", "Connection failed");
+    if (connectionManager) {
+      connectionManager.updateConnectionStatus(
+        false,
+        "Connection failed - max retries reached"
+      );
+      connectionManager.updateScanStatus("failed", "Connection failed");
+    }
   });
 
   wsManager.on("message", (message) => {
@@ -212,38 +239,45 @@ function setupEventListeners() {
 }
 
 function updateWebSocketConnection() {
-  if (wsManager) {
-    wsManager.updateServerSettings(
-      settingsManager.get("serverHost"),
-      settingsManager.get("serverPort")
-    );
-  }
-}
-
-function updateConnectionStatus(connected, message) {
-  elements.statusIndicator.className = connected
-    ? "status-indicator status-connected"
-    : "status-indicator status-disconnected";
-  elements.statusText.textContent = message;
-
-  console.log(
-    `🔌 Connection status: ${
-      connected ? "Connected" : "Disconnected"
-    } - ${message}`
+  connectionManager.updateWebSocketConnection(
+    settingsManager.get("serverHost"),
+    settingsManager.get("serverPort")
   );
 }
 
+function updateConnectionStatus(connected, message) {
+  connectionManager.updateConnectionStatus(connected, message);
+}
+
 function updateScanStatus(state, message) {
-  const validStates = ["ready-state", "scanning", "connected", "failed"];
-  const stateClass = validStates.includes(state) ? state : "ready-state";
-
-  elements.scanIndicator.className = `scan-indicator ${stateClass}`;
-  elements.scanText.textContent = message;
-
-  console.log(`🔍 Scan status: ${state} - ${message}`);
+  connectionManager.updateScanStatus(state, message);
 }
 
 async function testConnection() {
+  return connectionManager.testConnection(
+    settingsManager.get("serverHost"),
+    settingsManager.get("serverPort")
+  );
+}
+
+async function discoverServer(quietMode = false) {
+  return connectionManager.discoverServer(
+    quietMode,
+    (host, port) =>
+      settingsManager.setMany({ serverHost: host, serverPort: port }, true),
+    (host, port) => {
+      elements.serverHost.value = host;
+      elements.serverPort.value = port;
+    }
+  );
+}
+
+// Removed old testConnection implementation - delegated to ConnectionManager
+// Removed old discoverServer implementation - delegated to ConnectionManager
+// Removed testWebSocketConnection - now private method in ConnectionManager
+// Removed runConnectionDiagnostics - delegated to ConnectionManager
+
+async function OLD_testConnection() {
   updateScanStatus("scanning", "Testing connection...");
 
   try {
