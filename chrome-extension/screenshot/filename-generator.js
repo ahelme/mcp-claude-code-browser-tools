@@ -39,7 +39,9 @@ class FilenameGenerator {
     this.sessionCode = this.generateSessionCode();
     this.screenshotHistory = new Map();
 
-    console.log(`📝 FilenameGenerator initialized with session code: ${this.sessionCode}`);
+    console.log(
+      `📝 FilenameGenerator initialized with session code: ${this.sessionCode}`
+    );
   }
 
   /**
@@ -80,8 +82,8 @@ class FilenameGenerator {
     const cleaned = title.replace(/[^a-zA-Z0-9\s]/g, "").split(/\s+/)[0];
     if (!cleaned || cleaned.length === 0) return "Page";
 
-    // Take first 4 characters and capitalize first letter
-    const trimmed = cleaned.substring(0, 4);
+    // Take first 6 characters and capitalize first letter
+    const trimmed = cleaned.substring(0, 6);
     return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
   }
 
@@ -115,7 +117,7 @@ class FilenameGenerator {
       if (selector) {
         const selectorName = this.sanitizeFilename(
           selector.replace(/[#.]/g, "")
-        ).substring(0, 4);
+        ).substring(0, 6);
         baseName += `_${selectorName}`;
       }
 
@@ -300,7 +302,9 @@ class FilenameGenerator {
   reset() {
     this.sessionCode = this.generateSessionCode();
     this.screenshotHistory.clear();
-    console.log(`📝 FilenameGenerator reset with new session code: ${this.sessionCode}`);
+    console.log(
+      `📝 FilenameGenerator reset with new session code: ${this.sessionCode}`
+    );
   }
 }
 

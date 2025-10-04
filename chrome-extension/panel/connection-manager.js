@@ -127,6 +127,13 @@ class ConnectionManager {
   async testConnection(serverHost, serverPort) {
     this.updateScanStatus("scanning", "Testing connection...");
 
+    if (this.addLogEntry) {
+      this.addLogEntry(
+        "info",
+        `🔍 Testing connection to ${serverHost}:${serverPort}...`
+      );
+    }
+
     try {
       // Test HTTP health endpoint first
       console.log(
@@ -160,6 +167,13 @@ class ConnectionManager {
             true,
             `HTTP & WebSocket connected at ${serverHost}:${serverPort}`
           );
+
+          if (this.addLogEntry) {
+            this.addLogEntry(
+              "info",
+              `✅ Successfully connected to ${serverHost}:${serverPort}`
+            );
+          }
 
           return { success: true, data };
         } else {
