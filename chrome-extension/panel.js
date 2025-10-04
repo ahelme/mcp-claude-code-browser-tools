@@ -287,75 +287,13 @@ async function discoverServer(quietMode = false) {
   );
 }
 
-// Removed old testConnection implementation - delegated to ConnectionManager
-// Removed old discoverServer implementation - delegated to ConnectionManager
-// Removed testWebSocketConnection - now private method in ConnectionManager
-// Removed runConnectionDiagnostics - delegated to ConnectionManager
-
-async function OLD_testConnection() {
-  updateScanStatus("scanning", "Testing connection...");
-
-  try {
-    // Test HTTP health endpoint first
-    const serverHost = settingsManager.get("serverHost");
-    const serverPort = settingsManager.get("serverPort");
-
-    console.log(`🔍 Testing HTTP connection to ${serverHost}:${serverPort}...`);
-    const response = await fetch(`http://${serverHost}:${serverPort}/health`, {
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log(`✅ HTTP server healthy:`, data);
-
-      // Now test WebSocket connection
-      console.log(`🔌 Testing WebSocket connection...`);
-      const wsTest = await testWebSocketConnection(serverHost, serverPort);
-
-      if (wsTest) {
-        console.log(`✅ WebSocket connection test successful`);
-        updateScanStatus(
-          "connected",
-          `Connected to ${data.status || "server"}`
-        );
-        updateConnectionStatus(
-          true,
-          `HTTP & WebSocket connected at ${serverHost}:${serverPort}`
-        );
-
-        // Force WebSocket reconnection to ensure proper connection
-        if (wsManager) {
-          wsManager.disconnect();
-          setTimeout(() => wsManager.connect(), 500);
-        }
-      } else {
-        console.log(`❌ WebSocket connection test failed`);
-        updateScanStatus("failed", "HTTP OK, WebSocket failed");
-        updateConnectionStatus(
-          false,
-          `HTTP server found but WebSocket connection failed at ${serverHost}:${serverPort}`
-        );
-      }
-    } else {
-      updateScanStatus("failed", `Server error: ${response.status}`);
-      updateConnectionStatus(
-        false,
-        `Server returned error: ${response.status}`
-      );
-    }
-  } catch (error) {
-    const errorMsg =
-      error.name === "AbortError"
-        ? `Connection timeout after 5000ms`
-        : `${error.name}: ${error.message}`;
-    console.error(`❌ Connection test failed:`, errorMsg);
-    updateScanStatus("failed", `Connection failed: ${errorMsg}`);
-    updateConnectionStatus(false, `Connection failed: ${errorMsg}`);
-  }
-}
-
-// OLD discoverServer and testWebSocketConnection removed - now handled by ConnectionManager
+// All connection functions delegated to ConnectionManager:
+// - testConnection()
+// - discoverServer()
+// - testWebSocketConnection() (private method)
+// - runConnectionDiagnostics()
+// - updateConnectionStatus()
+// - updateScanStatus()
 
 // Tool functions (placeholders for now - will be implemented by other agents)
 async function captureScreenshot() {
