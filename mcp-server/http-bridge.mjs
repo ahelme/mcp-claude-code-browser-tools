@@ -616,6 +616,43 @@ app.post("/visual-message", async (req, res) => {
   }
 });
 
+// Send response from Claude back to user
+app.post("/send-response", async (req, res) => {
+  if (!wsConnection) {
+    return res.status(503).json({ error: "Chrome extension not connected" });
+  }
+
+  try {
+    const { text, screenshots } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ error: "Response text is required" });
+    }
+
+    console.log(`💬 Claude response: "${text.substring(0, 100)}${text.length > 100 ? '...' : ''}"`);
+
+    // Send Claude's response to extension via WebSocket
+    wsConnection.send(
+      JSON.stringify({
+        type: "claude-response",
+        data: {
+          text: text,
+          screenshots: screenshots || [],
+          timestamp: Date.now(),
+        },
+      }),
+    );
+
+    res.json({
+      success: true,
+      message: "Response sent successfully",
+    });
+  } catch (error) {
+    console.error("❌ Send response error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start HTTP server
 const server = app.listen(PORT, HOST, () => {
   console.log(`🚀 HTTP Bridge Server running at http://${HOST}:${PORT}`);

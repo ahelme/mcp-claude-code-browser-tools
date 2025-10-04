@@ -715,6 +715,7 @@ function handleWebSocketMessage(message) {
       // This is just an echo - the actual MCP tool call happens in Claude Code
       break;
 
+    case "claude-response":
     case "visual-message-response":
       // Response from Claude via visual messaging
       if (visualMessagePanel) {
@@ -724,8 +725,10 @@ function handleWebSocketMessage(message) {
           timestamp: message.timestamp || Date.now(),
         });
         addLogEntry(
-          "info",
-          `📥 Received Claude response for request ${requestId}`
+          "success",
+          `💬 Claude: "${
+            message.data?.text?.substring(0, 50) || "response received"
+          }${message.data?.text?.length > 50 ? "..." : ""}"`
         );
       } else {
         console.warn("⚠️ Visual message panel not available");
