@@ -19,6 +19,7 @@ let connectionManager = null;
 let wsManager = null;
 let isConnected = false;
 let navigationHandler = null;
+let visualMessagePanel = null;
 
 // Directory picker state (not serializable, must be requested each session)
 // Removed customDirectoryHandle - using lastScreenshotHandle instead (File System Access API)
@@ -36,6 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initializeWebSocket();
   initializeConnectionManager();
   initializeNavigationHandler();
+  initializeVisualMessagePanel();
   setupEventListeners();
 
   console.log("✅ Browser Tools Panel initialized");
@@ -81,6 +83,17 @@ function initializeDOM() {
     queryLimit: document.getElementById("query-limit"),
     showRequestHeaders: document.getElementById("show-request-headers"),
     showResponseHeaders: document.getElementById("show-response-headers"),
+
+    // Visual Message Panel
+    visualMessageInput: document.getElementById("visual-message-input"),
+    sendMessageBtn: document.getElementById("send-message-btn"),
+    visualScreenshotList: document.getElementById("visual-screenshot-list"),
+    screenshotSelectedCount: document.getElementById(
+      "screenshot-selected-count"
+    ),
+    visualConversationDisplay: document.getElementById(
+      "visual-conversation-display"
+    ),
   };
 
   console.log("📋 DOM elements cached:", Object.keys(elements).length);
@@ -190,6 +203,40 @@ function initializeNavigationHandler() {
   } else {
     console.warn(
       "⚠️ NavigationHandler class not available - navigation functionality disabled"
+    );
+  }
+}
+
+function initializeVisualMessagePanel() {
+  if (window.VisualMessagePanel) {
+    visualMessagePanel = new window.VisualMessagePanel();
+
+    // Prepare DOM elements for the panel
+    const visualElements = {
+      messageInput: elements.visualMessageInput,
+      sendMessageBtn: elements.sendMessageBtn,
+      screenshotList: elements.visualScreenshotList,
+      selectedCount: elements.screenshotSelectedCount,
+      conversationDisplay: elements.visualConversationDisplay,
+    };
+
+    // Initialize with send message callback
+    visualMessagePanel.initialize(visualElements, async (messageData) => {
+      // Send visual message via WebSocket
+      if (wsManager && isConnected) {
+        await wsManager.send({
+          action: "visual-message",
+          data: messageData,
+        });
+      } else {
+        throw new Error("Not connected to server");
+      }
+    });
+
+    console.log("💬 Visual Message Panel initialized");
+  } else {
+    console.warn(
+      "⚠️ VisualMessagePanel class not available - visual messaging disabled"
     );
   }
 }
@@ -587,6 +634,23 @@ function handleWebSocketMessage(message) {
 
     case "consoleLog":
       addLogEntry("info", `Console: ${message.data.message}`);
+      break;
+
+    case "visual-message-response":
+      // Response from Claude via visual messaging
+      if (visualMessagePanel) {
+        visualMessagePanel.receiveClaudeResponse({
+          text: message.data?.text || message.data?.message || "No response",
+          screenshots: message.data?.screenshots || [],
+          timestamp: message.timestamp || Date.now(),
+        });
+        addLogEntry(
+          "info",
+          `📥 Received Claude response for request ${requestId}`
+        );
+      } else {
+        console.warn("⚠️ Visual message panel not available");
+      }
       break;
 
     default:
