@@ -88,6 +88,20 @@ class VisualMessagePanel {
         }
       });
     }
+
+    // Deselect all screenshots button
+    if (this.elements.deselectAllBtn) {
+      this.elements.deselectAllBtn.addEventListener("click", () => {
+        this.deselectAllScreenshots();
+      });
+    }
+
+    // Clear screenshots button
+    if (this.elements.clearScreenshotsBtn) {
+      this.elements.clearScreenshotsBtn.addEventListener("click", () => {
+        this.clearScreenshots();
+      });
+    }
   }
 
   /**
@@ -522,6 +536,37 @@ class VisualMessagePanel {
   clearConversation() {
     this.conversation = [];
     this.renderConversation();
+  }
+
+  /**
+   * Deselect all screenshots
+   */
+  deselectAllScreenshots() {
+    if (!this.elements.screenshotList) return;
+
+    const checkboxes = this.elements.screenshotList.querySelectorAll(
+      ".screenshot-checkbox:checked"
+    );
+    checkboxes.forEach((cb) => (cb.checked = false));
+    this.updateSelectedCount();
+    console.log("✖ Deselected all screenshots");
+  }
+
+  /**
+   * Clear all screenshots from the list
+   */
+  clearScreenshots() {
+    if (
+      !confirm(
+        "Are you sure you want to clear all screenshots? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    this.screenshots = [];
+    this.renderScreenshotList();
+    console.log("🗑️ Cleared all screenshots");
   }
 }
 
