@@ -1,6 +1,195 @@
-# Browser Tools for Claude Code
+# Better Browser Tools
 
-## Memory Bank MCP - Usage Guide
+## Project Overview
+A powerful set of tools for you and your AI agent to visually test and debug front-end development, navigate and analyse UI and audit performance, SEO and accessibility.
+
+Consists of three parts:
+1. MCP server
+2. http bridge
+3. Chrome extension
+
+This project is a complete re-write of:
+1. AgentDesk's sophisticated Browser Tools MCP server: updated to June 2025 MCP spec
+2. AgentDesk's Chrome Extension: improve UI and address mcp tools no longer working
+
+## Tool Suite (Partially Developed Status)
+**🎯 Goal**: Build ALL 9 tools from scratch using foundation infrastructure (.mjs modules)
+
+1. browser_navigate 
+2. browser_screenshot 
+3. browser_click 
+4. browser_type 
+5. browser_wait 
+6. browser_evaluate 
+7. browser_get_content 
+8. browser_audit 
+9. browser_get_console
+
+## QuickStart Guide
+
+See README.md
+
+## Startup Commands
+./start_all.sh                    # Start everything
+npm start                         # Alias for start_all.sh
+npm run dev                       # Development mode with doc watching
+
+##  DOCUMENTATION 
+
+### Main, REST API and Websocket Protocol Documentation 
+
+**Interactive Swagger Documentation** available for developers and AI agents:
+
+```bash
+# Start documentation server (port 3020)
+./chrome-extension/start-docs.sh
+```
+
+- ✅ Auto-generated from OpenAPI 3.0.3 contract
+- ✅ Interactive testing directly in browser
+- ✅ Always accurate (reflects actual implementation)
+
+#### Server Routes:
+  - http://localhost:3020/docs - Main documentation portal
+  - http://localhost:3020/rest-docs - REST API documentation
+  - http://localhost:3020/ws-docs - WebSocket protocol documentation
+
+#### AI-Agent Discoverable Endpoints:
+- 📄 OpenAPI spec: http://localhost:3020/openapi.yaml
+- 🔍 JSON format: http://localhost:3020/openapi.json
+- 🤖 Health check: http://localhost:3020/health
+
+## Markdown Documentation Structure
+
+Modular docs available in these directories:
+
+```
+browser-tools-setup/
+       ├─ CLAUDE.md
+       ├─ README.md
+       ├─  chrome-extension/
+       |       └── chrome-extension_docs/   
+       |             ├── WEBSOCKET_PROTOCOL.md        # WebSocket protocol spec 
+       |             ├── INTERFACE-CONTRACTS.md       # Interface contracts   
+       |             ├── BEST_PRACTICES.md            # Development guidelines 
+       |             ├── SCREENSHOT_TESTING_GUIDE.md  # Testing guide    
+       |             └── TROUBLESHOOTING_GUIDE.md     # Debugging guide  
+       ├─  mcp-server/
+       |       └── mcp-server_docs/
+       |              ├─  CODE-ARCHITECTURE.md
+       |              ├─  DUAL_ARCHITECTURE.md
+       |              ├─  MCP_CLIPBOARD_ENDPOINTS.md
+       |              └─  TOOLS-GUIDE.md
+       └──  product-management/
+                └── product-management_docs/
+                      ├── CLAUDE-ONBOARDING.md
+                      ├── CONTRACT_DRIVEN_DEVELOPMENT.md
+                      ├── ESSENTIAL_CONTEXT_FOR_AGENTS.md   # Must-read for AgileAI agents 
+                      ├── AgileAI_KickStart.md              # Must-read for AgileAI agents     
+                      ├── AgileAI_Overview.md               # Must-read for AgileAI agents 
+                      ├── AgileAI_Methodology.md            # Must-read for AgileAI agents 
+                      ├── AgileAI_Project_Guardrails.md     # Must-read for AgileAI agents 
+                      ├── AgileAI_User_Stories.md           # Must-read for AgileAI agents
+                      ├── AgileAI_Development_Map.md        # Must-read for AgileAI agents
+                      ├── ARCHITECTURAL_MAP.md              # Extension architecture analysis
+                      └── REFACTORING_PLAN.md               # Modular refactoring plan 
+```
+
+## Project Code Structure
+
+```
+browser-tools-setup/
+├── MANE/                    # Complete MANE methodology (12 docs)
+├── contracts/               # Foundation contracts (MERGED)
+│   ├── http.yaml            # OpenAPI 3.0 specification
+│   ├── config.schema.json   # Configuration schema
+│   ├── Event contracts      # Event contracts
+│   └── QUALITY_GATE.md      # Quality gate requirements
+├── chrome-extension/        # Chrome extension files
+│   ├── interfaces.mjs       # Interface definitions
+│   ├── base-classes.mjs     # Base classes
+│   ├── registry.mjs         # Auto-discovery registry
+│   ### CORE EXTENSION FILES
+│   ├── background.js        # Service worker - message routing
+│   ├── panel.js             # Panel orchestrator - delegates to modules
+│   ├── panel.html           # UI html structure
+│   ├── devtools.js          # DevTools initialization
+│   ├── manifest.json        # Extension configuration
+│   ### FEATURE MODULES
+│   ├── screenshot.js        # Screenshot orchestrator - delegates to modules
+│   ├── navigation.js        # Navigation features
+│   ├── interactions.js      # Click/type/wait
+│   ├── websocket.js         # WebSocket management
+│   ### PANEL MODULES (Extracted from panel.js)
+│   ├── panel/
+│   │   ├── settings-manager.js     # Settings persistence via Chrome storage
+│   │   ├── log-display.js          # Memory-managed log display
+│   │   └── connection-manager.js   # WebSocket connection & server discovery
+│   ### SCREENSHOT MODULES (Extracted from screenshot.js)
+│   ├── screenshot/
+│   │   ├── filename-generator.js   # Smart filename generation
+│   │   ├── screenshot-capture.js   # Dual-pathway capture engine
+│   │   └── screenshot-ui.js        # UI feedback & visual state
+│   ### SHARED UTILITIES
+│   ├── screenshot/
+│   │   └── shared-utils.js         # Common screenshot utilities
+│   ### UTILITIES
+│   ├── constants.js         # Configuration constants
+│   ├── url-validator.js     # URL validation
+│   ├── memory-manager.js    # History management
+│   ├── bug-fixes.js         # Patches
+│   └── *.mjs                # Additional modules
+│   ### DOCUMENTATION
+│   └── chrome-extension_docs/
+│       ├── WEBSOCKET_PROTOCOL.md          # WebSocket protocol spec
+│       ├── INTERFACE-CONTRACTS.md         # Interface contracts
+│       ├── BEST_PRACTICES.md              # Development guidelines
+│       ├── SCREENSHOT_TESTING_GUIDE.md    # Testing guide
+│       └── TROUBLESHOOTING_GUIDE.md       # Debugging guide
+├── mcp-server/              # MCP server implementation
+│   ├── server.mjs           # Main MCP server
+│   ├── http-bridge.mjs      # HTTP bridge (3024)
+│   ├── start.sh             # Start script
+│   └── mcp-server_docs/     # Server documentation
+├── product-management/      # Product management tools
+│   └── mcp-servers/         # Product management MCP servers
+│       └── memory-bank/     # Session persistence
+├── .claude/agents/          # Agent definitions
+├── .mcp.json                # Project MCP configuration
+└── CLAUDE.md                # Project instructions
+```
+
+## Available MCP Servers
+
+### 1. Browser-Tools MCP (Custom Implementation) - 5/9 Tools Working
+- **Server**: `mcp-server/server.mjs`
+- **Purpose**: Browser automation and testing
+- **Status**: Path mismatch resolved (Sept 14, 2025)
+
+### 2. Memory Bank MCP
+- **Purpose**: Persistent memory across sessions
+- **Features**: Progress tracking, decision logging, context management
+- **Status**: ✅ Connected and functioning
+
+### 3. Sequential Thinking MCP
+- **Purpose**: Step-by-step problem solving
+- **Status**: ✅ Connected and functioning
+
+
+## Session Management
+**ALWAYS check current context at session start:**
+```javascript
+// Check active project status
+mcp__memory-bank-mcp__read_memory_bank_file({ filename: "active-context.md" })
+
+// Update context proactively when making progress
+mcp__memory-bank-mcp__update_active_context({
+  tasks: ["Current development tasks"],
+  issues: ["Known blockers or problems"],
+  nextSteps: ["Planned next actions"]
+})
+```
+### Memory Bank MCP - Usage Guide
 
 **Purpose**: Keep essential context between sessions
 
@@ -39,55 +228,20 @@ mcp__memory-bank-mcp__read_memory_bank_file({ filename: "progress.md" })
 **When to Use**: After completing changes, making decisions, when stuck (search previous solutions), between sessions
 
 ---
+## ⚠️ CRITICAL: MCP Server Read-Only Policy
+The `/mcp-server/` directory is **READ-ONLY** and **MUST NOT BE MODIFIED** by agents working on this project.
 
-## Project Overview
-A powerful set of tools for you and your AI agent to visually test and debug front-end development, navigate and analyse UI and audit performance, SEO and accessibility.
-
-Complete re-write of:
-1. AgentDesk's sophisticated Browser Tools MCP server: updated to June 2025 MCP spec
-2. AgentDesk's Chrome Extension: improve UI and address mcp tools no longer working
+🚫 **DO NOT**: Modify or update any files in `/mcp-server/`
+✅ **DO**: Work in `/chrome-extension/` for UI and component developmentries
+**WHY**: The MCP server is stable. Changes require USER APPROVAL.
 
 
-## 🚀 PROJECT STATUS: AgileAI Ready!
-
-**REVOLUTIONARY DEVELOPMENT**: World's first Agile methodology for human-AI collaborative development!
-
-### ✅ **AgileAI Methodology Complete**
+## ✅ **AgileAI Methodology**
 - **AgileAI_KickStart.md** - 5-minute setup guide for immediate use
 - **Complete documentation suite** in `product-management/product-management_docs/`
 - **8 Claude Identity Agents** ready for interactive collaboration
-- **GitHub Issues #40-47** with comprehensive specifications
 
-### ✅ **Current Implementation Status**
-- **Foundation Infrastructure**: Agent A completed and operational (.mjs modules)
-- **Framework Complete**: Agent B - Framework Specialist (GitHub Issue #40) ✅ COMPLETED
-- **Implementation**: 100% June 2025 MCP-compliant
-- **Method**: `mcp-server/server.mjs` + `mcp-server/http-bridge.mjs` (port 3024)
-
-### 🎯 **Ready to Start AgileAI Development**
-Ready for next batch deployment: *Agents C, D, E (Core Tools) or Agents F, G, H, I (Advanced Tools)*
-
-## ⚠️ CRITICAL: MCP Server Read-Only Policy
-
-**IMPORTANT FOR ALL AGENTS**: The `/mcp-server/` directory is **READ-ONLY** and **MUST NOT BE MODIFIED** by agents working on this project.
-
-### 🚫 **DO NOT**:
-- Modify any files in `/mcp-server/`
-- Add new files to `/mcp-server/`
-- Update dependencies in `/mcp-server/package.json`
-- Change configuration in `/mcp-server/`
-
-### ✅ **DO**:
-- Work in `/chrome-extension/` for UI and component development
-- Use `/MANE/` for architecture and documentation
-- Create new files in appropriate project directories
-- Report any MCP server issues to the user
-
-**WHY**: The MCP server provides stable infrastructure that multiple projects depend on. Changes require careful coordination and testing.
-
-## 🚀 AGILEAI SYSTEM OPERATIONAL
-
-**World's first battle-tested AI collaborative development system deployed.**
+## 🚀 AGILEAI SYSTEM 
 
 ### Foundation Infrastructure
 - **Contract Validation**: OpenAPI contracts prevent breaking changes
@@ -95,20 +249,37 @@ Ready for next batch deployment: *Agents C, D, E (Core Tools) or Agents F, G, H,
 - **Auto-Discovery Registry**: Zero-coordination tool registration
 - **Base Class Library**: 90% code duplication eliminated
 
+## 📚 Essential AgileAI Documentation
+**Start Here for New Claude Sessions:**
+- 🔍 [AgileAI KickStart Guide](product-management/product-management_docs/AgileAI_KickStart.md) - Quick setup guide
+- 🏗️ [Agent Specifications](product-management/product-management_docs/) - Agent documentation
+- 📚 [Project Documentation](README.md) - Complete project overview
+
 ### AgileAI Agent Structure
 ```
 browser-tools-setup/
 ├── agent-a-foundation   ✅ COMPLETED & MERGED
 ├── agent-b-framework    ✅ BATCH 2 COMPLETED - UI Framework & Component System
-├── agent-c-navigation   🎯 BATCH 3 - browser_navigate (working, needs NEW impl)
-├── agent-d-screenshot   🎯 BATCH 3 - browser_screenshot (working, needs NEW impl)
-├── agent-e-interaction  🎯 BATCH 3 - browser_click/type/wait (working, needs NEW impl)
-├── agent-f-evaluate     🎯 BATCH 4 - browser_evaluate (broken, needs NEW impl)
-├── agent-g-audit        🎯 BATCH 4 - browser_audit (broken, needs NEW impl)
-├── agent-h-console      🎯 BATCH 4 - browser_get_console (broken, needs NEW impl)
-├── agent-i-content      🎯 BATCH 4 - browser_get_content (broken, needs NEW impl)
-└── integration         🔄 READY - Integration testing
+├── agent-c-navigation   ✅ COMPLETED - browser_navigate
+├── agent-d-screenshot   🔄 CURRENT WORK - browser_screenshot (working, needs bug fixes and solutions)
+├── agent-e-interaction  🎯 - browser_click/type/wait 
+├── agent-f-evaluate     🎯 - browser_evaluate 
+├── agent-g-audit        🎯 - browser_audit 
+├── agent-h-console      🎯 - browser_get_console
+├── agent-i-content      🎯 - browser_get_content
+└── integration          READY - Integration testing
 ```
+**Agent Development Workflow:**
+1. Pick Agent Identity - Specialized development role
+2. Extend Foundation - Build on base classes
+3. Follow Contracts - Auto-validated API compliance
+4. Pass Quality Gates - Automated promotion criteria
+5. Auto-Integration - Registry connects seamlessly
+
+### ⚡ **AGILEAI BRANCH STRATEGY**
+- **`main`**: Default stable branch
+- **Agent branches**: Each agent works in dedicated development reality
+- **Foundation**: Infrastructure merged and operational
 
 ### Developer Experience
 **Agent Management:**
@@ -118,20 +289,6 @@ npm run quality-gate      # Full validation pipeline
 npm run contract-check    # OpenAPI compliance
 npm run env-validate      # Environment consistency
 ```
-
-**Agent Development Workflow:**
-1. Pick Agent Identity - Specialized development role
-2. Extend Foundation - Build on base classes
-3. Follow Contracts - Auto-validated API compliance
-4. Pass Quality Gates - Automated promotion criteria
-5. Auto-Integration - Registry connects seamlessly
-
-### Revolutionary Achievements
-✅ **Zero Coordination** - Agents work independently with contract guarantees
-✅ **Parallel Development** - 7+ agents build simultaneously
-✅ **Quality Assurance** - Battle-tested validation prevents integration issues
-✅ **Real-world Validated** - Incorporates production experience
-✅ **Scalable Architecture** - Add agents = add features automatically
 
 ---
 
@@ -147,262 +304,6 @@ npm run env-validate      # Environment consistency
 
 ---
 
-## 📚 Essential AgileAI Documentation
-**Start Here for New Claude Sessions:**
-- 🔍 [AgileAI KickStart Guide](product-management/product-management_docs/AgileAI_KickStart.md) - Quick setup guide
-- 🏗️ [Agent Specifications](product-management/product-management_docs/) - Agent documentation
-- 📚 [Project Documentation](README.md) - Complete project overview
-
-### Session Management
-**ALWAYS check current context at session start:**
-```javascript
-// Check active project status
-mcp__memory-bank-mcp__read_memory_bank_file({ filename: "active-context.md" })
-
-// Update context proactively when making progress
-mcp__memory-bank-mcp__update_active_context({
-  tasks: ["Current development tasks"],
-  issues: ["Known blockers or problems"],
-  nextSteps: ["Planned next actions"]
-})
-```
-
-### Implementation Status (All tools need NEW implementation)
-
-**Working in OLD AgentDesk Extension (need to be freshly-implemented in OUR Chrome Ext.):**
-1. browser_navigate - Navigates to URLs (NEW implementation needed)
-2. browser_screenshot - Captures screenshots (NEW implementation needed)
-3. browser_click - Clicks elements (NEW implementation needed)
-4. browser_type - Types text (NEW implementation needed)
-5. browser_wait - Waits for elements (NEW implementation needed)
-
-**Broken in OLD AgentDesk Extension (need to be freshly-implemented in OUR Chrome Ext.):**
-6. browser_evaluate - Timeout executing JavaScript (NEW implementation needed)
-7. browser_get_content - Request timeout (NEW implementation needed)
-8. browser_audit - Returns HTML instead of JSON (NEW implementation needed)
-9. browser_get_console - Request timeout (NEW implementation needed)
-
-**🎯 Goal**: Build ALL 9 tools from scratch using foundation infrastructure (.mjs modules)
-
-## Features
-
-#### Runs Headless
-- Multi-tasking: User operates computer without interfering with AI agent
-- Lower resource usage
-- Faster navigation
-
-#### Console Monitoring
-- Accurate error detection by AI agents
-- Agents verify changes better (user finds fewer "broken" apps)
-- AI agents read console errors faster than screenshots
-
-#### Screenshot UI Analysis
-- Autonomous AI agent screenshots (faster than Puppeteer)
-- One-click screenshots via Chrome extension
-
-#### Lighthouse Audits
-- Accessibility
-- SEO
-- Performance
-
-#### UI-based Configuration
-Via AgentDesk's 'Browser Tools' Chrome extension:
-- Port configuration or auto-scan
-- Screenshots directory
-- Log/query/string length configuration
-- Request/Response headers
-- Auto-Paste to Cursor toggle
-
-### Why Re-Write Browser Tools MCP Server?
-
-Built custom browser tools MCP server to address critical protocol violations in original npm package (agentdeskai), which used older MCP specification and no longer functioned.
-
-### Our Solution
-- 100% 2025-06-18 MCP protocol compliant
-- Clean stdio implementation
-- Proper error handling
-
-## QuickStart Guide
-
-1. **Exit Claude Code** (or don't start yet)
-```bash
-/exit
-```
-
-2. **Configure MCP tools in .mcp.json** (toggle DEBUG "1"/"0"):
-```json
-{
-  "mcpServers": {
-    "mcp-claude-code-browser-tools": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["/Users/lennox/development/browser-tools-setup/mcp-server/server.mjs"],
-      "env": {
-        "BROWSER_TOOLS_PORT": "3024",
-        "MCP_DEBUG": "1"
-      }
-    }
-  }
-}
-```
-
-3. **Install and Prepare** (first time only):
-```bash
-npm install
-chmod +x mcp-server/start.sh
-```
-
-4. **Start HTTP Bridge** (port 3024, NEW terminal):
-```bash
-# PREFERRED METHOD - Use the script
-./mcp-server/start.sh
-```
-
-**⚠️ CRITICAL - Working Directory Matters:**
-- ✅ **Use script method**: `./mcp-server/start.sh` (handles working directory correctly)
-- ✅ **Or run directly**: `node mcp-server/http-bridge.mjs` (from project root)
-- ❌ **Never do**: `cd mcp-server && node http-bridge.mjs` (wrong working directory)
-
-5. **Install Chrome Extension**: https://browsertools.agentdesk.ai/
-
-6. **Activate Extension**: Open Dev Tools (F12) → Browser Tools tab (MUST BE ACTIVE)
-
-7. **Start Claude Code**: `$ claude`
-
-8. **Configure Extension Port**: Set Server Port to **3024** in extension UI
-
-## MCP Configuration Guidelines
-
-1. **File Location**: Place `.mcp.json` in codebase root using latest MCP specification
-2. **Server Types**: All use `"type": "stdio"` for JSON-RPC communication
-3. **Environment Variables**: Configure ports and debug in `env` section
-4. **Paths**: Use absolute paths for local scripts
-5. **NPX Dependencies**: External packages use `npx -y` for auto-installation
-
-## Testing and Debugging
-
-```bash
-# Check configuration
-cat .mcp.json | grep browser-tools
-
-# Test HTTP bridge
-curl http://localhost:3024/health
-
-# Debug MCP server
-MCP_DEBUG=1 node mcp-server/server.mjs
-```
-
-## API Documentation
-
-**Interactive Swagger Documentation** available for developers and AI agents:
-
-```bash
-# Start documentation server (port 3020)
-./chrome-extension/start-docs.sh
-```
-
-**AI-Agent Discoverable Endpoints:**
-- 📚 Interactive docs: http://localhost:3020/docs
-- 📄 OpenAPI spec: http://localhost:3020/openapi.yaml
-- 🔍 JSON format: http://localhost:3020/openapi.json
-- 🤖 Health check: http://localhost:3020/health
-
-**Features:**
-- ✅ Auto-generated from OpenAPI 3.0.3 contract
-- ✅ Interactive testing directly in browser
-- ✅ Always accurate (reflects actual implementation)
-- ✅ AI-agent friendly discovery endpoints
-
-## Multi-Project Usage (ADVANCED)
-
-Run multiple instances with custom ports via `BROWSER_TOOLS_PORT` environment variable:
-
-**Port allocation:**
-- 3020 - API Documentation Server
-- 3024 - Main project (MCP HTTP Bridge)
-- 3025, 3026, 3027+ - Secondary projects
-
-```bash
-# Start different instances
-BROWSER_TOOLS_PORT=3024 ./mcp-server/start.sh  # Project A
-BROWSER_TOOLS_PORT=3025 ./mcp-server/start.sh  # Project B
-```
-
-Update Chrome extension port when switching projects.
-
-## Alternative Direct HTTP (Backup)
-If MCP server fails, use direct HTTP on port 3026:
-```bash
-./mcp-server/mcp-server/start-direct-browser-tools.sh
-curl http://localhost:3026/health
-```
-
-## Project Structure
-
-```
-browser-tools-setup/
-├── MANE/                    # Complete MANE methodology (12 docs)
-├── contracts/               # Foundation contracts (MERGED)
-│   ├── http.yaml            # OpenAPI 3.0 specification
-│   └── QUALITY_GATE.md      # Quality gate requirements
-├── chrome-extension/        # Chrome extension files
-│   ├── interfaces.mjs       # Interface definitions
-│   ├── base-classes.mjs     # Base classes
-│   ├── registry.mjs         # Auto-discovery registry
-│   └── *.mjs                # Additional core modules
-├── mcp-server/              # MCP server implementation
-│   ├── server.mjs           # Main MCP server
-│   ├── http-bridge.mjs      # HTTP bridge (3024)
-│   ├── start.sh             # Start script
-│   └── mcp-server/             # Additional server scripts
-├── product-management/     # Product management tools
-│   └── mcp-servers/        # Product management MCP servers
-│       └── memory-bank/    # Session persistence
-├── .claude/agents/         # Agent definitions
-├── .mcp.json               # Project MCP configuration
-└── CLAUDE.md               # Project instructions
-```
-
-## Available Tools
-
-All tools prefixed with `mcp__browser-tools__`:
-- `navigate` - Go to URL
-- `screenshot` - Capture page/element
-- `click` - Click elements
-- `type` - Enter text
-- `evaluate` - Run JavaScript
-- `get_content` - Get HTML
-- `audit` - Run Lighthouse
-- `wait` - Wait for elements
-- `get_console` - Get console logs
-
-### Example Usage
-```javascript
-mcp__browser-tools__navigate({ url: "https://example.com" })
-mcp__browser-tools__screenshot({ fullPage: true })
-mcp__browser-tools__click({ selector: "#submit-button" })
-```
-
-## MCP Protocol Compliance
-**✅ Full 2025-06-18 Protocol Compliance**
-- Implementation: `mcp-server/server.mjs`
-- All initialize handshake, capabilities, and tool definitions match specification
-
-## Available MCP Servers
-
-### 1. Browser-Tools MCP (Custom Implementation) - 5/9 Tools Working
-- **Server**: `mcp-server/server.mjs`
-- **Purpose**: Browser automation and testing
-- **Status**: Path mismatch resolved (Sept 14, 2025)
-
-### 2. Memory Bank MCP
-- **Purpose**: Persistent memory across sessions
-- **Features**: Progress tracking, decision logging, context management
-- **Status**: ✅ Connected and functioning
-
-### 3. Sequential Thinking MCP
-- **Purpose**: Step-by-step problem solving
-- **Status**: ✅ Connected and functioning
 
 ## Notes
 

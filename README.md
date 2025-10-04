@@ -1,98 +1,41 @@
 # Browser Tools for Claude Code
 
-## 🚀 **AgileAI Browser Tools - Revolutionary AI Collaborative Development**
 
-The world's first browser tools project built using **AgileAI** - a revolutionary Agile methodology for human-AI collaborative development!
+## Project Overview
+A powerful set of tools for you and your AI agent to visually test and debug front-end development, navigate and analyse UI and audit performance, SEO and accessibility.
 
-### **🎯 What is AgileAI?**
-AgileAI combines XML-driven architecture, specialized AI agents, break-point methodology, and complete user control to create transparent, quality-assured collaborative development.
+Consists of three parts:
+1. MCP server
+2. http bridge
+3. Chrome extension
 
-### **🛠️ Project Overview**
-A powerful set of 9 browser automation tools built collaboratively with specialized AI agents:
-- Complete re-write using AgileAI methodology
-- 100% June 2025 MCP specification compliant
-- Chrome extension with modern Manifest V3 architecture
+This project is a complete re-write of:
+1. AgentDesk's sophisticated Browser Tools MCP server: updated to June 2025 MCP spec
+2. AgentDesk's Chrome Extension: improve UI and address mcp tools no longer working
 
-### **🚀 Quick Start with AgileAI**
-Ready to experience revolutionary AI collaboration? See **[AgileAI_KickStart.md](product-management/product-management_docs/AgileAI_KickStart.md)** for 5-minute setup!
 
-## PROJECT STATUS: AgileAI Ready!
-- **REVOLUTIONARY**: World's first Agile methodology for human-AI collaborative development
-- **8 Claude Identity Agents**: Ready for interactive collaboration (GitHub Issues #40-47)
-- **Next Priority**: Agent B - Framework Specialist for Chrome extension architecture
-- **Implementation**: 100% June 2025 MCP-compliant with AgileAI break-point methodology
-- **MCP Method**: `mcp-server/server.mjs` + `mcp-server/http-bridge.mjs` (port 3024)
+## Features
 
-### 🦁 AGILEAI FOUNDATION INFRASTRUCTURE COMPLETE ✅
-**World's first complete AI collaborative development platform!**
-- 🦁 **AgileAI Methodology**: Revolutionary Agile methodology for human-AI collaborative development
-- ✅ **Foundation Merged**: Complete infrastructure with contracts, base classes, registry system
-- 🏗️ **Core Architecture**: TypeScript interfaces, quality gates, monitoring system
-- 🤖 **Agent Universes**: 9 agents in 4 logical batches for systematic development
-- 📋 **Contract-Driven**: OpenAPI specifications and comprehensive quality requirements
-- 🎯 **Complete Documentation**: [AgileAI KickStart Guide](product-management/product-management_docs/AgileAI_KickStart.md) | [Agent Specifications](product-management/product-management_docs/)
-
-### 🏗️ **AGILEAI FOUNDATION & BATCH SYSTEM**
-**Current Status - Foundation Complete, Ready for Batch 2:**
-- **✅ Batch 1**: Agent A (Foundation) - COMPLETED & MERGED
-  - Contracts: OpenAPI 3.0 specification, quality gates
-  - Core: Base classes, interfaces, registry system
-  - Infrastructure: Service worker, monitoring, MCP handler
-- **🎯 Batch 2**: Agent B (Framework) - NEXT TO DEPLOY
-  - UI Framework & Component System
-- **🎯 Batch 3**: Agents C,D,E (Core Tools) - Working in OLD extension, NEW implementation needed
-  - browser_navigate, browser_screenshot, browser_click, browser_type, browser_wait
-- **🎯 Batch 4**: Agents F,G,H,I (Advanced Tools) - Broken in OLD extension, NEW implementation needed
-  - browser_evaluate, browser_audit, browser_get_console, browser_get_content
-
-### ⚡ **AGILEAI BRANCH STRATEGY**
-- **`main`**: Default stable branch
-- **Agent branches**: Each agent works in dedicated development reality
-- **Foundation**: Infrastructure merged and operational
-
-### 🔄 IMPLEMENTATION STATUS (All tools need NEW implementation):
-
-**Working in OLD AgentDesk Chrome Ext. Need to be Implemnted in OUR new Chrome Ext:**
-  1. browser_navigate - Successfully navigates to URLs (NEW implementation needed)
-  2. browser_screenshot - Captures screenshots perfectly (NEW implementation needed)
-  3. browser_click - Clicks elements successfully (NEW implementation needed)
-  4. browser_type - Types text into input fields (NEW implementation needed)
-  5. browser_wait - Waits for elements to appear (NEW implementation needed)
-  
-**Broken in OLD AgentDesk Chrome Ext. & Need to be Implemnted in OUR new Chrome Ext:**
-  6. browser_evaluate - Timeout error when executing JavaScript (NEW implementation needed)
-  7. browser_get_content - Request timeout (NEW implementation needed)
-  8. browser_audit - Returns HTML instead of JSON (NEW implementation needed)
-  9. browser_get_console - Request timeout (NEW implementation needed)
-
-**🎯 Our Goal**: Build ALL 9 tools from scratch using our foundation infrastructure (.mjs modules)
-
-## 🛡️ Code Quality Standards
-**Enterprise-grade standards for all AgileAI agents:**
-- See gh issues 30-34
-
-### Features
-
-#### **Runs Headless**:
+### **Runs Headless**:
   - Facilitates multi-tasking: user can operate computer without interfering with autonomous browser-testing by AI agent
   - Uses fewer resources
   - Faster navigation
 
-#### **Console Monitoring**:
+### **Console Monitoring**:
   - Accurate pick up of errors by AI agents 
   - Agents better at checking results of changes (user does not find app "broken" as often, while agent declares 100% fixed)
   - AI agents faster at reading console errors than screenshots 
   
-#### **Take Screenshots for UI Analysis**: 
+### **Take Screenshots for UI Analysis**: 
   - Autonomous AI agent screenshots as per Puppeteer, but faster
   - One-click screenshots through Chrome extension
   
-#### **Lighthouse Audits**:
+### **Lighthouse Audits**:
    - Accessibility
    - SEO
    - Performance 
 
-#### **UI-based Configuration via AgentDesk's 'Browser Tools' Chrome extension**:
+### **UI-based Configuration via AgentDesk's 'Browser Tools' Chrome extension**:
   - Leverage AgentDesk's original Chrome Extension "Browser Tools"
     - Set Port Number or let Extension scan ports
     - Update screenshots directory 
@@ -100,15 +43,15 @@ Ready to experience revolutionary AI collaboration? See **[AgileAI_KickStart.md]
     - Include Request/Response headers
     - Toggle Auto-Paste to Cursor
 
-### **Why Did We Re-Write Browser Tools MCP Server?** 
+## Why Re-Write Browser Tools MCP Server?
 
-We built our own browser tools MCP server to address critical protocol violations in the original npm package maintained by agentdeskai, which used the older > June 2025 MCP specification and no longer functioned.
+Built custom browser tools MCP server to address critical protocol violations in original npm package (agentdeskai), which used older MCP specification and no longer functioned.
 
-
-### **Our Solution**
+### Our Solution
 - 100% 2025-06-18 MCP protocol compliant
 - Clean stdio implementation
 - Proper error handling
+
 
 ## QuickStart Guide
 
@@ -151,14 +94,21 @@ npm install
 
 # Make script executable (
 chmod +x mcp-server/start.sh
+chmod +x start_all.sh
 ```
 
 4. **Start the HTTP Bridge Server (port 3024) in NEW Terminal Tab/Window**
 starts on **Port 3024
 
 ```bash
-# Start MCP HTTP bridge (for Claude Code) - PREFERRED METHOD
+# Start MCP HTTP bridge 
 ./mcp-server/start.sh
+
+# Or: Start bridge and docs server
+./start_all.sh   
+
+# Or Start Development Mode with Docs Watching
+npm run dev                      
 
 # CRITICAL - Working Directory Matters:
 # ✅ Use script: ./mcp-server/start.sh (handles working directory correctly)
@@ -182,7 +132,118 @@ Set via UI form field "Server Connection Settings > Server Port to **3024**"
 
 This will connect extension to Claude Code Browser Tools MCP Server (via http bridge).
 
-## 📚 API Documentation
+
+## Start Services (http bridge, docs server)
+
+Unified Development Experience
+
+```
+# Simple startup commands
+./start_all.sh                    # Start everything
+npm start                         # Alias for start_all.sh
+npm run dev                       # Development mode with doc watching
+```
+
+## Architecture
+
+```
+Main Method (MCP): Claude Code <--[stdio]--> MCP Server <--[HTTP:3024]--> MCP Bridge <--[WebSocket]--> Chrome Extension
+Backup Method (Direct): External Tool <--[HTTP:3026]--> Direct Bridge <--[WebSocket]--> Chrome Extension
+```
+### Chrome Extension
+- Monitors XHR requests/responses and console logs
+- Tracks selected DOM elements
+- Sends all logs and current element to the BrowserTools Connector
+- Connects to Websocket server to capture/send screenshots
+- Allows user to configure token/truncation limits + screenshot folder path
+
+### Node Server HTTP Bridge
+- Acts as middleware between the Chrome extension and MCP server
+- Receives logs and currently selected element from Chrome extension
+- Processes requests from MCP server to capture logs, screenshot or current element
+- Sends Websocket command to the Chrome extension for capturing a screenshot
+- Intelligently truncates strings and # of duplicate objects in logs to avoid token limits
+- Removes cookies and sensitive headers to avoid sending to LLMs in MCP clients
+
+### MCP Server
+- Implements the Model Context Protocol
+- Provides standardized tools for AI clients
+- Compatible with various MCP clients (Cursor, Cline, Zed, Claude Desktop, etc.)
+
+**See [mcp-server/mcp-server_docs/CODE-ARCHITECTURE.md](mcp-server/mcp-server_docs/CODE-ARCHITECTURE.md) for more details.**
+
+**IMPORTANT**: Port 3024 is reserved for MCP server method.
+
+## Project Code Structure
+
+```
+browser-tools-setup/
+├── MANE/                    # Complete MANE methodology (12 docs)
+├── contracts/               # Foundation contracts (MERGED)
+│   ├── http.yaml            # OpenAPI 3.0 specification
+│   ├── config.schema.json   # Configuration schema
+│   ├── Event contracts      # Event contracts
+│   └── QUALITY_GATE.md      # Quality gate requirements
+├── chrome-extension/        # Chrome extension files
+│   ├── interfaces.mjs       # Interface definitions
+│   ├── base-classes.mjs     # Base classes
+│   ├── registry.mjs         # Auto-discovery registry
+│   ### CORE EXTENSION FILES
+│   ├── background.js        # Service worker - message routing
+│   ├── panel.js             # Panel orchestrator - delegates to modules
+│   ├── panel.html           # UI html structure
+│   ├── devtools.js          # DevTools initialization
+│   ├── manifest.json        # Extension configuration
+│   ### FEATURE MODULES
+│   ├── screenshot.js        # Screenshot orchestrator - delegates to modules
+│   ├── navigation.js        # Navigation features
+│   ├── interactions.js      # Click/type/wait
+│   ├── websocket.js         # WebSocket management
+│   ### PANEL MODULES (Extracted from panel.js)
+│   ├── panel/
+│   │   ├── settings-manager.js     # Settings persistence via Chrome storage
+│   │   ├── log-display.js          # Memory-managed log display
+│   │   └── connection-manager.js   # WebSocket connection & server discovery
+│   ### SCREENSHOT MODULES (Extracted from screenshot.js)
+│   ├── screenshot/
+│   │   ├── filename-generator.js   # Smart filename generation
+│   │   ├── screenshot-capture.js   # Dual-pathway capture engine
+│   │   └── screenshot-ui.js        # UI feedback & visual state
+│   ### SHARED UTILITIES
+│   ├── screenshot/
+│   │   └── shared-utils.js         # Common screenshot utilities
+│   ### UTILITIES
+│   ├── constants.js         # Configuration constants
+│   ├── url-validator.js     # URL validation
+│   ├── memory-manager.js    # History management
+│   ├── bug-fixes.js         # Patches
+│   └── *.mjs                # Additional modules
+│   ### DOCUMENTATION
+│   └── chrome-extension_docs/
+│       ├── WEBSOCKET_PROTOCOL.md          # WebSocket protocol spec
+│       ├── INTERFACE-CONTRACTS.md         # Interface contracts
+│       ├── BEST_PRACTICES.md              # Development guidelines
+│       ├── SCREENSHOT_TESTING_GUIDE.md    # Testing guide
+│       └── TROUBLESHOOTING_GUIDE.md       # Debugging guide
+├── mcp-server/              # MCP server implementation
+│   ├── server.mjs           # Main MCP server
+│   ├── http-bridge.mjs      # HTTP bridge (3024)
+│   ├── start.sh             # Start script
+│   └── mcp-server_docs/     # Server documentation
+├── product-management/      # Product management tools
+│   └── mcp-servers/         # Product management MCP servers
+│       └── memory-bank/     # Session persistence
+├── .claude/agents/          # Agent definitions
+├── .mcp.json                # Project MCP configuration
+└── CLAUDE.md                # Project instructions
+```
+
+##  DOCUMENTATION 
+
+See CLAUDE.md for markdown documentation structure.
+
+
+### 📚 API Documentation
 
 **Complete Protocol Documentation** is available for developers and AI agents:
 
@@ -199,14 +260,6 @@ This will connect extension to Claude Code Browser Tools MCP Server (via http br
 - 📡 **AsyncAPI spec**: http://localhost:3020/asyncapi.yaml - WebSocket protocol contract
 - 🤖 **AI-discoverable**: http://localhost:3020/health - Complete protocol metadata
 - 🔍 **JSON formats**: http://localhost:3020/openapi.json | http://localhost:3020/asyncapi.json
-
-**Features:**
-- ✅ **Dual Protocol Support** - REST (OpenAPI 3.0.3) + WebSocket (AsyncAPI 3.0.0)
-- ✅ **Interactive testing** - test REST API directly from browser
-- ✅ **Protocol visualization** - AsyncAPI Studio integration for WebSocket protocol
-- ✅ **AI-agent friendly** - auto-discoverable endpoints and standard formats
-- ✅ **Contract-driven** - single source of truth prevents documentation drift
-- ✅ **Always accurate** - reflects actual implementation
 
 **Port Layout:**
 - **3020** - API Documentation Server
@@ -243,35 +296,6 @@ curl http://localhost:3026/health
 
 ```
 
-## Architecture
-
-```
-Main Method (MCP): Claude Code <--[stdio]--> MCP Server <--[HTTP:3024]--> MCP Bridge <--[WebSocket]--> Chrome Extension
-Backup Method (Direct): External Tool <--[HTTP:3026]--> Direct Bridge <--[WebSocket]--> Chrome Extension
-```
-### Chrome Extension
-- Monitors XHR requests/responses and console logs
-- Tracks selected DOM elements
-- Sends all logs and current element to the BrowserTools Connector
-- Connects to Websocket server to capture/send screenshots
-- Allows user to configure token/truncation limits + screenshot folder path
-
-### Node Server HTTP Bridge
-- Acts as middleware between the Chrome extension and MCP server
-- Receives logs and currently selected element from Chrome extension
-- Processes requests from MCP server to capture logs, screenshot or current element
-- Sends Websocket command to the Chrome extension for capturing a screenshot
-- Intelligently truncates strings and # of duplicate objects in logs to avoid token limits
-- Removes cookies and sensitive headers to avoid sending to LLMs in MCP clients
-
-### MCP Server
-- Implements the Model Context Protocol
-- Provides standardized tools for AI clients
-- Compatible with various MCP clients (Cursor, Cline, Zed, Claude Desktop, etc.)
-
-**See [mcp-server/mcp-server_docs/CODE-ARCHITECTURE.md](mcp-server/mcp-server_docs/CODE-ARCHITECTURE.md) for more details.**
-
-**IMPORTANT**: Port 3024 is reserved for MCP server method.
 
 ## 🚀 Multi-Project Usage
 
@@ -386,7 +410,7 @@ mcp__browser-tools__click({ selector: "#submit-button" })
 ```
 
 ## Tools Guide
-Guide to usage of available tools: TOOLS_GUIDE.md
+Guide to usage of available tools: /mcp-server/mcp-server_docs/TOOLS_GUIDE.md
 
 ## Important Files
 
@@ -415,6 +439,27 @@ The MCP server supports several environment variables for customization:
 | `BROWSER_TOOLS_PORT` | `3024` | HTTP bridge port for MCP server | `3025` |
 | `MCP_HTTP_BRIDGE_PORT` | `3024` | Alternative name for same setting | `3026` |
 | `MCP_DEBUG` | `0` | Enable detailed debug logging | `1` |
+
+## MCP Configuration Guidelines
+
+1. **File Location**: Place `.mcp.json` in codebase root using latest MCP specification
+2. **Server Types**: All use `"type": "stdio"` for JSON-RPC communication
+3. **Environment Variables**: Configure ports and debug in `env` section
+4. **Paths**: Use absolute paths for local scripts
+5. **NPX Dependencies**: External packages use `npx -y` for auto-installation
+
+## Testing and Debugging
+
+```bash
+# Check configuration
+cat .mcp.json | grep browser-tools
+
+# Test HTTP bridge
+curl http://localhost:3024/health
+
+# Debug MCP server
+MCP_DEBUG=1 node mcp-server/server.mjs
+```
 
 
 ### Port Conflict Issues
