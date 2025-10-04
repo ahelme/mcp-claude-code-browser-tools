@@ -596,10 +596,10 @@
       .screenshot-item {
         display: flex;
         align-items: center;
-        gap: 4px;
-        padding: 2px 4px;
+        gap: 6px;
+        padding: 4px;
         cursor: pointer;
-        border-radius: 2px;
+        border-radius: 3px;
         transition: background 0.15s;
       }
 
@@ -608,21 +608,50 @@
       }
 
       .screenshot-checkbox {
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
         cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .screenshot-thumbnail {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 2px;
+        border: 1px solid #404040;
+        flex-shrink: 0;
+      }
+
+      .screenshot-details {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
       }
 
       .screenshot-filename {
-        font-size: 8px;
+        font-size: 9px;
         color: #f4f4f5;
         font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .screenshot-selector {
+        font-size: 7px;
+        color: #0ea5e9;
+        font-family: monospace;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .screenshot-time {
         font-size: 7px;
         color: #71717a;
-        margin-left: auto;
       }
 
       .no-screenshots {

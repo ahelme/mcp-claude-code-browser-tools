@@ -269,6 +269,7 @@ class VisualMessagePanel {
     const html = this.screenshots
       .map((screenshot, index) => {
         const timeAgo = Math.floor((Date.now() - screenshot.timestamp) / 1000);
+        const thumbnail = screenshot.dataUrl || screenshot.path || "";
         return `
         <label class="screenshot-item">
           <input
@@ -277,8 +278,20 @@ class VisualMessagePanel {
             data-index="${index}"
             data-filename="${screenshot.filename}"
           />
-          <span class="screenshot-filename">${screenshot.filename}</span>
-          <span class="screenshot-time">(${timeAgo}s ago)</span>
+          ${
+            thumbnail
+              ? `<img src="${thumbnail}" class="screenshot-thumbnail" alt="${screenshot.filename}" />`
+              : ""
+          }
+          <div class="screenshot-details">
+            <span class="screenshot-filename">${screenshot.filename}</span>
+            <span class="screenshot-time">(${timeAgo}s ago)</span>
+            ${
+              screenshot.selector
+                ? `<span class="screenshot-selector">${screenshot.selector}</span>`
+                : ""
+            }
+          </div>
         </label>
       `;
       })
