@@ -528,7 +528,7 @@ async function changeScreenshotFolder() {
 
 // Removed old functions - replaced with File System Access API approach
 
-function evaluateJavaScript() {
+async function evaluateJavaScript() {
   const script = elements.jsInput.value.trim();
   if (!script) {
     addLogEntry("error", "Enter JavaScript code to evaluate");
@@ -542,49 +542,255 @@ function evaluateJavaScript() {
 
   addLogEntry("info", `Evaluating: ${script}`);
 
-  // TODO: This will be implemented by Agent B (Evaluation Specialist)
-  // For now, just show a placeholder
-  addLogEntry(
-    "info",
-    "JavaScript evaluation tool will be implemented by Agent B"
-  );
+  try {
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: "EVALUATE_JS",
+        code: script,
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          addLogEntry(
+            "error",
+            `Evaluation failed: ${chrome.runtime.lastError.message}`
+          );
+          return;
+        }
+
+        if (response && response.success) {
+          const resultStr =
+            typeof response.result === "object"
+              ? JSON.stringify(response.result, null, 2)
+              : String(response.result);
+          addLogEntry(
+            "success",
+            `✅ Result: ${resultStr.substring(0, 200)}${
+              resultStr.length > 200 ? "..." : ""
+            }`
+          );
+        } else {
+          addLogEntry(
+            "error",
+            `❌ Evaluation failed: ${response?.error || "Unknown error"}`
+          );
+        }
+      }
+    );
+  } catch (error) {
+    addLogEntry("error", `Evaluation error: ${error.message}`);
+  }
 }
 
-function runAudit() {
+async function runAudit() {
   if (!isConnected) {
     addLogEntry("error", "Not connected to server");
     return;
   }
 
-  addLogEntry("info", "Running Lighthouse audit...");
+  addLogEntry("info", "🌐 Running comprehensive audit...");
 
-  // TODO: This will be implemented by Agent C (Audit Specialist)
-  addLogEntry("info", "Audit tool will be implemented by Agent C");
+  try {
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: "RUN_AUDIT",
+        categories: ["performance", "accessibility", "seo", "best-practices"],
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          addLogEntry(
+            "error",
+            `Audit failed: ${chrome.runtime.lastError.message}`
+          );
+          return;
+        }
+
+        if (response && response.success) {
+          addLogEntry(
+            "success",
+            `✅ Overall Score: ${response.overallScore}/100`
+          );
+
+          // Log category scores
+          const cats = response.categories;
+          if (cats.performance)
+            addLogEntry(
+              "info",
+              `⚡ Performance: ${cats.performance.score}/100 (${cats.performance.issueCount} issues)`
+            );
+          if (cats.accessibility)
+            addLogEntry(
+              "info",
+              `♿ Accessibility: ${cats.accessibility.score}/100 (${cats.accessibility.issueCount} issues)`
+            );
+          if (cats.seo)
+            addLogEntry(
+              "info",
+              `🔍 SEO: ${cats.seo.score}/100 (${cats.seo.issueCount} issues)`
+            );
+          if (cats.bestPractices)
+            addLogEntry(
+              "info",
+              `✨ Best Practices: ${cats.bestPractices.score}/100 (${cats.bestPractices.issueCount} issues)`
+            );
+        } else {
+          addLogEntry(
+            "error",
+            `❌ Audit failed: ${response?.error || "Unknown error"}`
+          );
+        }
+      }
+    );
+  } catch (error) {
+    addLogEntry("error", `Audit error: ${error.message}`);
+  }
 }
 
-function getPageContent() {
+async function getPageContent() {
   if (!isConnected) {
     addLogEntry("error", "Not connected to server");
     return;
   }
 
   const format = elements.contentFormat.value;
-  addLogEntry("info", `Getting page content (${format})...`);
+  const selector = elements.selectorInput.value.trim() || null;
 
-  // TODO: This will be implemented by Agent E (Content Extractor)
-  addLogEntry("info", "Content extraction tool will be implemented by Agent E");
+  addLogEntry(
+    "info",
+    `📜 Getting ${format} content${
+      selector ? ` from: ${selector}` : " (full page)"
+    }...`
+  );
+
+  try {
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: "GET_CONTENT",
+        selector: selector,
+        format: format,
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          addLogEntry(
+            "error",
+            `Content extraction failed: ${chrome.runtime.lastError.message}`
+          );
+          return;
+        }
+
+        if (response && response.success) {
+          const content = response[format] || response.html || response.text;
+          const preview = content.substring(0, 150);
+          addLogEntry(
+            "success",
+            `✅ Content (${
+              response.metadata?.contentLength || content.length
+            } chars): ${preview}${content.length > 150 ? "..." : ""}`
+          );
+
+          // Copy to clipboard if auto-paste is enabled
+          if (settingsManager.get("autoPaste")) {
+            navigator.clipboard.writeText(content);
+            addLogEntry("info", "📋 Copied to clipboard");
+          }
+        } else {
+          addLogEntry(
+            "error",
+            `❌ Content extraction failed: ${
+              response?.error || "Unknown error"
+            }`
+          );
+        }
+      }
+    );
+  } catch (error) {
+    addLogEntry("error", `Content extraction error: ${error.message}`);
+  }
 }
 
-function getConsoleLogs() {
+async function getConsoleLogs() {
   if (!isConnected) {
     addLogEntry("error", "Not connected to server");
     return;
   }
 
-  addLogEntry("info", "Getting console logs...");
+  const level = elements.logLevel.value;
+  const limit = parseInt(elements.logLimit.value) || 50;
 
-  // TODO: This will be implemented by Agent D (Console Detective)
-  addLogEntry("info", "Console monitoring tool will be implemented by Agent D");
+  addLogEntry("info", `📜 Getting console logs (${level}, limit: ${limit})...`);
+
+  try {
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        type: "GET_CONSOLE",
+        level: level === "all" ? null : level,
+        limit: limit,
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          addLogEntry(
+            "error",
+            `Console retrieval failed: ${chrome.runtime.lastError.message}`
+          );
+          return;
+        }
+
+        if (response && response.success) {
+          addLogEntry(
+            "success",
+            `✅ Retrieved ${response.count} console logs (${response.totalCaptured} total captured)`
+          );
+
+          // Display first few logs
+          const logs = response.logs || [];
+          logs.slice(0, 5).forEach((log) => {
+            const icon =
+              log.level === "error" ? "❌" : log.level === "warn" ? "⚠️" : "ℹ️";
+            addLogEntry(
+              log.level,
+              `${icon} ${log.message.substring(0, 100)}${
+                log.message.length > 100 ? "..." : ""
+              }`
+            );
+          });
+
+          if (logs.length > 5) {
+            addLogEntry("info", `... and ${logs.length - 5} more logs`);
+          }
+        } else {
+          addLogEntry(
+            "error",
+            `❌ Console retrieval failed: ${response?.error || "Unknown error"}`
+          );
+        }
+      }
+    );
+  } catch (error) {
+    addLogEntry("error", `Console retrieval error: ${error.message}`);
+  }
 }
 
 function clearLogs() {
