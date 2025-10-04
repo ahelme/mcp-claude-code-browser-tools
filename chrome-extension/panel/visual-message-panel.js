@@ -90,36 +90,103 @@ class VisualMessagePanel {
    */
   async startElementPicker() {
     try {
-      // Get active tab
-      const [tab] = await chrome.tabs.query({
+      // Get active tab via chrome.tabs API (works in DevTools context)
+      const tabs = await chrome.tabs.query({
         active: true,
         currentWindow: true,
       });
 
-      if (!tab) {
+      if (!tabs || tabs.length === 0) {
         console.error("❌ No active tab found");
+        alert("No active tab found. Please navigate to a webpage first.");
         return;
       }
 
-      // Send message to content script to start element picker
-      const response = await chrome.tabs.sendMessage(tab.id, {
-        type: "START_ELEMENT_PICKER",
-        tabId: tab.id,
-      });
+      const tab = tabs[0];
 
-      if (response.success) {
-        console.log("✅ Element picker started");
-        // Update button state
-        if (this.elements.elementPickerBtn) {
-          this.elements.elementPickerBtn.textContent = "⏹️ Stop Picker";
-          this.elements.elementPickerBtn.classList.remove("aqua");
-          this.elements.elementPickerBtn.classList.add("danger");
+      // Check if tab is a valid web page (not chrome://, devtools://, etc.)
+      if (
+        !tab.url ||
+        tab.url.startsWith("chrome://") ||
+        tab.url.startsWith("devtools://")
+      ) {
+        console.error(
+          "❌ Cannot inject content script into this tab:",
+          tab.url
+        );
+        alert(
+          "Element picker cannot run on this page. Please navigate to a regular webpage."
+        );
+        return;
+      }
+
+      try {
+        // Try to send message to content script
+        const response = await chrome.tabs.sendMessage(tab.id, {
+          type: "START_ELEMENT_PICKER",
+          tabId: tab.id,
+        });
+
+        if (response && response.success) {
+          console.log("✅ Element picker started");
+          this.updatePickerButtonState(true);
+        } else {
+          throw new Error(response?.error || "Failed to start picker");
         }
-      } else {
-        console.error("❌ Failed to start element picker:", response.error);
+      } catch (sendError) {
+        // Content script might not be loaded yet - try to inject it
+        console.log(
+          "⚠️ Content script not responding, attempting injection..."
+        );
+
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ["content-element-picker.js"],
+          });
+
+          // Wait a moment for script to initialize
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Try again
+          const retryResponse = await chrome.tabs.sendMessage(tab.id, {
+            type: "START_ELEMENT_PICKER",
+            tabId: tab.id,
+          });
+
+          if (retryResponse && retryResponse.success) {
+            console.log("✅ Element picker started after injection");
+            this.updatePickerButtonState(true);
+          } else {
+            throw new Error("Failed after injection retry");
+          }
+        } catch (injectError) {
+          console.error("❌ Failed to inject content script:", injectError);
+          alert(
+            "Failed to start element picker. Please reload the page and try again."
+          );
+        }
       }
     } catch (error) {
       console.error("❌ Element picker error:", error);
+      alert(`Element picker error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update element picker button state
+   */
+  updatePickerButtonState(isActive) {
+    if (!this.elements.elementPickerBtn) return;
+
+    if (isActive) {
+      this.elements.elementPickerBtn.textContent = "⏹️ Stop Picker";
+      this.elements.elementPickerBtn.classList.remove("aqua");
+      this.elements.elementPickerBtn.classList.add("danger");
+    } else {
+      this.elements.elementPickerBtn.textContent = "🎯 Pick Element";
+      this.elements.elementPickerBtn.classList.remove("danger");
+      this.elements.elementPickerBtn.classList.add("aqua");
     }
   }
 
