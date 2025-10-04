@@ -130,16 +130,13 @@ browser-tools-setup/
 │   │   ├── filename-generator.js   # Smart filename generation
 │   │   ├── screenshot-capture.js   # Dual-pathway capture engine
 │   │   └── screenshot-ui.js        # UI feedback & visual state
-│   ### SHARED UTILITIES
-│   ├── screenshot/
-│   │   └── shared-utils.js         # Common screenshot utilities
 │   ### UTILITIES
 │   ├── constants.js         # Configuration constants
 │   ├── url-validator.js     # URL validation
 │   ├── memory-manager.js    # History management
 │   ├── bug-fixes.js         # Patches
 │   └── *.mjs                # Additional modules
-│   ### DOCUMENTATION
+│   ### CHROME EXT. DOCUMENTATION
 │   └── chrome-extension_docs/
 │       ├── WEBSOCKET_PROTOCOL.md          # WebSocket protocol spec
 │       ├── INTERFACE-CONTRACTS.md         # Interface contracts
