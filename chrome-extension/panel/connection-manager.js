@@ -154,18 +154,12 @@ class ConnectionManager {
           console.log(`✅ WebSocket connection test successful`);
           this.updateScanStatus(
             "connected",
-            `Connected to ${data.status || "server"}`
+            `Connected to ${serverHost}:${serverPort}`
           );
           this.updateConnectionStatus(
             true,
             `HTTP & WebSocket connected at ${serverHost}:${serverPort}`
           );
-
-          // Force WebSocket reconnection to ensure proper connection
-          if (this.wsManager) {
-            this.wsManager.disconnect();
-            setTimeout(() => this.wsManager.connect(), 500);
-          }
 
           return { success: true, data };
         } else {

@@ -120,11 +120,16 @@ function initializeWebSocket() {
     console.log("✅ WebSocket connected!");
     isConnected = true;
     if (connectionManager) {
+      const host = settingsManager.get("serverHost");
+      const port = settingsManager.get("serverPort");
       connectionManager.updateConnectionStatus(
         true,
         "Connected to HTTP Bridge"
       );
-      connectionManager.updateScanStatus("connected", "Connected to server");
+      connectionManager.updateScanStatus(
+        "connected",
+        `Connected to ${host}:${port}`
+      );
     }
   });
 
