@@ -14,6 +14,7 @@
 
 // Application state
 let settingsManager = null;
+let logDisplayManager = null;
 let wsManager = null;
 let isConnected = false;
 let isDiscoveryInProgress = false;
@@ -32,6 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initializeDOM();
   await initializeSettings();
+  initializeLogDisplay();
   initializeWebSocket();
   initializeNavigationHandler();
   setupEventListeners();
@@ -90,8 +92,15 @@ async function initializeSettings() {
   settingsManager.updateUIFromSettings(elements);
 }
 
+function initializeLogDisplay() {
+  logDisplayManager = new LogDisplayManager(elements.logsDisplay);
+}
+
 // Settings methods delegated to SettingsManager
 // (loadSettings, saveSettings, updateUIFromSettings)
+
+// Log methods delegated to LogDisplayManager
+// (addLogEntry, clearLogs)
 
 function initializeWebSocket() {
   wsManager = new WebSocketManager(
@@ -581,13 +590,7 @@ function getConsoleLogs() {
 }
 
 function clearLogs() {
-  // CSP-compliant DOM manipulation
-  elements.logsDisplay.textContent = "";
-  const clearedDiv = document.createElement("div");
-  clearedDiv.className = "log-entry log-info";
-  clearedDiv.textContent = "Logs cleared...";
-  elements.logsDisplay.appendChild(clearedDiv);
-  addLogEntry("info", "Logs cleared");
+  logDisplayManager.clear();
 }
 
 function handleWebSocketMessage(message) {
@@ -729,20 +732,10 @@ function handleWebSocketMessage(message) {
 }
 
 function addLogEntry(level, message) {
-  const timestamp = new Date().toLocaleTimeString();
-  const logClass = level === "error" ? "log-error" : "log-info";
-
-  const logEntry = document.createElement("div");
-  logEntry.className = `log-entry ${logClass}`;
-  logEntry.textContent = `[${timestamp}] ${message}`;
-
-  elements.logsDisplay.appendChild(logEntry);
-  elements.logsDisplay.scrollTop = elements.logsDisplay.scrollHeight;
-
-  console.log(`📝 Log entry [${level}]: ${message}`);
+  logDisplayManager.addEntry(level, message);
 }
 
-// Make addLogEntry globally accessible for navigation handler
+// Make addLogEntry globally accessible for navigation handler and other modules
 window.addLogEntry = addLogEntry;
 
 // Handle interaction requests from MCP server via WebSocket
