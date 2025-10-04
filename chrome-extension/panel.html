@@ -750,79 +750,95 @@
     <div class="visual-message-panel">
       <div class="visual-panel-title">💬 Message Claude</div>
 
-      <!-- Message Input Section -->
-      <div class="message-input-section">
-        <textarea
-          id="visual-message-input"
-          class="message-textarea"
-          placeholder="Type your message to Claude... (Cmd+Enter to send)"
-        ></textarea>
-        <div class="message-actions">
-          <button class="btn primary" id="send-message-btn" style="flex: 1">
-            📤 Send to Claude
-          </button>
-        </div>
-      </div>
+      <!-- Two-Column Layout -->
+      <div style="display: flex; gap: 8px">
+        <!-- LEFT COLUMN: Message Input + Screenshots -->
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+          <!-- Message Input Section -->
+          <div class="message-input-section">
+            <textarea
+              id="visual-message-input"
+              class="message-textarea"
+              placeholder="Type your message to Claude... (Cmd+Enter to send)"
+            ></textarea>
+            <div class="message-actions">
+              <button class="btn primary" id="send-message-btn" style="flex: 1">
+                📤 Send to Claude
+              </button>
+            </div>
+          </div>
 
-      <!-- Screenshot Attachment Section -->
-      <div class="screenshot-section">
-        <div class="screenshot-section-header">
-          <span>📎 Attach Screenshots:</span>
-          <div style="display: flex; gap: 4px; align-items: center">
-            <button
-              class="btn aqua"
-              id="element-picker-btn"
-              style="font-size: 8px; padding: 2px 8px; height: 16px"
-            >
-              🎯 Pick Element
-            </button>
-            <span id="screenshot-selected-count">0 selected</span>
-            <button
-              class="btn secondary"
-              id="deselect-all-screenshots-btn"
-              style="font-size: 7px; padding: 2px 6px; height: 16px"
-              title="Deselect all screenshots"
-            >
-              ✖ Deselect
-            </button>
-            <button
-              class="btn danger"
-              id="clear-screenshots-btn"
-              style="font-size: 7px; padding: 2px 6px; height: 16px"
-              title="Clear all screenshots from list"
-            >
-              🗑️ Clear
-            </button>
+          <!-- Screenshot Attachment Section -->
+          <div class="screenshot-section">
+            <div class="screenshot-section-header">
+              <span>📎 Attach Screenshots:</span>
+              <div style="display: flex; gap: 4px; align-items: center">
+                <button
+                  class="btn aqua"
+                  id="element-picker-btn"
+                  style="font-size: 8px; padding: 2px 8px; height: 16px"
+                >
+                  🎯 Pick Element
+                </button>
+                <span id="screenshot-selected-count">0 selected</span>
+                <button
+                  class="btn secondary"
+                  id="deselect-all-screenshots-btn"
+                  style="font-size: 7px; padding: 2px 6px; height: 16px"
+                  title="Deselect all screenshots"
+                >
+                  ✖ Deselect
+                </button>
+                <button
+                  class="btn danger"
+                  id="clear-screenshots-btn"
+                  style="font-size: 7px; padding: 2px 6px; height: 16px"
+                  title="Clear all screenshots from list"
+                >
+                  🗑️ Clear
+                </button>
+              </div>
+            </div>
+            <div id="visual-screenshot-list" class="screenshot-list">
+              <div class="no-screenshots">No recent screenshots</div>
+            </div>
           </div>
         </div>
-        <div id="visual-screenshot-list" class="screenshot-list">
-          <div class="no-screenshots">No recent screenshots</div>
-        </div>
-      </div>
 
-      <!-- Conversation Display -->
-      <div
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 4px;
-        "
-      >
-        <div style="font-size: 8px; color: #a1a1aa; font-weight: 600">
-          💬 Conversation
+        <!-- RIGHT COLUMN: Conversation Thread -->
+        <div style="flex: 1; display: flex; flex-direction: column">
+          <!-- Conversation Header -->
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 4px;
+            "
+          >
+            <div style="font-size: 8px; color: #a1a1aa; font-weight: 600">
+              💬 Conversation
+            </div>
+            <button
+              class="btn danger"
+              id="clear-conversation-btn"
+              style="font-size: 7px; padding: 2px 6px; height: 16px"
+              title="Clear conversation history"
+            >
+              🗑️ Clear Chat
+            </button>
+          </div>
+          <!-- Conversation Display -->
+          <div
+            id="visual-conversation-display"
+            class="conversation-display"
+            style="flex: 1"
+          >
+            <div class="no-messages">
+              No messages yet. Start a conversation!
+            </div>
+          </div>
         </div>
-        <button
-          class="btn danger"
-          id="clear-conversation-btn"
-          style="font-size: 7px; padding: 2px 6px; height: 16px"
-          title="Clear conversation history"
-        >
-          🗑️ Clear Chat
-        </button>
-      </div>
-      <div id="visual-conversation-display" class="conversation-display">
-        <div class="no-messages">No messages yet. Start a conversation!</div>
       </div>
     </div>
 
