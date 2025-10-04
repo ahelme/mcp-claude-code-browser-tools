@@ -260,13 +260,6 @@ mcp__memory-bank-mcp__read_memory_bank_file({ filename: "progress.md" })
 **When to Use**: After completing changes, making decisions, when stuck (search previous solutions), between sessions
 
 ---
-## ⚠️ CRITICAL: MCP Server Read-Only Policy
-The `/mcp-server/` directory is **READ-ONLY** and **MUST NOT BE MODIFIED** by agents working on this project.
-
-🚫 **DO NOT**: Modify or update any files in `/mcp-server/`
-✅ **DO**: Work in `/chrome-extension/` for UI and component developmentries
-**WHY**: The MCP server is stable. Changes require USER APPROVAL.
-
 
 ## ✅ **AgileAI Methodology**
 - **AgileAI_KickStart.md** - 5-minute setup guide for immediate use

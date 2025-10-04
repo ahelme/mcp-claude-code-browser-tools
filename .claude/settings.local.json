@@ -54,7 +54,10 @@
       "Bash(mkdir:*)",
       "mcp__mcp-claude-code-browser-tools__browser_navigate",
       "Bash(npm run dev:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(xargs kill:*)",
+      "Read(//private/tmp/**)",
+      "Bash(curl -X POST http://localhost:3024/send-response )"
     ],
     "deny": [],
     "ask": []
