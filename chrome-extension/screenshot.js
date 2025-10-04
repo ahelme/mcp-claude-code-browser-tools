@@ -72,60 +72,26 @@ class ScreenshotManager {
       debugPrefix: "[Screenshot]",
     });
 
-    // Thread-safe configuration to prevent race conditions
-    const ThreadSafeConfigClass =
-      globalThis.ThreadSafeScreenshotConfig ||
-      function () {
-        // Enhanced fallback implementation with better validation
-        console.log(
-          "🔄 Using fallback ThreadSafeScreenshotConfig (enhanced module not available)"
-        );
+    // Thread-safe configuration (using shared utility)
+    this.threadSafeConfig = new ThreadSafeState(
+      {
+        timeout: { value: 30000, min: 5000, max: 120000 },
+        isCapturing: false,
+      },
+      {
+        debugPrefix: "[Screenshot]",
+      }
+    );
 
-        this.setTimeoutSafe = (timeout) => {
-          const validTimeout = Math.max(
-            5000,
-            Math.min(timeout || 30000, 120000)
-          );
-          console.log(
-            `⏱️ ThreadSafe capture timeout set to ${validTimeout}ms (input: ${timeout})`
-          );
-          return validTimeout;
-        };
-
-        this.setCaptureStateSafe = (state) => {
-          console.log(`🔄 ThreadSafe capture state set: ${state}`);
-          return true;
-        };
-
-        this.getTimeoutSafe = () => {
-          const timeout = this.captureTimeout || 30000;
-          console.log(`⏱️ ThreadSafe capture timeout retrieved: ${timeout}ms`);
-          return timeout;
-        };
-
-        this.getCaptureStateSafe = () => {
-          const state = this.isCapturing || false;
-          console.log(`🔄 ThreadSafe capture state retrieved: ${state}`);
-          return state;
-        };
-      };
-
-    try {
-      this.threadSafeConfig = new ThreadSafeConfigClass();
-    } catch (error) {
-      console.error(
-        "❌ Failed to initialize ThreadSafeScreenshotConfig:",
-        error
-      );
-      // Use minimal fallback
-      this.threadSafeConfig = {
-        setTimeoutSafe: (timeout) =>
-          Math.max(5000, Math.min(timeout || 30000, 120000)),
-        setCaptureStateSafe: () => true,
-        getTimeoutSafe: () => 30000,
-        getCaptureStateSafe: () => false,
-      };
-    }
+    // Provide backward-compatible methods
+    this.threadSafeConfig.setTimeoutSafe = (timeout) =>
+      this.threadSafeConfig.setStateSafe("timeout", timeout);
+    this.threadSafeConfig.getTimeoutSafe = () =>
+      this.threadSafeConfig.getState("timeout");
+    this.threadSafeConfig.setCaptureStateSafe = (state) =>
+      this.threadSafeConfig.setState("isCapturing", state);
+    this.threadSafeConfig.getCaptureStateSafe = () =>
+      this.threadSafeConfig.getState("isCapturing");
 
     // Listener Pool Management for better event handling (using shared utility)
     this.listenerPool = new ListenerPoolManager({
