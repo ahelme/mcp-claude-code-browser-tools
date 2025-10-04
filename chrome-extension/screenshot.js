@@ -56,6 +56,9 @@ class ScreenshotManager {
     this.filenameGenerator = new FilenameGenerator();
     this.screenshotHistory = this.filenameGenerator.screenshotHistory; // Reference for backward compatibility
 
+    // Screenshot capture engine (using screenshot module)
+    this.captureEngine = new ScreenshotCaptureEngine();
+
     // Retry logic (using shared utility)
     this.retryExecutor = new RetryExecutor({
       maxRetries: 2,
@@ -105,8 +108,6 @@ class ScreenshotManager {
 
     // Bind methods to preserve context
     this.captureScreenshot = this.captureScreenshot.bind(this);
-    this.captureViaBackground = this.captureViaBackground.bind(this);
-    this.captureViaWebSocket = this.captureViaWebSocket.bind(this);
     this.updateUI = this.updateUI.bind(this);
 
     this.initializeEventListeners();
@@ -355,7 +356,7 @@ class ScreenshotManager {
    * @since 1.2.0
    */
   /**
-   * Capture screenshot with retry logic (using shared RetryExecutor)
+   * Capture screenshot with retry logic (using shared RetryExecutor and ScreenshotCaptureEngine)
    */
   async captureWithRetry(
     selector,
@@ -366,28 +367,42 @@ class ScreenshotManager {
     source
   ) {
     return this.retryExecutor.executeWithRetry(async () => {
-      // Choose capture method based on source
+      // Choose capture method based on source (delegated to capture engine)
       let result;
       if (source === "panel") {
-        result = await this.captureViaBackground(
+        result = await this.captureEngine.captureViaBackground(
           selector,
           fullPage,
           filename,
           format,
           quality
         );
+
+        // Update UI and add to history for panel captures
+        if (result.success) {
+          this.updateUI("success", result.filename, result);
+          this.addToHistory(result);
+        } else {
+          this.updateUI("error", result.error);
+        }
       } else {
         // Check if we're connected to the HTTP bridge for WebSocket method
         if (!window.wsManager || !window.wsManager.isConnected) {
           throw new Error("Not connected to HTTP bridge");
         }
-        result = await this.captureViaWebSocket(
+        result = await this.captureEngine.captureViaWebSocket(
           selector,
           fullPage,
           filename,
           format,
           quality
         );
+
+        // Update UI and add to history for WebSocket captures
+        if (result.success) {
+          this.updateUI("success", filename);
+          this.addToHistory(result);
+        }
       }
 
       // If result indicates failure, throw error for retry logic
@@ -399,200 +414,9 @@ class ScreenshotManager {
     });
   }
 
-  /**
-   * Capture screenshot via background script (for panel button clicks)
-   *
-   * Captures screenshots using Chrome extension background script with performance monitoring
-   * and comprehensive error handling. Tracks capture duration and provides detailed timing metrics.
-   *
-   * @param {string|null} selector - CSS selector for element-specific screenshots
-   * @param {boolean} fullPage - Whether to capture full page including below fold
-   * @param {string} filename - Generated filename for the screenshot
-   * @param {string} [format="png"] - Image format: "png" or "jpeg"
-   * @param {number} [quality=90] - JPEG quality (1-100, ignored for PNG)
-   * @returns {Promise<Object>} Screenshot result with performance metrics
-   * @since 1.2.0
-   */
-  async captureViaBackground(
-    selector,
-    fullPage,
-    filename,
-    format = "png",
-    quality = 90,
-    sendToHttpBridge = false
-  ) {
-    const startTime = performance.now();
-
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(
-        {
-          type: "CAPTURE_SCREENSHOT",
-          tabId: chrome.devtools.inspectedWindow.tabId,
-          selector,
-          fullPage,
-          filename,
-          format,
-          quality,
-          sendToHttpBridge,
-          timestamp: Date.now(),
-        },
-        (response) => {
-          const loadTime = performance.now() - startTime;
-
-          if (response && response.success) {
-            console.log(
-              `✅ Screenshot captured via background in ${loadTime.toFixed(
-                2
-              )}ms: ${response.filename}`
-            );
-            this.updateUI("success", response.filename, response);
-
-            const enhancedResponse = {
-              ...response,
-              loadTime: Math.round(loadTime),
-              performanceMetrics: {
-                captureMethod: "background",
-                totalTime: loadTime,
-                timestamp: Date.now(),
-                format,
-                quality,
-                fullPage,
-                hasSelector: Boolean(selector),
-              },
-            };
-
-            this.addToHistory(enhancedResponse);
-            resolve(enhancedResponse);
-          } else {
-            const error = response?.error || "Unknown error";
-            console.error(
-              `❌ Screenshot failed via background after ${loadTime.toFixed(
-                2
-              )}ms: ${error}`
-            );
-            this.updateUI("error", error);
-            resolve({
-              success: false,
-              error,
-              loadTime: Math.round(loadTime),
-              performanceMetrics: {
-                captureMethod: "background",
-                totalTime: loadTime,
-                timestamp: Date.now(),
-                failed: true,
-              },
-            });
-          }
-        }
-      );
-    });
-  }
-
-  /**
-   * Capture screenshot via WebSocket (for MCP calls)
-   *
-   * Captures screenshots using WebSocket communication with performance monitoring
-   * and comprehensive error handling. Tracks capture duration and provides detailed timing metrics.
-   *
-   * @param {string|null} selector - CSS selector for element-specific screenshots
-   * @param {boolean} fullPage - Whether to capture full page including below fold
-   * @param {string} filename - Generated filename for the screenshot
-   * @param {string} [format="png"] - Image format: "png" or "jpeg"
-   * @param {number} [quality=90] - JPEG quality (1-100, ignored for PNG)
-   * @returns {Promise<Object>} Screenshot result with performance metrics
-   * @since 1.2.0
-   */
-  async captureViaWebSocket(
-    selector,
-    fullPage,
-    filename,
-    format = "png",
-    quality = 90
-  ) {
-    const startTime = performance.now();
-
-    return new Promise((resolve, reject) => {
-      const requestId = Date.now().toString();
-      const timeout = setTimeout(() => {
-        reject(new Error("Screenshot request timeout"));
-      }, 30000);
-
-      // Set up one-time listener for screenshot response
-      const messageHandler = (message) => {
-        if (
-          message.type === "screenshot-data" &&
-          message.requestId === requestId
-        ) {
-          clearTimeout(timeout);
-          window.wsManager.off("message", messageHandler);
-
-          const loadTime = performance.now() - startTime;
-
-          console.log(
-            `✅ Screenshot captured via WebSocket in ${loadTime.toFixed(
-              2
-            )}ms: ${filename}`
-          );
-          this.updateUI("success", filename);
-
-          const response = {
-            success: true,
-            filename,
-            data: message.data,
-            path: message.path || `.screenshots/${filename}`,
-            loadTime: Math.round(loadTime),
-            performanceMetrics: {
-              captureMethod: "websocket",
-              totalTime: loadTime,
-              timestamp: Date.now(),
-              format,
-              quality,
-              fullPage,
-              hasSelector: Boolean(selector),
-              requestId,
-            },
-          };
-
-          this.addToHistory(response);
-          resolve(response);
-        }
-      };
-
-      window.wsManager.on("message", messageHandler);
-
-      // Send screenshot request via WebSocket
-      const request = {
-        type: "take-screenshot",
-        selector,
-        fullPage,
-        filename,
-        format,
-        quality,
-        requestId,
-        tabId: chrome.devtools.inspectedWindow.tabId,
-        timestamp: Date.now(),
-      };
-
-      console.log("📤 Sending screenshot request via WebSocket:", request);
-      console.log("🔍 WebSocket manager state:", {
-        wsManager: typeof window.wsManager,
-        isConnected: window.wsManager?.isConnected,
-        send: typeof window.wsManager?.send,
-      });
-
-      try {
-        window.wsManager.send(request);
-        console.log("✅ WebSocket screenshot request sent successfully");
-      } catch (error) {
-        console.error("❌ WebSocket send error:", error);
-        clearTimeout(timeout);
-        reject(new Error(`WebSocket send failed: ${error.message}`));
-        return;
-      }
-    });
-  }
-
-  // All filename generation methods moved to FilenameGenerator module
+  // Capture methods delegated to ScreenshotCaptureEngine module
+  // (captureViaBackground, captureViaWebSocket, handleHttpBridgeScreenshotRequest)
+  // All filename generation methods delegated to FilenameGenerator module
   // (generateSessionCode, trimPageName, generateSmartFilename, getPageInfo,
   //  sanitizeFilename, getSessionScreenshotCount, getFallbackFilename)
 
@@ -727,66 +551,10 @@ class ScreenshotManager {
 
   /**
    * Handle screenshot requests from HTTP bridge via WebSocket
+   * (Delegated to ScreenshotCaptureEngine)
    */
   async handleHttpBridgeScreenshotRequest(message) {
-    try {
-      console.log("🔄 Processing HTTP bridge screenshot request...");
-
-      // Capture screenshot using background script method
-      const result = await this.captureViaBackground(
-        message.selector,
-        message.fullPage || false,
-        `screenshot-${message.requestId || Date.now()}.png`,
-        "png",
-        90,
-        true // Send to HTTP bridge for MCP integration
-      );
-
-      if (result.success && window.wsManager && window.wsManager.isConnected) {
-        // Send screenshot data back to HTTP bridge
-        const response = {
-          type: "screenshot-data",
-          requestId: message.requestId,
-          data: result.data,
-          filename: result.filename,
-          success: true,
-        };
-
-        console.log(
-          "📤 Sending screenshot data to HTTP bridge:",
-          response.filename
-        );
-        window.wsManager.send(response);
-      } else {
-        // Send error response
-        const errorResponse = {
-          type: "screenshot-data",
-          requestId: message.requestId,
-          success: false,
-          error: result.error || "Screenshot capture failed",
-        };
-
-        console.error(
-          "❌ Sending screenshot error to HTTP bridge:",
-          errorResponse
-        );
-        if (window.wsManager && window.wsManager.isConnected) {
-          window.wsManager.send(errorResponse);
-        }
-      }
-    } catch (error) {
-      console.error("❌ Error handling HTTP bridge screenshot request:", error);
-
-      // Send error response to HTTP bridge
-      if (window.wsManager && window.wsManager.isConnected) {
-        window.wsManager.send({
-          type: "screenshot-data",
-          requestId: message.requestId,
-          success: false,
-          error: error.message,
-        });
-      }
-    }
+    return this.captureEngine.handleHttpBridgeScreenshotRequest(message);
   }
 
   /**
