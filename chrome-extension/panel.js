@@ -224,15 +224,25 @@ function initializeVisualMessagePanel() {
 
     // Initialize with send message callback
     visualMessagePanel.initialize(visualElements, async (messageData) => {
-      // Send visual message via WebSocket
-      if (wsManager && isConnected) {
-        await wsManager.send({
-          action: "visual-message",
-          data: messageData,
-        });
-      } else {
-        throw new Error("Not connected to server");
+      // Send visual message via HTTP bridge
+      const host = settingsManager.get("serverHost");
+      const port = settingsManager.get("serverPort");
+
+      const response = await fetch(`http://${host}:${port}/visual-message`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(messageData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      const result = await response.json();
+      console.log("✅ Visual message sent:", result);
+      return result;
     });
 
     console.log("💬 Visual Message Panel initialized");
