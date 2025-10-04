@@ -295,13 +295,15 @@ class ScreenshotCaptureEngine {
       console.log("🔄 Processing HTTP bridge screenshot request...");
 
       // Capture screenshot using background script method
+      // IMPORTANT: sendToHttpBridge=false to avoid infinite loop!
+      // We send the response via WebSocket directly below
       const result = await this.captureViaBackground(
         message.selector,
         message.fullPage || false,
         `screenshot-${message.requestId || Date.now()}.png`,
         "png",
         90,
-        true // Send to HTTP bridge for MCP integration
+        false // Don't POST to HTTP bridge - we'll send WebSocket response directly
       );
 
       if (result.success && window.wsManager && window.wsManager.isConnected) {
