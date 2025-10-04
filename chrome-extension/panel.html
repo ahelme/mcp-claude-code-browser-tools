@@ -1182,6 +1182,169 @@
         <input type="hidden" id="string-size-limit" value="500" />
         <input type="hidden" id="max-log-size" value="20000" />
       </div>
+
+      <!-- Visual Precision Tools Panel -->
+      <div class="panel">
+        <div class="panel-title">🎨 Visual Precision Tools</div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <!-- Tool Section: Visual Diff -->
+          <div class="tool-section">
+            <div
+              style="
+                font-size: 8px;
+                color: #0ea5e9;
+                font-weight: 600;
+                margin-bottom: 4px;
+              "
+            >
+              📊 Visual Diff
+            </div>
+            <button
+              class="btn primary"
+              id="visual-diff-btn"
+              style="width: 100%; font-size: 8px; height: 20px"
+            >
+              Compare Screenshots
+            </button>
+            <div
+              id="visual-diff-result"
+              style="
+                font-size: 7px;
+                color: #a1a1aa;
+                margin-top: 4px;
+                display: none;
+              "
+            ></div>
+          </div>
+
+          <!-- Tool Section: Layout Measurement -->
+          <div class="tool-section">
+            <div
+              style="
+                font-size: 8px;
+                color: #0ea5e9;
+                font-weight: 600;
+                margin-bottom: 4px;
+              "
+            >
+              📏 Layout Measurement
+            </div>
+            <input
+              type="text"
+              class="input"
+              id="measure-selector"
+              placeholder="CSS Selector"
+              style="
+                width: 100%;
+                font-size: 8px;
+                height: 18px;
+                margin-bottom: 4px;
+              "
+            />
+            <button
+              class="btn aqua"
+              id="measure-layout-btn"
+              style="width: 100%; font-size: 8px; height: 20px"
+            >
+              Measure Element
+            </button>
+            <div
+              id="measure-result"
+              style="
+                font-size: 7px;
+                color: #a1a1aa;
+                margin-top: 4px;
+                display: none;
+              "
+            ></div>
+          </div>
+
+          <!-- Tool Section: Style Analysis -->
+          <div class="tool-section">
+            <div
+              style="
+                font-size: 8px;
+                color: #0ea5e9;
+                font-weight: 600;
+                margin-bottom: 4px;
+              "
+            >
+              🎨 Style Analysis
+            </div>
+            <input
+              type="text"
+              class="input"
+              id="analyze-selector"
+              placeholder="CSS Selector"
+              style="
+                width: 100%;
+                font-size: 8px;
+                height: 18px;
+                margin-bottom: 4px;
+              "
+            />
+            <button
+              class="btn secondary"
+              id="analyze-styles-btn"
+              style="width: 100%; font-size: 8px; height: 20px"
+            >
+              Analyze Styles
+            </button>
+            <div
+              id="analyze-result"
+              style="
+                font-size: 7px;
+                color: #a1a1aa;
+                margin-top: 4px;
+                display: none;
+              "
+            ></div>
+          </div>
+
+          <!-- Tool Section: Accessibility Check -->
+          <div class="tool-section">
+            <div
+              style="
+                font-size: 8px;
+                color: #0ea5e9;
+                font-weight: 600;
+                margin-bottom: 4px;
+              "
+            >
+              ♿ Accessibility
+            </div>
+            <input
+              type="text"
+              class="input"
+              id="a11y-selector"
+              placeholder="CSS Selector"
+              style="
+                width: 100%;
+                font-size: 8px;
+                height: 18px;
+                margin-bottom: 4px;
+              "
+            />
+            <button
+              class="btn light-pink"
+              id="a11y-check-btn"
+              style="width: 100%; font-size: 8px; height: 20px"
+            >
+              Check Accessibility
+            </button>
+            <div
+              id="a11y-result"
+              style="
+                font-size: 7px;
+                color: #a1a1aa;
+                margin-top: 4px;
+                display: none;
+              "
+            ></div>
+          </div>
+        </div>
+      </div>
     </div>
     <!-- Include JavaScript files -->
     <!-- Shared utilities (loaded first) -->
@@ -1207,6 +1370,13 @@
     <script src="panel/log-display.js"></script>
     <script src="panel/connection-manager.js"></script>
     <script src="panel/visual-message-panel.js"></script>
+
+    <!-- Visual Precision Tools -->
+    <script src="visual-diff.js"></script>
+    <script src="layout-measurement.js"></script>
+    <script src="style-analyzer.js"></script>
+    <script src="accessibility-overlay.js"></script>
+    <script src="visual-tools-integration.js"></script>
 
     <!-- Main orchestrator (loaded last) -->
     <script src="panel.js"></script>
