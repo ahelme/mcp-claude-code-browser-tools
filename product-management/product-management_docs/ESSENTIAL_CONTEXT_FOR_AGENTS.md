@@ -5,14 +5,21 @@
 
 ## 🎯 **PRIMARY MISSION: Build Complete Chrome Extension from Scratch**
 
-**IMPORTANT**: We are building a **brand new Chrome browser extension** from the ground up. We only have the UI design (`panel.html`) - everything else needs to be created!
+**IMPORTANT**: We are building a **brand new Chrome browser extension** from the ground up. 
 
-### 🚀 **The Reality Check**
+We ALREADY have the UI design and the MCP Server AND the http bridge.
 
 ✅ **What We Actually Have:**
 - **UI Design**: `chrome-extension-mvp/panel.html` - Beautiful responsive 4-panel layout (HTML/CSS only)
 - **Backend Infrastructure**: MCP server + HTTP bridge working perfectly (port 3024)
-- **Reference Implementation**: `chrome-extension-old/` - Shows communication patterns but broken
+
+#### **Panel Structure (ALREADY DESIGNED)**
+`chrome-extension-mvp/panel.html` has 4 responsive panels:
+- **Configuration Panel** (65% width) - Server settings, connection status
+- **Code & Content Panel** (25% width) - Code execution, content extraction
+- **Console & Status Panel** (50% width) - Console logs, system status
+- **Advanced Panel** (25% width) - Advanced features, audit results
+
 
 ❌ **What We Need to Build from Scratch:**
 - **Complete Chrome Extension**: manifest.json, service worker, content scripts
@@ -27,17 +34,8 @@
 
 ### 🎨 **UI Design (DESIGN ONLY)**
 - **`chrome-extension-mvp/panel.html`** - Our responsive UI design (HTML structure)
-- **`chrome-extension-mvp/panel.css`** - Modern styling with aqua/magenta theme
+- **`chrome-extension-mvp/panel.css`** - Modern styling w
 - **Status**: 🎨 DESIGN COMPLETE - needs JavaScript functionality
-
-### 🔧 **Reference Implementation (STUDY ONLY)**
-- **`chrome-extension-old/`** - Original extension to study for patterns
-- **Key files to understand**:
-  - `chrome-extension-old/panel.js` - Communication patterns with HTTP bridge
-  - `chrome-extension-old/background.js` - Service worker setup
-  - `chrome-extension-old/manifest.json` - Extension configuration
-  - `chrome-extension-old/content.js` - Content script patterns
-- **Status**: ⚠️ REFERENCE ONLY - broken but shows working communication patterns
 
 ### 🖥️ **Backend Infrastructure (WORKING)**
 - **`mcp-server/server.mjs`** - MCP server (Claude Code integration)
@@ -47,27 +45,22 @@
 
 ---
 
-## 🚀 **MANE BATCH DEPLOYMENT PROTOCOL**
+## 🚀 **AGENT DEPLOYMENT PROTOCOL**
 
-### **📋 BATCH 1: Foundation Infrastructure**
+### **Foundation Infrastructure**
 **Agent**: A (Foundation Architect)
 **Status**: ✅ **COMPLETE**
-**Duration**: ALREADY DEPLOYED
 
 **Deliverables**:
 - ✅ Core infrastructure, MCP server, HTTP bridge established
 - ✅ Interface contracts defined, registry system operational
 - ✅ Backend communication layer fully functional
 
-**User Testing**: N/A (Backend infrastructure)
-**Report**: Foundation complete - ready for Chrome extension development
-
 ---
 
-### **🎨 BATCH 2: Chrome Extension Framework**
-**Agent**: F (Framework Specialist)
-**Priority**: 🔴 **CRITICAL NEXT - BLOCKS ALL OTHER BATCHES**
-**Estimated Duration**: 2-3 hours
+### **🎨 Chrome Extension Framework**
+**Agent**: B (Framework Specialist)
+**Status**: ✅ **COMPLETE**
 
 **Deliverables**:
 - `chrome-extension-mvp/manifest.json` - Extension configuration (Manifest V3)
@@ -76,77 +69,31 @@
 - `chrome-extension-mvp/websocket.js` - Communication with HTTP bridge (port 3024)
 - Basic extension installation and connection framework
 
-**Success Criteria**:
-- Extension loads properly in Chrome Developer Tools
-- Connects to HTTP bridge on port 3024
-- UI panels display correctly with aqua/magenta theme
-- Basic communication framework working (heartbeat/ping-pong)
-- No console errors during extension loading
-
-**User Testing Instructions**:
-```
-📋 BATCH 2 USER TESTING CHECKLIST:
-
-1. Install Extension:
-   - Open Chrome → Extensions → Developer Mode
-   - Click "Load unpacked" → Select chrome-extension-mvp folder
-   - Verify extension appears in extensions list
-
-2. Activate Extension:
-   - Open any website (e.g., https://example.com)
-   - Open Developer Tools (F12)
-   - Look for "Browser Tools" tab
-   - Click on "Browser Tools" tab
-
-3. Test Connection:
-   - Ensure HTTP bridge is running: ./mcp-server/start.sh
-   - Extension should show "Connected" status
-   - Check Configuration Panel shows port 3024 connection
-   - Look for successful WebSocket connection messages
-
-4. UI Verification:
-   - All 4 panels visible and properly sized
-   - Aqua/magenta theme applied correctly
-   - Responsive layout works when resizing DevTools
-   - No broken styling or layout issues
-
-EXPECTED RESULT: Working extension with beautiful UI, connected to backend
-```
-
-**Batch 2 Report Template**:
-```
-🎨 BATCH 2 COMPLETION REPORT - Chrome Extension Framework
-
-✅ COMPLETED DELIVERABLES:
-- [ ] manifest.json created and valid
-- [ ] background.js service worker functional
-- [ ] panel.js UI integration working
-- [ ] websocket.js communication established
-- [ ] Extension loads without errors
-
-📊 USER TESTING RESULTS:
-- Extension Installation: [PASS/FAIL + details]
-- UI Display: [PASS/FAIL + details]
-- Backend Connection: [PASS/FAIL + details]
-- Theme/Styling: [PASS/FAIL + details]
-
-🚀 READY FOR BATCH 3: [YES/NO]
-📝 NOTES: [Any issues or observations]
-
-🎯 NEXT: Deploy Batch 3 (Core Tools) - Agents G, H, I can now work in parallel
-```
-
 ---
 
-### **🛠️ BATCH 3: Core Browser Tools**
-**Agents**: G (Navigation), H (Screenshot), I (Interaction)
-**Depends on**: Batch 2 (Framework) completion
-**Estimated Duration**: 3-4 hours (parallel development)
+### **🛠️ Core Browser Tools**
+**Agents**: C (Navigation), D (Screenshot), E (Interaction)
 
-**Deliverables**:
-- **Agent G**: `chrome-extension-mvp/navigation.js` - URL navigation handler
-- **Agent H**: `chrome-extension-mvp/screenshot.js` - Screenshot capture system
-- **Agent I**: `chrome-extension-mvp/interactions.js` - Click, type, wait handlers
+**COMPLETED**:
+### 🧭 **Agent C (Navigation Specialist)**
+**Mission**: Implement browser navigation functionality
+**Tool**: `browser_navigate`
+- `chrome-extension-mvp/navigation.js` - URL navigation handler
+**Status**: ✅ **COMPLETE**
+
+**CURRENT WORK**
+### 📸 **Agent D (Screenshot Specialist)**
+**Batch**: 3 (Core Tools)
+**Mission**: Implement screenshot capture functionality
+**Tool**: `browser_screenshot`
+- `chrome-extension-mvp/screenshot.js` - Screenshot capture system
+
+**NEXT**
+### 🖱️ **Agent E (Interaction Specialist)**
+**Batch**: 3 (Core Tools)
+**Mission**: Implement click, type, and wait functionality
+**Tools**: `browser_click`, `browser_type`, `browser_wait`
+- `chrome-extension-mvp/interactions.js` - Click, type, wait handlers
 
 **Success Criteria**:
 - All 5 core tools working: navigate, screenshot, click, type, wait
@@ -156,7 +103,7 @@ EXPECTED RESULT: Working extension with beautiful UI, connected to backend
 
 **User Testing Instructions**:
 ```
-📋 BATCH 3 USER TESTING CHECKLIST:
+📋 CORE BROWSER TOOLS USER TESTING CHECKLIST:
 
 1. Navigation Testing (Agent G):
    - Test: mcp__mcp-claude-code-browser-tools__browser_navigate
@@ -182,7 +129,7 @@ EXPECTED RESULT: Working extension with beautiful UI, connected to backend
 EXPECTED RESULT: 5/9 browser tools working perfectly with Claude Code
 ```
 
-**Batch 3 Report Template**:
+**CORE TOOLS Report Template**:
 ```
 🛠️ BATCH 3 COMPLETION REPORT - Core Browser Tools
 
@@ -209,16 +156,15 @@ EXPECTED RESULT: 5/9 browser tools working perfectly with Claude Code
 
 ---
 
-### **⚡ BATCH 4: Advanced Browser Tools**
-**Agents**: B (Evaluation), C (Audit), D (Console), E (Content)
-**Depends on**: Batch 3 (Core Tools) completion
+### **⚡ Advanced Browser Tools**
+**Agents**: F (Evaluation), G (Audit), H (Console), I (Content)
 **Estimated Duration**: 4-5 hours (parallel development)
 
 **Deliverables**:
-- **Agent B**: `chrome-extension-mvp/evaluate.js` - Secure JavaScript execution
-- **Agent C**: `chrome-extension-mvp/audit.js` - Lighthouse performance auditing
-- **Agent D**: `chrome-extension-mvp/console.js` - Console monitoring system
-- **Agent E**: `chrome-extension-mvp/content.js` - Content extraction engine
+- **Agent F**: `chrome-extension-mvp/evaluate.js` - Secure JavaScript execution
+- **Agent G**: `chrome-extension-mvp/audit.js` - Lighthouse performance auditing
+- **Agent H**: `chrome-extension-mvp/console.js` - Console monitoring system
+- **Agent I**: `chrome-extension-mvp/content.js` - Content extraction engine
 
 **Success Criteria**:
 - All 9 browser tools working perfectly
@@ -226,9 +172,31 @@ EXPECTED RESULT: 5/9 browser tools working perfectly with Claude Code
 - Security features implemented (sandboxing, XSS protection)
 - Professional-grade error handling and user feedback
 
+### 🧪 **Agent F (Evaluation Specialist)**
+**Batch**: 4 (Advanced Tools)
+**Mission**: Implement secure JavaScript execution
+**Tool**: `browser_evaluate`
+
+### 📊 **Agent G (Audit Specialist)**
+**Batch**: 4 (Advanced Tools)
+**Mission**: Implement Lighthouse performance/accessibility auditing
+**Tool**: `browser_audit`
+
+### 🎮 **Agent H (Console Detective)**
+**Batch**: 4 (Advanced Tools)
+**Mission**: Implement console log monitoring and retrieval
+**Tool**: `browser_get_console`
+
+### 📄 **Agent I (Content Extractor)**
+**Batch**: 4 (Advanced Tools)
+**Mission**: Implement HTML content extraction and DOM analysis
+**Tool**: `browser_get_content`
+
+---
+
 **User Testing Instructions**:
 ```
-📋 BATCH 4 USER TESTING CHECKLIST:
+📋 ADVANCED TOOLS USER TESTING CHECKLIST:
 
 1. JavaScript Evaluation Testing (Agent B):
    - Test: mcp__mcp-claude-code-browser-tools__browser_evaluate
@@ -258,7 +226,7 @@ EXPECTED RESULT: 5/9 browser tools working perfectly with Claude Code
 EXPECTED RESULT: Complete 9/9 browser tools suite working flawlessly
 ```
 
-**Batch 4 Report Template**:
+**ADVANCED TOOLS Report Template**:
 ```
 ⚡ BATCH 4 COMPLETION REPORT - Advanced Browser Tools
 
@@ -283,69 +251,6 @@ EXPECTED RESULT: Complete 9/9 browser tools suite working flawlessly
 🎉 RESULT: World's first complete MANE-built browser tools suite!
 ```
 
----
-
-## 🦁 **MANE Agent Universe Assignments**
-
-### 🏗️ **Agent A (Foundation Architect) - COMPLETE**
-**Batch**: 1 (Foundation)
-**Status**: ✅ **DEPLOYED AND COMPLETE**
-
-### 🎨 **Agent F (Framework Specialist)**
-**Batch**: 2 (Framework)
-**Mission**: Create complete Chrome extension architecture from scratch
-**Priority**: 🔴 **CRITICAL - ALL OTHER AGENTS DEPEND ON THIS**
-
-### 🧭 **Agent G (Navigation Specialist)**
-**Batch**: 3 (Core Tools)
-**Mission**: Implement browser navigation functionality
-**Tool**: `browser_navigate`
-
-### 📸 **Agent H (Screenshot Specialist)**
-**Batch**: 3 (Core Tools)
-**Mission**: Implement screenshot capture functionality
-**Tool**: `browser_screenshot`
-
-### 🖱️ **Agent I (Interaction Specialist)**
-**Batch**: 3 (Core Tools)
-**Mission**: Implement click, type, and wait functionality
-**Tools**: `browser_click`, `browser_type`, `browser_wait`
-
-### 🧪 **Agent B (Evaluation Specialist)**
-**Batch**: 4 (Advanced Tools)
-**Mission**: Implement secure JavaScript execution
-**Tool**: `browser_evaluate`
-
-### 📊 **Agent C (Audit Specialist)**
-**Batch**: 4 (Advanced Tools)
-**Mission**: Implement Lighthouse performance/accessibility auditing
-**Tool**: `browser_audit`
-
-### 🎮 **Agent D (Console Detective)**
-**Batch**: 4 (Advanced Tools)
-**Mission**: Implement console log monitoring and retrieval
-**Tool**: `browser_get_console`
-
-### 📄 **Agent E (Content Extractor)**
-**Batch**: 4 (Advanced Tools)
-**Mission**: Implement HTML content extraction and DOM analysis
-**Tool**: `browser_get_content`
-
----
-
-## 🎨 **UI Integration Requirements**
-
-### **Panel Structure (ALREADY DESIGNED)**
-`chrome-extension-mvp/panel.html` has 4 responsive panels:
-- **Configuration Panel** (65% width) - Server settings, connection status
-- **Code & Content Panel** (25% width) - Code execution, content extraction
-- **Console & Status Panel** (50% width) - Console logs, system status
-- **Advanced Panel** (25% width) - Advanced features, audit results
-
-### **Required Integration by Batch**
-- **Batch 2 (Framework)**: Basic panel.js framework and WebSocket communication
-- **Batch 3 (Core Tools)**: Navigation, screenshot, interaction controls
-- **Batch 4 (Advanced Tools)**: Evaluation, audit, console, content integration
 
 ---
 
@@ -533,20 +438,7 @@ ls chrome-extension-mvp/
 - **Zero External Dependencies**: Self-contained solution
 - **Perfect Claude Code Integration**: Seamless MCP tool usage
 
----
-
-## 🦁 **Ready for MANE Batch Deployment!**
-
-**Follow the batch protocol for systematic, tested, reliable deployment:**
-
-1. **Batch 2 (Framework)**: Agent F creates the foundation for all other agents
-2. **Batch 3 (Core Tools)**: Agents G, H, I work in parallel to rebuild working tools
-3. **Batch 4 (Advanced Tools)**: Agents B, C, D, E work in parallel for advanced functionality
-
-**Remember: Each batch includes user testing and reporting before proceeding to the next!**
-
 **When in doubt, ask the user! Perfect clarity leads to perfect execution.** 🦁✨
 
 ---
 
-*Created for MANE parallel development with systematic batch deployment! 🌟*

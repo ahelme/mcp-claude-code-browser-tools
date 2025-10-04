@@ -1,8 +1,8 @@
 # Browser Tools Event Contracts
 
-## Event-Driven Architecture for MANE Agents
+## Event-Driven Architecture for Agents
 
-This document defines the event contracts for asynchronous communication between MANE agents in the browser tools ecosystem.
+This document defines the event contracts for asynchronous communication between agents in the browser tools ecosystem.
 
 ## Event Topics
 

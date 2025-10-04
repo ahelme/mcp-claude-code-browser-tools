@@ -42,7 +42,7 @@ npm run dev                       # Development mode with doc watching
 
 ```bash
 # Start documentation server (port 3020)
-./chrome-extension/start-docs.sh
+./start-docs.sh
 ```
 
 - ✅ Auto-generated from OpenAPI 3.0.3 contract

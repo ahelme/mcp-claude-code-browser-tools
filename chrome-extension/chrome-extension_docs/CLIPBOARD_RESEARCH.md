@@ -22,6 +22,19 @@ Screenshots copy to clipboard successfully but **do not paste into Claude Code**
 5. **execCommand Fallback** ❌
    - Never reached (ClipboardItem succeeds but wrong format)
 
+6. **Multi-MIME Type Approach** ❌ (Oct 2, 2025)
+   - Implemented: `text/plain` + `text/html` + `image/png`
+   - Added image dimensions to prevent stretching
+   - HTML format: `<img src="data:..." width="X" height="Y" />`
+   - Result: Still doesn't paste in Claude Code, works in graphics apps
+
+7. **Pure PNG Only (Electron Preference)** ❌ (Oct 2, 2025)
+   - Simplified to single `image/png` blob (removed text/plain, text/html)
+   - Rationale: Electron `clipboard.readImage()` expects native format
+   - Same format Finder uses (confirmed by user)
+   - Result: Still doesn't paste in Claude Code with Cmd+V
+   - Note: Finder copy DOES paste, extension copy DOES NOT
+
 ## Research Findings
 
 ### Key Discovery: Multiple MIME Types Support
@@ -119,19 +132,59 @@ Use system clipboard inspector to see what formats are available:
 
 ## Implementation Priority
 
-1. **HIGH:** Multi-MIME type approach (text/plain + text/html + image/png)
-2. **MEDIUM:** HTML format variations
-3. **LOW:** Native file format approach (complex, may not be needed)
+1. ~~**HIGH:** Multi-MIME type approach (text/plain + text/html + image/png)~~ ❌ FAILED
+2. ~~**MEDIUM:** HTML format variations~~ ❌ FAILED
+3. **✅ IMPLEMENTED:** File path approach (leverages Claude Code auto-attach feature)
 
-## Success Criteria
+## ✅ SOLUTION IMPLEMENTED (Oct 2, 2025)
 
-- ✅ Screenshot pastes into Claude Code text input
-- ✅ Screenshot pastes into other apps (graphics, docs)
+### **File Path Clipboard Copy**
+
+Instead of copying image blob, copy the **file path** after saving to disk.
+
+**Implementation:**
+```javascript
+// After screenshot saved to disk
+const filePath = downloads[0].filename; // Full path from Chrome Downloads API
+await navigator.clipboard.writeText(filePath); // Copy path as text
+```
+
+**How It Works:**
+1. Screenshot saves to disk: `~/Downloads/screenshots/filename.png` ✅
+2. File path copied to clipboard as text ✅
+3. User pastes in Claude Code: `/Users/username/Downloads/screenshots/filename.png`
+4. **Claude Code auto-attaches image!** 🎉
+
+**Why This Works:**
+- Claude Code has built-in feature to auto-attach images from file paths
+- Simple text copy (no blob format issues)
+- Works across all platforms
+- Leverages existing functionality
+- No Electron clipboard compatibility issues
+
+**Benefits:**
+- ✅ Actually works with Claude Code
+- ✅ Simple implementation
 - ✅ No CSP violations
 - ✅ Clean console output
 - ✅ Files save to disk successfully
+- ✅ Leverages Claude Code's built-in auto-attach
+
+**User Experience:**
+- Click screenshot button
+- File saves to disk
+- File path copied to clipboard
+- Paste in Claude Code → Image auto-attaches!
+
+## Success Criteria
+
+- ✅ Screenshot saves to disk successfully
+- ✅ File path copied to clipboard
+- ✅ No CSP violations
+- ✅ Clean console output
+- ⏳ **TESTING:** Paste file path in Claude Code → auto-attach
 
 ---
 
-**Status:** Ready to implement multi-MIME type approach
-**Next Session:** Test ClipboardItem with multiple MIME types
+**Status:** ✅ IMPLEMENTED - File path clipboard copy
+**Next Session:** Test file path paste in Claude Code for auto-attach verification

@@ -50,7 +50,8 @@
       "Bash(gh pr view:*)",
       "Bash(gh issue view:*)",
       "Bash(gh issue edit:*)",
-      "SlashCommand(/deploy-agile-agent --agent=C --issue=41 --enforce-xml-scope=YES)"
+      "SlashCommand(/deploy-agile-agent --agent=C --issue=41 --enforce-xml-scope=YES)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

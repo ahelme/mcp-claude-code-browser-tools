@@ -30,32 +30,29 @@ class InteractionHandler {
     this.cleanupInterval = null;
     this.lastCleanupTime = Date.now();
 
-    // Initialize CSP-safe script executor with enhanced validation
-    const globalValidation = this.validateGlobalReference(
-      "CSPSafeScriptExecutor",
-      globalThis.CSPSafeScriptExecutor,
-    );
-    // Enhanced CSP-safe script executor with better validation
+    // Enhanced CSP-safe script executor with validation
     const CSPSafeExecutorClass =
       globalThis.CSPSafeScriptExecutor ||
       function () {
-        // Enhanced fallback executor with better error reporting and validation
+        // Fallback executor (no validation call needed - just use fallback silently)
         console.log(
-          "🔄 Using fallback CSPSafeScriptExecutor (enhanced module not available)",
+          "🔄 Using fallback CSPSafeScriptExecutor (enhanced module not available)"
         );
 
         this.executeScript = async (tabId, script) => {
           console.warn(
-            "⚠️ CSP-safe executor not available - script execution disabled",
+            "⚠️ CSP-safe executor not available - script execution disabled"
           );
           console.log(
-            "📋 This is expected behavior when enhanced modules are not loaded",
+            "📋 This is expected behavior when enhanced modules are not loaded"
           );
 
           throw new Error(
             "CSP-safe executor not available - script execution disabled. " +
               "This is expected behavior when enhanced modules are not loaded. " +
-              `Requested for tab ${tabId} with script length ${script?.length || 0}`,
+              `Requested for tab ${tabId} with script length ${
+                script?.length || 0
+              }`
           );
         };
 
@@ -158,7 +155,9 @@ class InteractionHandler {
     if (foundDangerousPatterns.length > 0) {
       return {
         isValid: false,
-        error: `Script contains dangerous patterns: ${foundDangerousPatterns.join(", ")}`,
+        error: `Script contains dangerous patterns: ${foundDangerousPatterns.join(
+          ", "
+        )}`,
         sanitizedScript: null,
         dangerousPatterns: foundDangerousPatterns,
       };
@@ -167,7 +166,7 @@ class InteractionHandler {
     // Basic script structure validation for our use cases
     const isWrappedFunction =
       /^\s*\(\s*function\s*\(\s*\)\s*\{[\s\S]*\}\s*\)\s*\(\s*\)\s*;?\s*$/.test(
-        script,
+        script
       );
     if (!isWrappedFunction && context.requireWrappedFunction) {
       return {
@@ -192,7 +191,7 @@ class InteractionHandler {
       // Replace the selector placeholder with sanitized version
       sanitizedScript = sanitizedScript.replace(
         /\$\{selector\.replace\([^}]+\)\}/g,
-        `'${sanitizedSelector}'`,
+        `'${sanitizedSelector}'`
       );
     }
 
@@ -237,7 +236,7 @@ class InteractionHandler {
   validateGlobalReference(globalName, globalValue) {
     if (typeof globalValue === "undefined") {
       console.warn(
-        `⚠️ Global reference '${globalName}' is undefined, using fallback implementation`,
+        `⚠️ Global reference '${globalName}' is undefined, using fallback implementation`
       );
       return {
         isValid: false,
@@ -249,7 +248,7 @@ class InteractionHandler {
 
     if (typeof globalValue !== "function" && typeof globalValue !== "object") {
       console.warn(
-        `⚠️ Global reference '${globalName}' is not a function or object (type: ${typeof globalValue})`,
+        `⚠️ Global reference '${globalName}' is not a function or object (type: ${typeof globalValue})`
       );
       return {
         isValid: false,
@@ -346,7 +345,7 @@ class InteractionHandler {
           }
         })();
       `,
-        { selector: selector },
+        { selector: selector }
       );
 
       console.log("🖱️ Click result:", result);
@@ -476,7 +475,7 @@ class InteractionHandler {
           selectorInvalid: InteractionResults.SELECTOR_INVALID,
           success: InteractionResults.SUCCESS,
           unknownError: InteractionResults.UNKNOWN_ERROR,
-        },
+        }
       );
 
       console.log("⌨️ Type result:", result);
@@ -515,7 +514,7 @@ class InteractionHandler {
       const waitId = `wait_${Date.now()}_${Math.random()}`;
 
       console.log(
-        `⏳ Starting wait for selector: ${selector} (timeout: ${maxTimeout}ms)`,
+        `⏳ Starting wait for selector: ${selector} (timeout: ${maxTimeout}ms)`
       );
 
       // Store active wait operation
@@ -573,7 +572,10 @@ class InteractionHandler {
           const result = await this.executeInCurrentTab(`
             (function() {
               try {
-                const element = document.querySelector('${selector.replace(/'/g, "\\'")}');
+                const element = document.querySelector('${selector.replace(
+                  /'/g,
+                  "\\'"
+                )}');
 
                 if (!element) {
                   return { found: false };
@@ -642,7 +644,7 @@ class InteractionHandler {
 
       if (!sanitizationResult.isValid) {
         throw new Error(
-          `Script sanitization failed: ${sanitizationResult.error}`,
+          `Script sanitization failed: ${sanitizationResult.error}`
         );
       }
 
@@ -653,7 +655,7 @@ class InteractionHandler {
 
       if (!tabId) {
         throw new Error(
-          "No active tab found - ensure DevTools is open and a tab is selected",
+          "No active tab found - ensure DevTools is open and a tab is selected"
         );
       }
 
@@ -672,7 +674,7 @@ class InteractionHandler {
             hasSelector: !!context.selector,
             hasText: !!context.text,
           },
-        },
+        }
       );
 
       console.log("✅ Script executed successfully with enhanced security");
@@ -683,7 +685,7 @@ class InteractionHandler {
       // Provide fallback result for interaction operations
       if (script.includes("querySelector") && script.includes("click")) {
         console.warn(
-          "⚠️ Using interaction fallback - actual click may not have occurred",
+          "⚠️ Using interaction fallback - actual click may not have occurred"
         );
         return {
           success: false,
@@ -747,7 +749,9 @@ class InteractionHandler {
       }, interval);
 
       console.log(
-        `🔄 Next cleanup scheduled in ${interval / 1000}s (${operationCount} active operations)`,
+        `🔄 Next cleanup scheduled in ${
+          interval / 1000
+        }s (${operationCount} active operations)`
       );
     };
 
@@ -766,7 +770,7 @@ class InteractionHandler {
       const age = now - waitInfo.startTime;
       if (age > maxAge) {
         console.log(
-          `🧹 Cleaning up orphaned wait operation: ${waitId} (age: ${age}ms)`,
+          `🧹 Cleaning up orphaned wait operation: ${waitId} (age: ${age}ms)`
         );
         this.activeWaits.delete(waitId);
         cleaned++;

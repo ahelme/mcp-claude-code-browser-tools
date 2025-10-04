@@ -246,7 +246,7 @@ See CLAUDE.md for markdown documentation structure.
 
 ```bash
 # Start comprehensive documentation server
-./chrome-extension/start-docs.sh
+./start-docs.sh
 ```
 
 **Available Endpoints:**

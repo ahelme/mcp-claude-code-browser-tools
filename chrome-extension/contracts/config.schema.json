@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Browser Tools Configuration Schema",
-  "description": "Environment configuration schema for MANE Browser Tools",
+  "description": "Environment configuration schema for Better Browser Tools",
   "type": "object",
   "properties": {
     "BROWSER_TOOLS_PORT": {

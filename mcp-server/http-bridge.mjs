@@ -23,6 +23,10 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { fileURLToPath } from "url";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -386,6 +390,153 @@ app.post("/wait", async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Copy file to clipboard endpoint (native OS clipboard)
+app.post("/copy-file-to-clipboard", async (req, res) => {
+  const { filePath } = req.body;
+
+  if (!filePath) {
+    return res.status(400).json({
+      success: false,
+      error: "filePath is required",
+    });
+  }
+
+  // Security: Validate path is in screenshots directory
+  const screenshotsDir = path.join(os.homedir(), "Downloads", "screenshots");
+  const resolvedPath = path.resolve(filePath);
+
+  if (!resolvedPath.startsWith(screenshotsDir)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid file path - must be in screenshots directory",
+    });
+  }
+
+  // Check file exists
+  if (!fs.existsSync(resolvedPath)) {
+    return res.status(404).json({
+      success: false,
+      error: "File not found",
+    });
+  }
+
+  try {
+    let command;
+
+    switch (process.platform) {
+      case "darwin": // macOS
+        command = `osascript -e 'set the clipboard to POSIX file "${resolvedPath}"'`;
+        break;
+
+      case "win32": // Windows
+        command = `powershell.exe -command "Get-Item '${resolvedPath}' | Set-Clipboard"`;
+        break;
+
+      case "linux":
+        // Try xclip first, fallback to wl-clipboard for Wayland
+        command = `xclip -selection clipboard -t image/png -i "${resolvedPath}" 2>/dev/null || wl-copy < "${resolvedPath}"`;
+        break;
+
+      default:
+        return res.status(500).json({
+          success: false,
+          error: `Unsupported platform: ${process.platform}`,
+        });
+    }
+
+    const { stdout, stderr } = await execAsync(command);
+
+    res.json({
+      success: true,
+      message: "File copied to clipboard in native format",
+      platform: process.platform,
+      filePath: resolvedPath,
+    });
+  } catch (error) {
+    console.error("Clipboard copy failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stderr: error.stderr,
+    });
+  }
+});
+
+// Show file in Finder/Explorer endpoint
+app.post("/show-in-finder", async (req, res) => {
+  const { filePath } = req.body;
+
+  if (!filePath) {
+    return res.status(400).json({
+      success: false,
+      error: "filePath is required",
+    });
+  }
+
+  // Security: Validate path is in screenshots directory
+  const screenshotsDir = path.join(os.homedir(), "Downloads", "screenshots");
+  const resolvedPath = path.resolve(filePath);
+
+  if (!resolvedPath.startsWith(screenshotsDir)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid file path - must be in screenshots directory",
+    });
+  }
+
+  // Check file exists
+  if (!fs.existsSync(resolvedPath)) {
+    return res.status(404).json({
+      success: false,
+      error: "File not found",
+    });
+  }
+
+  try {
+    let command;
+
+    switch (process.platform) {
+      case "darwin": // macOS
+        // -R flag reveals and selects the file
+        command = `open -R "${resolvedPath}"`;
+        break;
+
+      case "win32": // Windows
+        // /select flag opens Explorer with file selected
+        command = `explorer /select,"${resolvedPath}"`;
+        break;
+
+      case "linux":
+        // Open parent directory (can't select file on Linux)
+        const dirPath = path.dirname(resolvedPath);
+        command = `xdg-open "${dirPath}"`;
+        break;
+
+      default:
+        return res.status(500).json({
+          success: false,
+          error: `Unsupported platform: ${process.platform}`,
+        });
+    }
+
+    const { stdout, stderr } = await execAsync(command);
+
+    res.json({
+      success: true,
+      message: "File revealed in file manager",
+      platform: process.platform,
+      filePath: resolvedPath,
+    });
+  } catch (error) {
+    console.error("Show in finder failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stderr: error.stderr,
+    });
   }
 });
 

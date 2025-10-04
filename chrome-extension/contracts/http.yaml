@@ -1,14 +1,13 @@
-# 🦁 MANE HTTP API Contracts v2.0.0
+# 🦁 Better Browser Tools HTTP API Contracts v2.0.0
 #
 # This contract defines the HTTP API interfaces that all MANE agents must
 # follow when implementing browser tools and UI components.
 #
 # Built by: Foundation Architect (Agent A)
-# For: MANE (Modular Agentic Non-linear Engineering)
 
 openapi: 3.0.3
 info:
-  title: MANE Browser Tools API
+  title: Better Browser Tools API
   description: |
     HTTP API contracts for MANE browser tools and Chrome extension communication.
 

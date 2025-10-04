@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Module Integration Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+    .test-section {
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .test-result {
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+    }
+    .pass {
+      background: #1a4d2e;
+      border-left: 4px solid #27ae60;
+      color: #2ecc71;
+    }
+    .fail {
+      background: #4d1a1a;
+      border-left: 4px solid #e74c3c;
+      color: #e74c3c;
+    }
+    .info {
+      background: #1a3a4d;
+      border-left: 4px solid #3498db;
+      color: #5dade2;
+    }
+    h1 {
+      color: #3498db;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #9b59b6;
+      margin-top: 0;
+    }
+    .summary {
+      background: #1a1a2e;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 30px;
+      text-align: center;
+    }
+    .summary h2 {
+      margin-top: 0;
+      color: #3498db;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+    .stat {
+      padding: 15px 30px;
+      border-radius: 6px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .stat.pass { background: #27ae60; color: white; }
+    .stat.fail { background: #e74c3c; color: white; }
+    .stat.total { background: #3498db; color: white; }
+  </style>
+</head>
+<body>
+  <h1>📦 Modular Architecture Integration Test</h1>
+
+  <div class="test-section">
+    <h2>🔍 Phase 1: Module Detection</h2>
+    <div id="detection-results"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>🏗️ Phase 2: Class Instantiation</h2>
+    <div id="instantiation-results"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>✅ Phase 3: Method Verification</h2>
+    <div id="method-results"></div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <!-- Load modules in dependency order -->
+  <script src="../chrome-extension/screenshot/filename-generator.js"></script>
+  <script src="../chrome-extension/screenshot/screenshot-ui.js"></script>
+  <script src="../chrome-extension/screenshot/screenshot-capture.js"></script>
+
+  <script src="../chrome-extension/panel/settings-manager.js"></script>
+  <script src="../chrome-extension/panel/log-display.js"></script>
+  <script src="../chrome-extension/panel/connection-manager.js"></script>
+
+  <script>
+    // Test results tracking
+    const results = {
+      detection: [],
+      instantiation: [],
+      methods: [],
+      total: 0,
+      passed: 0,
+      failed: 0
+    };
+
+    function addResult(phase, name, pass, message) {
+      results[phase].push({ name, pass, message });
+      results.total++;
+      if (pass) results.passed++;
+      else results.failed++;
+    }
+
+    function displayResults(elementId, phaseResults) {
+      const container = document.getElementById(elementId);
+      phaseResults.forEach(result => {
+        const div = document.createElement('div');
+        div.className = `test-result ${result.pass ? 'pass' : 'fail'}`;
+        div.textContent = `${result.pass ? '✅' : '❌'} ${result.name}: ${result.message}`;
+        container.appendChild(div);
+      });
+    }
+
+    // Phase 1: Module Detection
+    console.log('🔍 Phase 1: Testing module availability...');
+
+    const modules = [
+      'FilenameGenerator',
+      'ScreenshotUIManager',
+      'ScreenshotCaptureEngine',
+      'SettingsManager',
+      'LogDisplayManager',
+      'ConnectionManager'
+    ];
+
+    modules.forEach(moduleName => {
+      const exists = typeof window[moduleName] === 'function';
+      addResult('detection', moduleName, exists,
+        exists ? 'Module loaded successfully' : 'Module not found on window object');
+    });
+
+    // Phase 2: Class Instantiation
+    console.log('🏗️ Phase 2: Testing class instantiation...');
+
+    try {
+      // Create mock elements for testing
+      const mockElement = document.createElement('div');
+
+      // Test FilenameGenerator
+      try {
+        const filenameGen = new window.FilenameGenerator();
+        addResult('instantiation', 'FilenameGenerator', true,
+          'Instantiated successfully');
+      } catch (e) {
+        addResult('instantiation', 'FilenameGenerator', false, e.message);
+      }
+
+      // Test ScreenshotUIManager
+      try {
+        const uiManager = new window.ScreenshotUIManager(new window.FilenameGenerator());
+        addResult('instantiation', 'ScreenshotUIManager', true,
+          'Instantiated successfully');
+      } catch (e) {
+        addResult('instantiation', 'ScreenshotUIManager', false, e.message);
+      }
+
+      // Test ScreenshotCaptureEngine
+      try {
+        const captureEngine = new window.ScreenshotCaptureEngine();
+        addResult('instantiation', 'ScreenshotCaptureEngine', true,
+          'Instantiated successfully');
+      } catch (e) {
+        addResult('instantiation', 'ScreenshotCaptureEngine', false, e.message);
+      }
+
+      // Test SettingsManager
+      try {
+        const settingsManager = new window.SettingsManager();
+        addResult('instantiation', 'SettingsManager', true,
+          'Instantiated successfully');
+      } catch (e) {
+        addResult('instantiation', 'SettingsManager', false, e.message);
+      }
+
+      // Test LogDisplayManager
+      try {
+        const logManager = new window.LogDisplayManager(mockElement);
+        addResult('instantiation', 'LogDisplayManager', true,
+          'Instantiated successfully');
+      } catch (e) {
+        addResult('instantiation', 'LogDisplayManager', false, e.message);
+      }
+
+      // Test ConnectionManager
+      try {
+        const mockWsManager = { connect: () => {}, disconnect: () => {} };
+        const connManager = new window.ConnectionManager(mockWsManager, {}, () => {});
+        addResult('instantiation', 'ConnectionManager', true,
+          'Instantiated successfully');
+      } catch (e) {
+        addResult('instantiation', 'ConnectionManager', false, e.message);
+      }
+
+    } catch (e) {
+      console.error('Phase 2 error:', e);
+    }
+
+    // Phase 3: Method Verification
+    console.log('✅ Phase 3: Testing key methods...');
+
+    try {
+      const filenameGen = new window.FilenameGenerator();
+
+      // Test FilenameGenerator methods
+      const hasGenerateMethod = typeof filenameGen.generateSmartFilename === 'function';
+      addResult('methods', 'FilenameGenerator.generateSmartFilename', hasGenerateMethod,
+        hasGenerateMethod ? 'Method exists' : 'Method not found');
+
+      const hasSessionCode = typeof filenameGen.sessionCode === 'string';
+      addResult('methods', 'FilenameGenerator.sessionCode', hasSessionCode,
+        hasSessionCode ? `Session code: ${filenameGen.sessionCode}` : 'Session code not initialized');
+
+      // Test SettingsManager methods
+      const settingsManager = new window.SettingsManager();
+      const hasLoadMethod = typeof settingsManager.load === 'function';
+      addResult('methods', 'SettingsManager.load', hasLoadMethod,
+        hasLoadMethod ? 'Method exists' : 'Method not found');
+
+      const hasGetMethod = typeof settingsManager.get === 'function';
+      addResult('methods', 'SettingsManager.get', hasGetMethod,
+        hasGetMethod ? 'Method exists' : 'Method not found');
+
+      // Test LogDisplayManager methods
+      const logManager = new window.LogDisplayManager(document.createElement('div'));
+      const hasAddEntry = typeof logManager.addEntry === 'function';
+      addResult('methods', 'LogDisplayManager.addEntry', hasAddEntry,
+        hasAddEntry ? 'Method exists' : 'Method not found');
+
+      const hasClear = typeof logManager.clear === 'function';
+      addResult('methods', 'LogDisplayManager.clear', hasClear,
+        hasClear ? 'Method exists' : 'Method not found');
+
+    } catch (e) {
+      console.error('Phase 3 error:', e);
+      addResult('methods', 'Method verification', false, e.message);
+    }
+
+    // Display all results
+    displayResults('detection-results', results.detection);
+    displayResults('instantiation-results', results.instantiation);
+    displayResults('method-results', results.methods);
+
+    // Display summary
+    const summary = document.getElementById('summary');
+    const passRate = ((results.passed / results.total) * 100).toFixed(1);
+
+    summary.innerHTML = `
+      <h2>📊 Test Summary</h2>
+      <div class="stats">
+        <div class="stat total">Total: ${results.total}</div>
+        <div class="stat pass">Passed: ${results.passed}</div>
+        <div class="stat fail">Failed: ${results.failed}</div>
+      </div>
+      <div style="margin-top: 20px; font-size: 32px;">
+        ${passRate >= 100 ? '🎉' : passRate >= 80 ? '✅' : '⚠️'} Pass Rate: ${passRate}%
+      </div>
+    `;
+
+    console.log('📊 Test Results:', results);
+    console.log(`✨ ${results.passed}/${results.total} tests passed (${passRate}%)`);
+  </script>
+</body>
+</html>

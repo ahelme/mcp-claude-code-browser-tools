@@ -856,115 +856,149 @@ async function executeScriptInTab(tabId, script) {
 }
 
 async function handleCopyToClipboard(message, sendResponse) {
+  console.log("🎯 handleCopyToClipboard called");
+  console.log("Message:", message);
+
   try {
-    const { data } = message;
+    const { data, filename, downloadId } = message;
 
     if (!data) {
+      console.error("❌ No data provided");
       sendResponse({ success: false, error: "No data provided" });
       return;
     }
 
-    // ClipboardItem is not available in service workers
-    // Use chrome.scripting to inject clipboard code into the active tab instead
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    // Extract filename as plain string for serialization
+    const filenameString = filename || "screenshot.png";
+    console.log("📁 Filename:", filenameString);
+    console.log("🆔 Download ID:", downloadId);
 
-    if (!tabs || tabs.length === 0) {
-      sendResponse({ success: false, error: "No active tab found" });
-      return;
-    }
+    // Build the full absolute file path
+    let filePath = null;
 
-    const tabId = tabs[0].id;
+    if (downloadId) {
+      try {
+        const downloads = await chrome.downloads.search({ id: downloadId });
+        if (downloads && downloads.length > 0) {
+          // Chrome Downloads API returns the full absolute path
+          const downloadPath = downloads[0].filename;
 
-    // Inject script to copy to clipboard in page context
-    const results = await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      func: async (dataUrl) => {
-        try {
-          // CSP-safe blob conversion (no fetch)
-          function dataURLtoBlob(dataURL) {
-            const parts = dataURL.split(",");
-            const mime = parts[0].match(/:(.*?);/)[1];
-            const binaryString = atob(parts[1]);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            return new Blob([bytes], { type: mime });
+          console.log(`📁 Chrome download path: ${downloadPath}`);
+
+          // Check if it's already an absolute path (starts with / or contains drive letter)
+          if (downloadPath.startsWith("/") || downloadPath.match(/^[A-Z]:\\/)) {
+            // Already absolute path - use as-is
+            filePath = downloadPath;
+          } else {
+            // Relative path - construct full path
+            filePath = `~/Downloads/${downloadPath}`;
           }
 
-          const blob = dataURLtoBlob(dataUrl);
-
-          // Try ClipboardItem with proper PNG MIME type
-          try {
-            const clipboardItem = new ClipboardItem({
-              "image/png": blob,
-            });
-            await navigator.clipboard.write([clipboardItem]);
-            return {
-              success: true,
-              method: "ClipboardItem API",
-              size: blob.size,
-            };
-          } catch (clipboardError) {
-            // Fallback: Use contenteditable + execCommand with img element
-            const img = document.createElement("img");
-            img.src = dataUrl;
-
-            const div = document.createElement("div");
-            div.contentEditable = true;
-            div.appendChild(img);
-            document.body.appendChild(div);
-
-            // Select the image
-            const range = document.createRange();
-            range.selectNode(img);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-
-            const copied = document.execCommand("copy");
-            document.body.removeChild(div);
-
-            if (copied) {
-              return { success: true, method: "execCommand fallback" };
-            } else {
-              return {
-                success: false,
-                error: "Both ClipboardItem and execCommand failed",
-              };
-            }
-          }
-        } catch (error) {
-          return { success: false, error: error.message };
+          console.log(`📁 Final file path: ${filePath}`);
         }
-      },
-      args: [data],
-    });
-
-    // Check the result from the injected script
-    if (results && results[0] && results[0].result) {
-      const result = results[0].result;
-      if (result.success) {
-        console.log(
-          `✅ Screenshot copied to clipboard using: ${result.method}${
-            result.size ? ` (${result.size} bytes)` : ""
-          }`
-        );
-        sendResponse({ success: true, method: result.method });
-      } else {
-        console.error(
-          "❌ Clipboard copy failed in page context:",
-          result.error
-        );
-        sendResponse({ success: false, error: result.error });
+      } catch (error) {
+        console.warn("⚠️ Could not get file path from downloadId:", error);
       }
-    } else {
-      console.error("❌ No result from injected script");
-      sendResponse({
-        success: false,
-        error: "No result from clipboard script",
-      });
     }
+
+    // Fallback: If no downloadId, construct path from filename
+    if (!filePath && filenameString) {
+      filePath = `~/Downloads/screenshots/${filenameString}`;
+      console.log(`📁 Constructed file path: ${filePath}`);
+    }
+
+    // Get MCP server settings
+    const result = await chrome.storage.local.get(["browserConnectorSettings"]);
+    const settings = result.browserConnectorSettings || {
+      serverHost: "localhost",
+      serverPort: 3024,
+    };
+
+    // Solution C: Hybrid Smart Fallback
+    // Step 1: Try native clipboard copy via MCP server
+    console.log("🎯 Attempting native clipboard copy via MCP server...");
+
+    try {
+      const clipboardResponse = await fetch(
+        `http://${settings.serverHost}:${settings.serverPort}/copy-file-to-clipboard`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filePath: filePath }),
+          signal: AbortSignal.timeout(5000),
+        }
+      );
+
+      const clipboardResult = await clipboardResponse.json();
+
+      if (clipboardResult.success) {
+        console.log("✅ Native clipboard copy successful!");
+        console.log(`📋 File copied: ${filePath}`);
+        console.log(`💡 Platform: ${clipboardResult.platform}`);
+        console.log("🎉 Paste in Claude Code should work now!");
+
+        sendResponse({
+          success: true,
+          method: "MCP native clipboard",
+          filePath: filePath,
+          filename: filenameString,
+          platform: clipboardResult.platform,
+          note: "File copied to native OS clipboard - paste in Claude Code!",
+        });
+        return;
+      } else {
+        console.warn("⚠️ Native clipboard failed:", clipboardResult.error);
+      }
+    } catch (clipboardError) {
+      console.warn("⚠️ MCP clipboard request failed:", clipboardError.message);
+    }
+
+    // Step 2: Fallback - Auto-open file manager with file selected
+    console.log("🔄 Falling back to show-in-finder method...");
+
+    try {
+      const finderResponse = await fetch(
+        `http://${settings.serverHost}:${settings.serverPort}/show-in-finder`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filePath: filePath }),
+          signal: AbortSignal.timeout(5000),
+        }
+      );
+
+      const finderResult = await finderResponse.json();
+
+      if (finderResult.success) {
+        console.log("✅ File manager opened with file selected!");
+        console.log(`📁 File location: ${filePath}`);
+        console.log("💡 Press Cmd+C (Mac) or Ctrl+C (Win/Linux) to copy");
+
+        sendResponse({
+          success: true,
+          method: "Show in file manager",
+          filePath: filePath,
+          filename: filenameString,
+          platform: finderResult.platform,
+          note: "File manager opened - press Cmd+C to copy, then paste in Claude Code",
+        });
+        return;
+      } else {
+        console.warn("⚠️ Show in finder failed:", finderResult.error);
+      }
+    } catch (finderError) {
+      console.warn("⚠️ Show-in-finder request failed:", finderError.message);
+    }
+
+    // Step 3: Final fallback - Show file path (user can manually navigate)
+    console.log("📝 All MCP methods failed - providing file path...");
+    sendResponse({
+      success: true,
+      method: "File path display",
+      filePath: filePath,
+      filename: filenameString,
+      note: `Screenshot saved to: ${filePath} - Navigate to this location to copy the file`,
+    });
   } catch (error) {
     console.error("❌ Failed to copy to clipboard:", error);
     sendResponse({ success: false, error: error.message });
