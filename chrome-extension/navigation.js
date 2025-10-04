@@ -441,7 +441,7 @@ class NavigationHandler {
         };
 
         // Create managed listener with pool management
-        const managedListener = this.createManagedListener(
+        const managedListener = this.listenerPool.createManagedListener(
           updateListenerFunction,
           `navigation-${url.substring(0, 50)}`
         );
