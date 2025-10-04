@@ -297,7 +297,9 @@ class ConnectionManager {
                 updateUICallback(host, port);
               }
 
-              // Update WebSocket connection
+              // Note: Programmatically setting input.value does NOT trigger "change" event
+              // Must update WebSocket connection manually here
+              // The URL check in updateServerSettings will prevent unnecessary reconnection
               if (this.wsManager) {
                 this.wsManager.updateServerSettings(host, port);
               }
