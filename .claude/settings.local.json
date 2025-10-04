@@ -52,7 +52,9 @@
       "Bash(gh issue edit:*)",
       "SlashCommand(/deploy-agile-agent --agent=C --issue=41 --enforce-xml-scope=YES)",
       "Bash(mkdir:*)",
-      "mcp__mcp-claude-code-browser-tools__browser_navigate"
+      "mcp__mcp-claude-code-browser-tools__browser_navigate",
+      "Bash(npm run dev:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": []
