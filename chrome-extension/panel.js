@@ -340,127 +340,12 @@ async function OLD_testConnection() {
   }
 }
 
-async function discoverServer(quietMode = false) {
-  if (isDiscoveryInProgress) {
-    console.log("🔍 Discovery already in progress");
-    return;
-  }
-
-  isDiscoveryInProgress = true;
-  discoveryController = new AbortController();
-
-  if (!quietMode) {
-    updateScanStatus("scanning", "Scanning for server...");
-  }
-
-  const hosts = ["localhost", "127.0.0.1"];
-  const ports = [3024, 3025, 3026, 3027, 3028, 3029, 3030]; // Prioritize MCP port
-
-  try {
-    for (const host of hosts) {
-      for (const port of ports) {
-        if (!isDiscoveryInProgress) break;
-
-        try {
-          console.log(`🔍 Trying HTTP ${host}:${port}...`);
-
-          if (!quietMode) {
-            updateScanStatus("scanning", `Checking ${host}:${port}...`);
-          }
-
-          // First check HTTP health endpoint
-          const response = await fetch(`http://${host}:${port}/health`, {
-            signal: AbortSignal.timeout(1000),
-          });
-
-          if (response.ok) {
-            console.log(`✅ HTTP server found at ${host}:${port}`);
-
-            // Now test WebSocket connection
-            console.log(
-              `🔌 Testing WebSocket connection to ${host}:${port}...`
-            );
-            const wsConnectTest = await testWebSocketConnection(host, port);
-
-            if (wsConnectTest) {
-              console.log(
-                `✅ WebSocket connection successful at ${host}:${port}`
-              );
-
-              // Update settings
-              settingsManager.setMany(
-                { serverHost: host, serverPort: port },
-                true
-              );
-              elements.serverHost.value = host;
-              elements.serverPort.value = port;
-
-              // Update WebSocket
-              updateWebSocketConnection();
-
-              updateScanStatus("connected", `Connected to ${host}:${port}`);
-              isDiscoveryInProgress = false;
-              return true;
-            } else {
-              console.log(
-                `⚠️ HTTP found but WebSocket failed at ${host}:${port}`
-              );
-            }
-          }
-        } catch (error) {
-          // Continue to next port/host
-          console.debug(`❌ ${host}:${port} failed:`, error.message);
-        }
-      }
-    }
-
-    updateScanStatus("failed", "No server found");
-    console.log("❌ Server discovery failed - no server found");
-    return false;
-  } catch (error) {
-    updateScanStatus("failed", `Discovery error: ${error.message}`);
-    console.error("❌ Server discovery error:", error);
-    return false;
-  } finally {
-    isDiscoveryInProgress = false;
-    discoveryController = null;
-  }
-}
-
-// Test WebSocket connection to verify server is reachable
-function testWebSocketConnection(host, port) {
-  return new Promise((resolve) => {
-    const testWs = new WebSocket(`ws://${host}:${port}/extension-ws`);
-
-    const timeout = setTimeout(() => {
-      console.log(`⏱️ WebSocket test timeout for ${host}:${port}`);
-      testWs.close();
-      resolve(false);
-    }, 2000);
-
-    testWs.onopen = () => {
-      console.log(`✅ WebSocket test connection opened for ${host}:${port}`);
-      clearTimeout(timeout);
-      testWs.close();
-      resolve(true);
-    };
-
-    testWs.onerror = (error) => {
-      console.log(`❌ WebSocket test error for ${host}:${port}:`, error);
-      clearTimeout(timeout);
-      resolve(false);
-    };
-
-    testWs.onclose = () => {
-      console.log(`🔌 WebSocket test connection closed for ${host}:${port}`);
-    };
-  });
-}
+// OLD discoverServer and testWebSocketConnection removed - now handled by ConnectionManager
 
 // Tool functions (placeholders for now - will be implemented by other agents)
 async function captureScreenshot() {
   console.log("🎬 captureScreenshot function called");
-  console.log("🎬 Settings:", settings);
+  console.log("🎬 Settings:", settingsManager.getAll());
 
   if (!window.screenshotManager) {
     addLogEntry("error", "Screenshot manager not available");
