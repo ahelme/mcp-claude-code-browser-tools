@@ -200,6 +200,57 @@ const tools = {
       additionalProperties: false,
     },
   },
+  browser_receive_visual_message: {
+    title: "Receive Visual Message from User",
+    description: "Receive a message from the user with optional screenshot attachments sent from the DevTools panel. This enables two-way communication directly in the browser for collaborative debugging.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        message: {
+          type: "string",
+          description: "The user's message text",
+        },
+        screenshots: {
+          type: "array",
+          description: "Array of screenshot attachments with metadata",
+          items: {
+            type: "object",
+            properties: {
+              filename: {
+                type: "string",
+                description: "Screenshot filename",
+              },
+              path: {
+                type: "string",
+                description: "Path to screenshot file",
+              },
+              elementMetadata: {
+                type: "object",
+                description: "Optional metadata about selected element",
+                properties: {
+                  selector: {
+                    type: "string",
+                    description: "CSS selector for the element",
+                  },
+                  bounds: {
+                    type: "object",
+                    description: "Element bounding box",
+                  },
+                  tagName: {
+                    type: "string",
+                    description: "HTML tag name",
+                  },
+                },
+              },
+            },
+          },
+          default: [],
+        },
+      },
+      required: ["message"],
+      additionalProperties: false,
+    },
+  },
 };
 
 // Debug logging to stderr only
@@ -409,6 +460,7 @@ async function handleRequest(request) {
           browser_audit: "audit",
           browser_wait: "wait",
           browser_get_console: "getConsole",
+          browser_receive_visual_message: "receiveVisualMessage",
         };
 
         const action = actionMap[toolName];
@@ -417,6 +469,40 @@ async function handleRequest(request) {
             code: -32603,
             message: `Tool ${toolName} not implemented`,
           });
+          return;
+        }
+
+        // Special handling for visual messages (user → Claude direction)
+        if (toolName === "browser_receive_visual_message") {
+          // This tool is called when user sends a message from the panel
+          // We just acknowledge receipt and format the message for Claude
+          const response = {
+            content: [
+              {
+                type: "text",
+                text: `📨 User message from browser:\n\n${args.message}\n\n${
+                  args.screenshots && args.screenshots.length > 0
+                    ? `📎 Attachments: ${args.screenshots.length} screenshot(s)`
+                    : "No attachments"
+                }`,
+              },
+            ],
+          };
+
+          // If screenshots are provided, add them as image content
+          if (args.screenshots && args.screenshots.length > 0) {
+            for (const screenshot of args.screenshots) {
+              if (screenshot.data) {
+                response.content.push({
+                  type: "image",
+                  data: screenshot.data,
+                  mimeType: "image/png",
+                });
+              }
+            }
+          }
+
+          sendResponse(id, response);
           return;
         }
 
