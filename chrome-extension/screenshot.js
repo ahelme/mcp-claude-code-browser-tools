@@ -56,6 +56,9 @@ class ScreenshotManager {
     this.filenameGenerator = new FilenameGenerator();
     this.screenshotHistory = this.filenameGenerator.screenshotHistory; // Reference for backward compatibility
 
+    // Screenshot UI manager (using screenshot module)
+    this.uiManager = new ScreenshotUIManager(this.filenameGenerator);
+
     // Screenshot capture engine (using screenshot module)
     this.captureEngine = new ScreenshotCaptureEngine();
 
@@ -108,7 +111,6 @@ class ScreenshotManager {
 
     // Bind methods to preserve context
     this.captureScreenshot = this.captureScreenshot.bind(this);
-    this.updateUI = this.updateUI.bind(this);
 
     this.initializeEventListeners();
 
@@ -210,6 +212,7 @@ class ScreenshotManager {
     if (!options || typeof options !== "object") {
       const error = "Invalid options format - expected object";
       console.error("❌ Screenshot error:", error);
+      this.uiManager.addLogEntry("error", error);
       return { success: false, error };
     }
 
@@ -229,7 +232,7 @@ class ScreenshotManager {
     if (this.isCapturing) {
       const error = "Screenshot capture already in progress";
       console.warn("⚠️ Screenshot warning:", error);
-      this.addLogEntry("error", error);
+      this.uiManager.addLogEntry("error", error);
       return { success: false, error };
     }
 
@@ -237,8 +240,8 @@ class ScreenshotManager {
       // Start capture (thread-safe)
       this.threadSafeConfig.setCaptureStateSafe(true);
       this.isCapturing = true;
-      this.updateUI("capturing", "Taking screenshot...");
-      this.addLogEntry(
+      this.uiManager.updateUI("capturing", "Taking screenshot...");
+      this.uiManager.addLogEntry(
         "info",
         `Capturing screenshot - fullPage: ${fullPage}, selector: ${
           selector || "none"
@@ -273,7 +276,7 @@ class ScreenshotManager {
       if (result.success) {
         console.log("✅ Screenshot capture successful");
         // Note: Detailed log message added by updateUI() - no need for duplicate here
-        this.updateUI("success", smartFilename);
+        this.uiManager.updateUI("success", smartFilename);
         return {
           ...result,
           loadTime: result.loadTime,
@@ -282,8 +285,11 @@ class ScreenshotManager {
         };
       } else {
         console.error("❌ Screenshot capture failed:", result.error);
-        this.addLogEntry("error", `Screenshot capture failed: ${result.error}`);
-        this.updateUI("error", result.error);
+        this.uiManager.addLogEntry(
+          "error",
+          `Screenshot capture failed: ${result.error}`
+        );
+        this.uiManager.updateUI("error", result.error);
         return {
           ...result,
           retryCount: this.retryAttempts,
@@ -305,8 +311,11 @@ class ScreenshotManager {
         );
       }
 
-      this.addLogEntry("error", `Screenshot capture error: ${errorMessage}`);
-      this.updateUI("error", errorMessage);
+      this.uiManager.addLogEntry(
+        "error",
+        `Screenshot capture error: ${errorMessage}`
+      );
+      this.uiManager.updateUI("error", errorMessage);
       return {
         success: false,
         error: errorMessage,
@@ -323,7 +332,7 @@ class ScreenshotManager {
 
       // Clear status after delay
       setTimeout(() => {
-        this.updateUI("ready", "Ready for screenshot capture");
+        this.uiManager.updateUI("ready", "Ready for screenshot capture");
       }, 3000);
     }
   }
@@ -380,10 +389,10 @@ class ScreenshotManager {
 
         // Update UI and add to history for panel captures
         if (result.success) {
-          this.updateUI("success", result.filename, result);
+          this.uiManager.updateUI("success", result.filename, result);
           this.addToHistory(result);
         } else {
-          this.updateUI("error", result.error);
+          this.uiManager.updateUI("error", result.error);
         }
       } else {
         // Check if we're connected to the HTTP bridge for WebSocket method
@@ -400,7 +409,7 @@ class ScreenshotManager {
 
         // Update UI and add to history for WebSocket captures
         if (result.success) {
-          this.updateUI("success", filename);
+          this.uiManager.updateUI("success", filename);
           this.addToHistory(result);
         }
       }
@@ -420,81 +429,10 @@ class ScreenshotManager {
   // (generateSessionCode, trimPageName, generateSmartFilename, getPageInfo,
   //  sanitizeFilename, getSessionScreenshotCount, getFallbackFilename)
 
-  /**
-   * Update UI elements to show screenshot status
-   */
-  updateUI(status, message = "", diskStatus = null) {
-    const screenshotBtn = document.getElementById("screenshot-btn");
-    if (!screenshotBtn) return;
-
-    switch (status) {
-      case "capturing":
-        screenshotBtn.textContent = "📸 Capturing...";
-        screenshotBtn.disabled = true;
-        this.addLogEntry("info", "Taking screenshot...");
-        break;
-
-      case "success":
-        let buttonText = "✅ Captured!";
-        let logMessage = `Screenshot captured: ${message}`;
-
-        // Show disk saving status
-        if (diskStatus && diskStatus.savedToDisk) {
-          buttonText = "💾 Saved!";
-          logMessage = `Screenshot saved to disk: ${message}`;
-        } else if (diskStatus && diskStatus.savedToDisk === false) {
-          buttonText = "⚠️ Captured";
-          logMessage = `Screenshot captured but not saved to disk: ${
-            diskStatus.fallbackReason || "Download failed"
-          }`;
-        }
-
-        screenshotBtn.textContent = buttonText;
-        screenshotBtn.disabled = false;
-        this.addLogEntry("info", logMessage);
-        this.updateScreenshotPreview(message);
-
-        // Reset button text after 2 seconds
-        setTimeout(() => {
-          screenshotBtn.textContent = "Take screenshot 📸";
-        }, 2000);
-        break;
-
-      case "error":
-        screenshotBtn.textContent = "❌ Failed";
-        screenshotBtn.disabled = false;
-        this.addLogEntry("error", `Screenshot failed: ${message}`);
-
-        // Reset button text after 3 seconds
-        setTimeout(() => {
-          screenshotBtn.textContent = "Take screenshot 📸";
-        }, 3000);
-        break;
-
-      default:
-        screenshotBtn.textContent = "Take screenshot 📸";
-        screenshotBtn.disabled = false;
-    }
-  }
-
-  /**
-   * Update screenshot preview in UI
-   * Shows NEXT predicted filename only
-   */
-  async updateScreenshotPreview(filename) {
-    const previewDiv = document.querySelector(".screenshot-preview");
-    if (!previewDiv) return;
-
-    // Generate next predicted filename (using FilenameGenerator module)
-    const nextFilename = await this.filenameGenerator.predictNextFilename();
-    const filenameSpan = previewDiv.querySelector(".screenshot-filename");
-    if (filenameSpan) {
-      filenameSpan.textContent = nextFilename;
-    }
-  }
-
-  // Filename generation methods now delegated to FilenameGenerator module
-  // Available via this.filenameGenerator (generateSmartFilename, predictNextFilename, etc.)
+  // UI methods delegated to ScreenshotUIManager module
+  // (updateUI, updateScreenshotPreview, addLogEntry)
+  // Filename generation methods delegated to FilenameGenerator module
+  // (generateSmartFilename, predictNextFilename, etc.)
 
   /**
    * Add screenshot to history tracking
@@ -530,12 +468,15 @@ class ScreenshotManager {
 
       case "screenshot-progress":
         console.log(`📸 Screenshot progress: ${message.progress}%`);
-        this.addLogEntry("info", `Screenshot progress: ${message.progress}%`);
+        this.uiManager.addLogEntry(
+          "info",
+          `Screenshot progress: ${message.progress}%`
+        );
         break;
 
       case "screenshot-error":
         console.error(`❌ Screenshot error: ${message.error}`);
-        this.updateUI("error", message.error);
+        this.uiManager.updateUI("error", message.error);
         break;
 
       case "screenshot-data":
@@ -563,23 +504,11 @@ class ScreenshotManager {
   handleScreenshotResponse(message) {
     if (message.success) {
       console.log(`✅ Background screenshot response: ${message.filename}`);
-      this.updateUI("success", message.filename);
+      this.uiManager.updateUI("success", message.filename);
       this.addToHistory(message);
     } else {
       console.error(`❌ Background screenshot error: ${message.error}`);
-      this.updateUI("error", message.error);
-    }
-  }
-
-  /**
-   * Add log entry to the console panel
-   */
-  addLogEntry(level, message) {
-    // Use the existing addLogEntry function if available
-    if (typeof window.addLogEntry === "function") {
-      window.addLogEntry(level, message);
-    } else {
-      console.log(`[${level.toUpperCase()}] ${message}`);
+      this.uiManager.updateUI("error", message.error);
     }
   }
 
