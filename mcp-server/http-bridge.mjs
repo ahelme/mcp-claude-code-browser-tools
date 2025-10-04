@@ -578,6 +578,44 @@ app.get("/get-content", async (req, res) => {
   }
 });
 
+// Visual message endpoint - receives messages from extension panel
+app.post("/visual-message", async (req, res) => {
+  if (!wsConnection) {
+    return res.status(503).json({ error: "Chrome extension not connected" });
+  }
+
+  try {
+    const { message, screenshots } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    console.log(`📨 Visual message received: "${message}" with ${screenshots?.length || 0} screenshots`);
+
+    // Forward message to extension via WebSocket
+    // Extension will display it in the conversation
+    wsConnection.send(
+      JSON.stringify({
+        type: "visual-message",
+        data: {
+          message,
+          screenshots: screenshots || [],
+          timestamp: Date.now(),
+        },
+      }),
+    );
+
+    res.json({
+      success: true,
+      message: "Visual message sent successfully",
+    });
+  } catch (error) {
+    console.error("❌ Visual message error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start HTTP server
 const server = app.listen(PORT, HOST, () => {
   console.log(`🚀 HTTP Bridge Server running at http://${HOST}:${PORT}`);
