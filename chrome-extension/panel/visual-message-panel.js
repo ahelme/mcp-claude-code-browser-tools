@@ -18,6 +18,7 @@ class VisualMessagePanel {
     this.conversation = [];
     this.isInitialized = false;
     this.elementPicker = null;
+    this.isPickerActive = false; // Track picker state
   }
 
   /**
@@ -77,10 +78,14 @@ class VisualMessagePanel {
       });
     }
 
-    // Element picker button
+    // Element picker button - toggle start/stop
     if (this.elements.elementPickerBtn) {
       this.elements.elementPickerBtn.addEventListener("click", () => {
-        this.startElementPicker();
+        if (this.isPickerActive) {
+          this.stopElementPicker();
+        } else {
+          this.startElementPicker();
+        }
       });
     }
   }
@@ -129,6 +134,7 @@ class VisualMessagePanel {
 
         if (response && response.success) {
           console.log("✅ Element picker started");
+          this.isPickerActive = true;
           this.updatePickerButtonState(true);
         } else {
           throw new Error(response?.error || "Failed to start picker");
@@ -156,6 +162,7 @@ class VisualMessagePanel {
 
           if (retryResponse && retryResponse.success) {
             console.log("✅ Element picker started after injection");
+            this.isPickerActive = true;
             this.updatePickerButtonState(true);
           } else {
             throw new Error("Failed after injection retry");
@@ -170,6 +177,42 @@ class VisualMessagePanel {
     } catch (error) {
       console.error("❌ Element picker error:", error);
       alert(`Element picker error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Stop element picker in the active tab
+   */
+  async stopElementPicker() {
+    try {
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      if (!tabs || tabs.length === 0) {
+        console.error("❌ No active tab found");
+        return;
+      }
+
+      const tab = tabs[0];
+
+      // Send stop message to content script
+      const response = await chrome.tabs.sendMessage(tab.id, {
+        type: "STOP_ELEMENT_PICKER",
+        tabId: tab.id,
+      });
+
+      if (response && response.success) {
+        console.log("✅ Element picker stopped");
+        this.isPickerActive = false;
+        this.updatePickerButtonState(false);
+      }
+    } catch (error) {
+      console.error("❌ Failed to stop element picker:", error);
+      // Reset state anyway
+      this.isPickerActive = false;
+      this.updatePickerButtonState(false);
     }
   }
 

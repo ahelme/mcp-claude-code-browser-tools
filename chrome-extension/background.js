@@ -98,6 +98,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleNavigateTab(message, sendResponse);
       return true;
 
+    case "CAPTURE_ELEMENT_SCREENSHOT":
+      handleCaptureElementScreenshot(message, sendResponse);
+      return true;
+
+    case "ELEMENT_SELECTED":
+      handleElementSelected(message, sendResponse);
+      return true;
+
     case "PING":
       sendResponse({ success: true, timestamp: Date.now() });
       break;
@@ -1071,6 +1079,70 @@ async function handleCopyToClipboard(message, sendResponse) {
     });
   } catch (error) {
     console.error("❌ Failed to copy to clipboard:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Handle element screenshot capture request
+ * Called when element picker captures an element and needs a screenshot
+ */
+async function handleCaptureElementScreenshot(message, sendResponse) {
+  try {
+    console.log("📸 Capturing element screenshot:", message);
+
+    const { selector, bounds } = message.data || {};
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    if (!tab) {
+      throw new Error("No active tab found");
+    }
+
+    // Capture full page screenshot
+    const dataUrl = await chrome.tabs.captureVisibleTab(null, {
+      format: "png",
+    });
+
+    console.log(
+      `✅ Element screenshot captured for selector: ${selector || "unknown"}`
+    );
+
+    // Return screenshot with metadata
+    sendResponse({
+      success: true,
+      dataUrl: dataUrl,
+      selector: selector,
+      bounds: bounds,
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error("❌ Failed to capture element screenshot:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+/**
+ * Handle element selected notification
+ * Forwards element selection data to panel for display
+ */
+async function handleElementSelected(message, sendResponse) {
+  try {
+    console.log("🎯 Element selected:", message.data);
+
+    // Forward to panel via runtime message (panel is listening)
+    chrome.runtime.sendMessage({
+      type: "ELEMENT_SELECTED",
+      data: message.data,
+      tabId: message.tabId,
+      timestamp: Date.now(),
+    });
+
+    sendResponse({ success: true });
+  } catch (error) {
+    console.error("❌ Failed to handle element selected:", error);
     sendResponse({ success: false, error: error.message });
   }
 }

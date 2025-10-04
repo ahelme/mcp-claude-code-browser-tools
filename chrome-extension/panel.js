@@ -648,6 +648,17 @@ function handleWebSocketMessage(message) {
       addLogEntry("info", `Console: ${message.data.message}`);
       break;
 
+    case "visual-message":
+      // Incoming visual message from HTTP bridge (user → Claude flow)
+      addLogEntry(
+        "info",
+        `📨 Visual message: "${message.data?.message}" with ${
+          message.data?.screenshots?.length || 0
+        } screenshot(s)`
+      );
+      // This is just an echo - the actual MCP tool call happens in Claude Code
+      break;
+
     case "visual-message-response":
       // Response from Claude via visual messaging
       if (visualMessagePanel) {
