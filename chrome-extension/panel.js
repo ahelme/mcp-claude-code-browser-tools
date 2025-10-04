@@ -100,6 +100,7 @@ function initializeDOM() {
       "deselect-all-screenshots-btn"
     ),
     clearScreenshotsBtn: document.getElementById("clear-screenshots-btn"),
+    clearConversationBtn: document.getElementById("clear-conversation-btn"),
   };
 
   console.log("📋 DOM elements cached:", Object.keys(elements).length);
@@ -227,6 +228,7 @@ function initializeVisualMessagePanel() {
       elementPickerBtn: elements.elementPickerBtn,
       deselectAllBtn: elements.deselectAllScreenshotsBtn,
       clearScreenshotsBtn: elements.clearScreenshotsBtn,
+      clearConversationBtn: elements.clearConversationBtn,
     };
 
     // Initialize with send message callback

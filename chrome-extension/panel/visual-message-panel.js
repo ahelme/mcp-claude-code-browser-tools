@@ -102,6 +102,13 @@ class VisualMessagePanel {
         this.clearScreenshots();
       });
     }
+
+    // Clear conversation button
+    if (this.elements.clearConversationBtn) {
+      this.elements.clearConversationBtn.addEventListener("click", () => {
+        this.clearConversation();
+      });
+    }
   }
 
   /**
@@ -534,8 +541,18 @@ class VisualMessagePanel {
    * Clear all messages in conversation
    */
   clearConversation() {
+    if (
+      this.conversation.length > 0 &&
+      !confirm(
+        "Are you sure you want to clear the conversation? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+
     this.conversation = [];
     this.renderConversation();
+    console.log("🗑️ Cleared conversation history");
   }
 
   /**
