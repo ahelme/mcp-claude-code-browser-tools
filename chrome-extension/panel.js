@@ -13,20 +13,7 @@
  */
 
 // Application state
-let settings = {
-  logLimit: 50,
-  queryLimit: 30000,
-  stringSizeLimit: 500,
-  showRequestHeaders: false,
-  showResponseHeaders: false,
-  maxLogSize: 20000,
-  screenshotPath: "",
-  serverHost: "localhost",
-  serverPort: 3024, // Updated to MCP port
-  autoPaste: false,
-  addToClipboard: false,
-};
-
+let settingsManager = null;
 let wsManager = null;
 let isConnected = false;
 let isDiscoveryInProgress = false;
@@ -40,11 +27,11 @@ let navigationHandler = null;
 let elements = {};
 
 // Initialize when DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("🚀 Browser Tools Panel initializing...");
 
   initializeDOM();
-  loadSettings();
+  await initializeSettings();
   initializeWebSocket();
   initializeNavigationHandler();
   setupEventListeners();
@@ -97,46 +84,20 @@ function initializeDOM() {
   console.log("📋 DOM elements cached:", Object.keys(elements).length);
 }
 
-function loadSettings() {
-  chrome.storage.local.get(["browserConnectorSettings"], (result) => {
-    if (result.browserConnectorSettings) {
-      settings = { ...settings, ...result.browserConnectorSettings };
-      console.log("⚙️ Settings loaded:", settings);
-    }
-
-    updateUIFromSettings();
-  });
+async function initializeSettings() {
+  settingsManager = new SettingsManager();
+  await settingsManager.load();
+  settingsManager.updateUIFromSettings(elements);
 }
 
-function saveSettings() {
-  chrome.storage.local.set({ browserConnectorSettings: settings }, () => {
-    console.log("💾 Settings saved");
-  });
-}
-
-function updateUIFromSettings() {
-  // Update all UI elements from settings
-  elements.serverHost.value = settings.serverHost;
-  elements.serverPort.value = settings.serverPort;
-  // Screenshot path is now display-only, showing default Downloads/screenshots/
-  elements.addToClipboardCb.checked = settings.addToClipboard;
-  elements.autoPasteCb.checked = settings.autoPaste;
-  elements.logLimit.value = settings.logLimit;
-  elements.queryLimit.value = settings.queryLimit;
-  elements.showRequestHeaders.checked = settings.showRequestHeaders;
-  elements.showResponseHeaders.checked = settings.showResponseHeaders;
-  elements.verboseCb.checked = false; // Always start with verbose off
-
-  // Initialize screenshot location display
-  if (elements.screenshotPathDisplay) {
-    elements.screenshotPathDisplay.innerHTML = `📥&nbsp;&nbsp;Chrome Downloads Folder`;
-  }
-
-  console.log("🎨 UI updated from settings");
-}
+// Settings methods delegated to SettingsManager
+// (loadSettings, saveSettings, updateUIFromSettings)
 
 function initializeWebSocket() {
-  wsManager = new WebSocketManager(settings.serverHost, settings.serverPort);
+  wsManager = new WebSocketManager(
+    settingsManager.get("serverHost"),
+    settingsManager.get("serverPort")
+  );
 
   // Connection events
   wsManager.on("connected", () => {
@@ -186,14 +147,12 @@ function initializeNavigationHandler() {
 function setupEventListeners() {
   // Configuration panel events
   elements.serverHost.addEventListener("change", (e) => {
-    settings.serverHost = e.target.value;
-    saveSettings();
+    settingsManager.set("serverHost", e.target.value, true);
     updateWebSocketConnection();
   });
 
   elements.serverPort.addEventListener("change", (e) => {
-    settings.serverPort = parseInt(e.target.value, 10);
-    saveSettings();
+    settingsManager.set("serverPort", parseInt(e.target.value, 10), true);
     updateWebSocketConnection();
   });
 
@@ -205,13 +164,11 @@ function setupEventListeners() {
   // Note: screenshotPathDisplay is read-only, no event listener needed
 
   elements.addToClipboardCb.addEventListener("change", (e) => {
-    settings.addToClipboard = e.target.checked;
-    saveSettings();
+    settingsManager.set("addToClipboard", e.target.checked, true);
   });
 
   elements.autoPasteCb.addEventListener("change", (e) => {
-    settings.autoPaste = e.target.checked;
-    saveSettings();
+    settingsManager.set("autoPaste", e.target.checked, true);
   });
 
   // Code & Content panel events
@@ -227,23 +184,19 @@ function setupEventListeners() {
 
   // Advanced panel events
   elements.logLimit.addEventListener("change", (e) => {
-    settings.logLimit = parseInt(e.target.value, 10);
-    saveSettings();
+    settingsManager.set("logLimit", parseInt(e.target.value, 10), true);
   });
 
   elements.queryLimit.addEventListener("change", (e) => {
-    settings.queryLimit = parseInt(e.target.value, 10);
-    saveSettings();
+    settingsManager.set("queryLimit", parseInt(e.target.value, 10), true);
   });
 
   elements.showRequestHeaders.addEventListener("change", (e) => {
-    settings.showRequestHeaders = e.target.checked;
-    saveSettings();
+    settingsManager.set("showRequestHeaders", e.target.checked, true);
   });
 
   elements.showResponseHeaders.addEventListener("change", (e) => {
-    settings.showResponseHeaders = e.target.checked;
-    saveSettings();
+    settingsManager.set("showResponseHeaders", e.target.checked, true);
   });
 
   console.log("🎯 Event listeners setup complete");
@@ -251,7 +204,10 @@ function setupEventListeners() {
 
 function updateWebSocketConnection() {
   if (wsManager) {
-    wsManager.updateServerSettings(settings.serverHost, settings.serverPort);
+    wsManager.updateServerSettings(
+      settingsManager.get("serverHost"),
+      settingsManager.get("serverPort")
+    );
   }
 }
 
@@ -283,15 +239,13 @@ async function testConnection() {
 
   try {
     // Test HTTP health endpoint first
-    console.log(
-      `🔍 Testing HTTP connection to ${settings.serverHost}:${settings.serverPort}...`
-    );
-    const response = await fetch(
-      `http://${settings.serverHost}:${settings.serverPort}/health`,
-      {
-        signal: AbortSignal.timeout(5000),
-      }
-    );
+    const serverHost = settingsManager.get("serverHost");
+    const serverPort = settingsManager.get("serverPort");
+
+    console.log(`🔍 Testing HTTP connection to ${serverHost}:${serverPort}...`);
+    const response = await fetch(`http://${serverHost}:${serverPort}/health`, {
+      signal: AbortSignal.timeout(5000),
+    });
 
     if (response.ok) {
       const data = await response.json();
@@ -299,10 +253,7 @@ async function testConnection() {
 
       // Now test WebSocket connection
       console.log(`🔌 Testing WebSocket connection...`);
-      const wsTest = await testWebSocketConnection(
-        settings.serverHost,
-        settings.serverPort
-      );
+      const wsTest = await testWebSocketConnection(serverHost, serverPort);
 
       if (wsTest) {
         console.log(`✅ WebSocket connection test successful`);
@@ -312,7 +263,7 @@ async function testConnection() {
         );
         updateConnectionStatus(
           true,
-          `HTTP & WebSocket connected at ${settings.serverHost}:${settings.serverPort}`
+          `HTTP & WebSocket connected at ${serverHost}:${serverPort}`
         );
 
         // Force WebSocket reconnection to ensure proper connection
@@ -325,7 +276,7 @@ async function testConnection() {
         updateScanStatus("failed", "HTTP OK, WebSocket failed");
         updateConnectionStatus(
           false,
-          `HTTP server found but WebSocket connection failed at ${settings.serverHost}:${settings.serverPort}`
+          `HTTP server found but WebSocket connection failed at ${serverHost}:${serverPort}`
         );
       }
     } else {
@@ -394,11 +345,12 @@ async function discoverServer(quietMode = false) {
               );
 
               // Update settings
-              settings.serverHost = host;
-              settings.serverPort = port;
+              settingsManager.setMany(
+                { serverHost: host, serverPort: port },
+                true
+              );
               elements.serverHost.value = host;
               elements.serverPort.value = port;
-              saveSettings();
 
               // Update WebSocket
               updateWebSocketConnection();
@@ -464,6 +416,9 @@ function testWebSocketConnection(host, port) {
 
 // Tool functions (placeholders for now - will be implemented by other agents)
 async function captureScreenshot() {
+  console.log("🎬 captureScreenshot function called");
+  console.log("🎬 Settings:", settings);
+
   if (!window.screenshotManager) {
     addLogEntry("error", "Screenshot manager not available");
     return;
@@ -478,6 +433,8 @@ async function captureScreenshot() {
       source: "panel",
     });
 
+    console.log("🎬 Screenshot result:", result);
+
     if (result.success) {
       console.log(
         "[Screenshot] Saved to:",
@@ -485,13 +442,29 @@ async function captureScreenshot() {
       );
 
       // Copy to clipboard if requested - handled by background.js
-      if (settings.addToClipboard && result.data) {
+      const addToClipboard = settingsManager.get("addToClipboard");
+      console.log("🔍 CLIPBOARD CHECK:", {
+        addToClipboard,
+        hasData: !!result.data,
+        dataLength: result.data?.length,
+      });
+
+      if (addToClipboard && result.data) {
+        console.log("[21:30:55] 🔍 Sending COPY_TO_CLIPBOARD message");
+        console.log("[21:30:55] 📦 Data length:", result.data?.length);
+        console.log("[21:30:55] 📁 Filename:", result.filename);
+        console.log("[21:30:55] 🆔 Download ID:", result.downloadId);
+
         chrome.runtime.sendMessage(
           {
             type: "COPY_TO_CLIPBOARD",
             data: result.data,
+            filename: result.filename, // Pass the actual smart filename
+            downloadId: result.downloadId, // Pass downloadId to get full path
           },
           (response) => {
+            console.log("[21:30:55] 📨 Received response:", response);
+
             if (response && response.success) {
               console.log("[Screenshot] Copied to clipboard");
               addLogEntry("info", "Screenshot copied to clipboard");
@@ -825,10 +798,12 @@ function runConnectionDiagnostics() {
 
   // 1. Check current settings
   console.log("📋 Current Settings:");
-  console.log(`   Host: ${settings.serverHost}`);
-  console.log(`   Port: ${settings.serverPort}`);
+  console.log(`   Host: ${settingsManager.get("serverHost")}`);
+  console.log(`   Port: ${settingsManager.get("serverPort")}`);
   console.log(
-    `   Expected URL: ws://${settings.serverHost}:${settings.serverPort}/extension-ws`
+    `   Expected URL: ws://${settingsManager.get(
+      "serverHost"
+    )}:${settingsManager.get("serverPort")}/extension-ws`
   );
 
   // 2. Check WebSocket Manager state
@@ -846,7 +821,11 @@ function runConnectionDiagnostics() {
   }
 
   // 3. Test HTTP endpoint
-  fetch(`http://${settings.serverHost}:${settings.serverPort}/health`)
+  fetch(
+    `http://${settingsManager.get("serverHost")}:${settingsManager.get(
+      "serverPort"
+    )}/health`
+  )
     .then((response) => {
       if (response.ok) {
         return response.json();
