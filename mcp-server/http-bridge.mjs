@@ -688,7 +688,7 @@ process.on("unhandledRejection", (error) => {
 });
 
 console.log("\n📌 Chrome Extension Setup:");
-console.log("1. Install extension from: https://browsertools.agentdesk.ai/");
+console.log("1. Install extension from: https://github.com/ahelme/mcp-claude-code-browser-tools/");
 console.log(
   '2. Set Server Port: type "3024" into Browser Tools chrome ext. HIT RETURN <important',
 );
