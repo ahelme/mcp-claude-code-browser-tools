@@ -1,1 +1,66 @@
-#!/bin/bash# Colors for outputRED='\033[0;31m'GREEN='\033[0;32m'YELLOW='\033[1;33m'BLUE='\033[0;34m'NC='\033[0m' # No Colorecho -e "${BLUE}🚀 Starting BrowserTools MCP Complete Stack...${NC}"# Check dependenciesecho -e "${YELLOW}📋 Checking dependencies...${NC}"command -v node >/dev/null 2>&1 || { echo -e "${RED}❌ Node.js is required but not installed.${NC}" >&2; exit 1; }command -v npm >/dev/null 2>&1 || { echo -e "${RED}❌ npm is required but not installed.${NC}" >&2; exit 1; }# Install dependencies if neededif [ ! -d "node_modules" ]; then    echo -e "${YELLOW}📦 Installing dependencies...${NC}"    npm installfi# Build documentationecho -e "${YELLOW}📚 Building JSDoc documentation...${NC}"npm run docs:build# Start services in backgroundecho -e "${YELLOW}🔧 Starting HTTP Bridge...${NC}"node http-bridge/server.mjs &HTTP_BRIDGE_PID=$!echo -e "${YELLOW}🤖 Starting MCP Server...${NC}"node src/mcp-server.mjs &MCP_SERVER_PID=$!echo -e "${YELLOW}📖 Starting Documentation Server...${NC}"./chrome-extension/start-docs.sh &DOCS_SERVER_PID=$!# Wait for services to startsleep 3# Health checksecho -e "${YELLOW}🏥 Running health checks...${NC}"curl -s http://localhost:3020/health > /dev/null && echo -e "${GREEN}✅ Documentation server ready${NC}" || echo -e "${RED}❌ Documentation server failed${NC}"echo -e "${GREEN}🎉 All services started successfully!${NC}"echo -e "${BLUE}📚 Documentation Portal: http://localhost:3020/docs${NC}"echo -e "${BLUE}🔗 REST API docs: http://localhost:3020/rest-docs${NC}"echo -e "${BLUE}🔌 WebSocket docs: http://localhost:3020/ws-docs${NC}"echo -e "${BLUE}📖 JSDoc API docs: http://localhost:3020/jsdoc${NC}"echo -e "${BLUE}🤖 AI-discoverable: http://localhost:3020/health${NC}"echo -e "${YELLOW}💡 Next steps:${NC}"echo -e "   1. Install Chrome extension from ./chrome-extension/"echo -e "   2. Configure MCP client to connect to the server"echo -e "   3. Test the complete pipeline"echo -e "${YELLOW}⏹️  To stop all services: Ctrl+C or run 'pkill -f \"node.*mcp\\|node.*bridge\\|start-docs\"'${NC}"# Keep script running and handle cleanuptrap "echo -e '\\n${YELLOW}🛑 Stopping services...${NC}'; kill $HTTP_BRIDGE_PID $MCP_SERVER_PID $DOCS_SERVER_PID 2>/dev/null; exit 0" INTwait
+#!/bin/bash
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}🚀 Starting Browser Tools MCP Stack...${NC}"
+
+# Start HTTP Bridge (port 3024)
+echo -e "${YELLOW}🔧 Starting HTTP Bridge on port 3024...${NC}"
+./mcp-server/start.sh &
+HTTP_BRIDGE_PID=$!
+echo -e "${GREEN}✅ HTTP Bridge started (PID: $HTTP_BRIDGE_PID)${NC}"
+
+# Wait for HTTP bridge to be ready
+sleep 2
+
+# Start Documentation Server (port 3020)
+echo -e "${YELLOW}📖 Starting Documentation Server on port 3020...${NC}"
+./start-docs.sh &
+DOCS_SERVER_PID=$!
+echo -e "${GREEN}✅ Documentation Server started (PID: $DOCS_SERVER_PID)${NC}"
+
+# Wait for services to initialize
+sleep 2
+
+# Health checks
+echo -e "${YELLOW}🏥 Running health checks...${NC}"
+
+# Check HTTP Bridge
+if curl -s http://localhost:3024/health > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ HTTP Bridge healthy (port 3024)${NC}"
+else
+    echo -e "${RED}❌ HTTP Bridge not responding (port 3024)${NC}"
+fi
+
+# Check Documentation Server
+if curl -s http://localhost:3020/health > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ Documentation Server healthy (port 3020)${NC}"
+else
+    echo -e "${RED}❌ Documentation Server not responding (port 3020)${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}🎉 All services started successfully!${NC}"
+echo ""
+echo -e "${BLUE}📚 Available Services:${NC}"
+echo -e "   ${BLUE}🔧 HTTP Bridge:${NC}        http://localhost:3024/health"
+echo -e "   ${BLUE}📚 Documentation Portal:${NC} http://localhost:3020/docs"
+echo -e "   ${BLUE}🔗 REST API docs:${NC}       http://localhost:3020/rest-docs"
+echo -e "   ${BLUE}🔌 WebSocket docs:${NC}      http://localhost:3020/ws-docs"
+echo ""
+echo -e "${YELLOW}💡 Next steps:${NC}"
+echo -e "   1. Open Chrome DevTools → Browser Tools tab"
+echo -e "   2. Configure server port to 3024"
+echo -e "   3. Click 'Test Connection' or 'Discover Server'"
+echo ""
+echo -e "${YELLOW}⏹️  To stop: Press Ctrl+C${NC}"
+
+# Keep script running and handle cleanup
+trap "echo -e '\\n${YELLOW}🛑 Stopping services...${NC}'; kill $HTTP_BRIDGE_PID $DOCS_SERVER_PID 2>/dev/null; echo -e '${GREEN}✅ Services stopped${NC}'; exit 0" INT
+
+wait

@@ -655,7 +655,9 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     console.log("⚠️  Chrome extension disconnected");
-    if (wsConnection === ws) {
+    // Only clear wsConnection if THIS connection is still the active one
+    // AND no newer connection has been established (prevents race condition)
+    if (wsConnection === ws && ws.readyState === WebSocket.CLOSED) {
       wsConnection = null;
       currentTabId = null;
       currentUrl = "";
