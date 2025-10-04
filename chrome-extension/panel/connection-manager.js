@@ -42,7 +42,7 @@ class ConnectionManager {
     this.isDiscoveryInProgress = false;
     this.discoveryController = null;
 
-    console.log('🔌 ConnectionManager initialized');
+    console.log("🔌 ConnectionManager initialized");
   }
 
   /**
@@ -58,16 +58,20 @@ class ConnectionManager {
    */
   updateConnectionStatus(connected, message) {
     if (!this.elements.statusIndicator || !this.elements.statusText) {
-      console.warn('⚠️ ConnectionManager: Status elements not available');
+      console.warn("⚠️ ConnectionManager: Status elements not available");
       return;
     }
 
     this.elements.statusIndicator.className = connected
-      ? 'status-indicator status-connected'
-      : 'status-indicator status-disconnected';
+      ? "status-indicator status-connected"
+      : "status-indicator status-disconnected";
     this.elements.statusText.textContent = message;
 
-    console.log(`🔌 Connection status: ${connected ? 'Connected' : 'Disconnected'} - ${message}`);
+    console.log(
+      `🔌 Connection status: ${
+        connected ? "Connected" : "Disconnected"
+      } - ${message}`
+    );
   }
 
   /**
@@ -83,18 +87,18 @@ class ConnectionManager {
    */
   updateScanStatus(state, message) {
     if (!this.elements.scanIndicator || !this.elements.scanText) {
-      console.warn('⚠️ ConnectionManager: Scan status elements not available');
+      console.warn("⚠️ ConnectionManager: Scan status elements not available");
       return;
     }
 
     const stateClasses = {
-      scanning: 'scan-indicator-scanning',
-      connected: 'scan-indicator-connected',
-      failed: 'scan-indicator-failed',
-      idle: 'scan-indicator-idle',
+      scanning: "scanning",
+      connected: "connected",
+      failed: "failed",
+      idle: "ready-state",
     };
 
-    const stateClass = stateClasses[state] || 'scan-indicator-idle';
+    const stateClass = stateClasses[state] || "ready-state";
 
     this.elements.scanIndicator.className = `scan-indicator ${stateClass}`;
     this.elements.scanText.textContent = message;
@@ -121,14 +125,19 @@ class ConnectionManager {
    * @since 1.0.0
    */
   async testConnection(serverHost, serverPort) {
-    this.updateScanStatus('scanning', 'Testing connection...');
+    this.updateScanStatus("scanning", "Testing connection...");
 
     try {
       // Test HTTP health endpoint first
-      console.log(`🔍 Testing HTTP connection to ${serverHost}:${serverPort}...`);
-      const response = await fetch(`http://${serverHost}:${serverPort}/health`, {
-        signal: AbortSignal.timeout(5000),
-      });
+      console.log(
+        `🔍 Testing HTTP connection to ${serverHost}:${serverPort}...`
+      );
+      const response = await fetch(
+        `http://${serverHost}:${serverPort}/health`,
+        {
+          signal: AbortSignal.timeout(5000),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -136,11 +145,17 @@ class ConnectionManager {
 
         // Now test WebSocket connection
         console.log(`🔌 Testing WebSocket connection...`);
-        const wsTest = await this.testWebSocketConnection(serverHost, serverPort);
+        const wsTest = await this.testWebSocketConnection(
+          serverHost,
+          serverPort
+        );
 
         if (wsTest) {
           console.log(`✅ WebSocket connection test successful`);
-          this.updateScanStatus('connected', `Connected to ${data.status || 'server'}`);
+          this.updateScanStatus(
+            "connected",
+            `Connected to ${data.status || "server"}`
+          );
           this.updateConnectionStatus(
             true,
             `HTTP & WebSocket connected at ${serverHost}:${serverPort}`
@@ -155,25 +170,28 @@ class ConnectionManager {
           return { success: true, data };
         } else {
           console.log(`❌ WebSocket connection test failed`);
-          this.updateScanStatus('failed', 'HTTP OK, WebSocket failed');
+          this.updateScanStatus("failed", "HTTP OK, WebSocket failed");
           this.updateConnectionStatus(
             false,
             `HTTP server found but WebSocket connection failed at ${serverHost}:${serverPort}`
           );
-          return { success: false, error: 'WebSocket connection failed' };
+          return { success: false, error: "WebSocket connection failed" };
         }
       } else {
-        this.updateScanStatus('failed', `Server error: ${response.status}`);
-        this.updateConnectionStatus(false, `Server returned error: ${response.status}`);
+        this.updateScanStatus("failed", `Server error: ${response.status}`);
+        this.updateConnectionStatus(
+          false,
+          `Server returned error: ${response.status}`
+        );
         return { success: false, error: `HTTP ${response.status}` };
       }
     } catch (error) {
       const errorMsg =
-        error.name === 'AbortError'
+        error.name === "AbortError"
           ? `Connection timeout after 5000ms`
           : `${error.name}: ${error.message}`;
       console.error(`❌ Connection test failed:`, errorMsg);
-      this.updateScanStatus('failed', `Connection failed: ${errorMsg}`);
+      this.updateScanStatus("failed", `Connection failed: ${errorMsg}`);
       this.updateConnectionStatus(false, `Connection failed: ${errorMsg}`);
       return { success: false, error: errorMsg };
     }
@@ -199,39 +217,46 @@ class ConnectionManager {
    *
    * @since 1.0.0
    */
-  async discoverServer(quietMode = false, updateSettingsCallback, updateUICallback) {
+  async discoverServer(
+    quietMode = false,
+    updateSettingsCallback,
+    updateUICallback
+  ) {
     if (this.isDiscoveryInProgress) {
-      console.log('🔍 Discovery already in progress');
-      return { success: false, error: 'Discovery already in progress' };
+      console.log("🔍 Discovery already in progress");
+      return { success: false, error: "Discovery already in progress" };
     }
 
     this.isDiscoveryInProgress = true;
     this.discoveryController = new AbortController();
 
     if (!quietMode) {
-      this.updateScanStatus('scanning', 'Discovering server on localhost...');
+      this.updateScanStatus("scanning", "Discovering server on localhost...");
       if (this.addLogEntry) {
-        this.addLogEntry('info', '🔍 Starting server discovery on localhost...');
+        this.addLogEntry(
+          "info",
+          "🔍 Starting server discovery on localhost..."
+        );
       }
     }
 
     // Common MCP server ports to scan
     const portsToScan = [3024, 3000, 3001, 8080, 8000, 5000];
-    const host = 'localhost';
+    const host = "localhost";
 
     try {
       for (const port of portsToScan) {
         if (this.discoveryController.signal.aborted) {
-          console.log('🛑 Discovery cancelled by user');
+          console.log("🛑 Discovery cancelled by user");
           if (!quietMode) {
-            this.updateScanStatus('idle', 'Discovery cancelled');
+            this.updateScanStatus("idle", "Discovery cancelled");
           }
-          return { success: false, error: 'Discovery cancelled' };
+          return { success: false, error: "Discovery cancelled" };
         }
 
         console.log(`🔍 Checking port ${port}...`);
         if (!quietMode) {
-          this.updateScanStatus('scanning', `Checking port ${port}...`);
+          this.updateScanStatus("scanning", `Checking port ${port}...`);
         }
 
         try {
@@ -244,10 +269,15 @@ class ConnectionManager {
             console.log(`✅ HTTP server found at ${host}:${port}`);
 
             // Test WebSocket connection
-            const wsConnectTest = await this.testWebSocketConnection(host, port);
+            const wsConnectTest = await this.testWebSocketConnection(
+              host,
+              port
+            );
 
             if (wsConnectTest) {
-              console.log(`✅ WebSocket connection successful at ${host}:${port}`);
+              console.log(
+                `✅ WebSocket connection successful at ${host}:${port}`
+              );
 
               // Update settings via callback
               if (updateSettingsCallback) {
@@ -264,16 +294,24 @@ class ConnectionManager {
                 this.wsManager.updateServerSettings(host, port);
               }
 
-              this.updateScanStatus('connected', `Connected to ${host}:${port}`);
+              this.updateScanStatus(
+                "connected",
+                `Connected to ${host}:${port}`
+              );
               this.isDiscoveryInProgress = false;
 
               if (this.addLogEntry) {
-                this.addLogEntry('info', `✅ Server discovered at ${host}:${port}`);
+                this.addLogEntry(
+                  "info",
+                  `✅ Server discovered at ${host}:${port}`
+                );
               }
 
               return { success: true, host, port };
             } else {
-              console.log(`⚠️ HTTP found but WebSocket failed at ${host}:${port}`);
+              console.log(
+                `⚠️ HTTP found but WebSocket failed at ${host}:${port}`
+              );
             }
           }
         } catch (error) {
@@ -283,21 +321,21 @@ class ConnectionManager {
       }
 
       // No server found
-      console.log('❌ No MCP server found on scanned ports');
-      this.updateScanStatus('failed', 'No server found on common ports');
+      console.log("❌ No MCP server found on scanned ports");
+      this.updateScanStatus("failed", "No server found on common ports");
 
       if (this.addLogEntry) {
         this.addLogEntry(
-          'error',
-          '❌ No MCP server found. Please start the server and try again.'
+          "error",
+          "❌ No MCP server found. Please start the server and try again."
         );
       }
 
       this.isDiscoveryInProgress = false;
-      return { success: false, error: 'No server found' };
+      return { success: false, error: "No server found" };
     } catch (error) {
-      console.error('❌ Discovery error:', error);
-      this.updateScanStatus('failed', 'Discovery error');
+      console.error("❌ Discovery error:", error);
+      this.updateScanStatus("failed", "Discovery error");
       this.isDiscoveryInProgress = false;
       return { success: false, error: error.message };
     }
@@ -314,7 +352,7 @@ class ConnectionManager {
   cancelDiscovery() {
     if (this.discoveryController) {
       this.discoveryController.abort();
-      console.log('🛑 Discovery cancelled');
+      console.log("🛑 Discovery cancelled");
     }
   }
 
@@ -369,25 +407,29 @@ class ConnectionManager {
    * @since 1.0.0
    */
   runDiagnostics(settings) {
-    console.log('\n🔬 RUNNING CONNECTION DIAGNOSTICS');
-    console.log('='.repeat(50));
+    console.log("\n🔬 RUNNING CONNECTION DIAGNOSTICS");
+    console.log("=".repeat(50));
 
     // 1. Check current settings
-    console.log('📋 Current Settings:');
+    console.log("📋 Current Settings:");
     console.log(`   Host: ${settings.serverHost}`);
     console.log(`   Port: ${settings.serverPort}`);
-    console.log(`   Expected URL: ws://${settings.serverHost}:${settings.serverPort}/extension-ws`);
+    console.log(
+      `   Expected URL: ws://${settings.serverHost}:${settings.serverPort}/extension-ws`
+    );
 
     // 2. Check WebSocket Manager state
     if (this.wsManager) {
       const state = this.wsManager.connectionState;
-      console.log('🔌 WebSocket Manager State:');
+      console.log("🔌 WebSocket Manager State:");
       console.log(`   Connected: ${state.isConnected}`);
       console.log(`   Reconnect attempts: ${state.reconnectAttempts}`);
-      console.log(`   Ready state: ${state.readyState} (0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)`);
+      console.log(
+        `   Ready state: ${state.readyState} (0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED)`
+      );
       console.log(`   Queued messages: ${state.queuedMessages}`);
     } else {
-      console.log('❌ WebSocket Manager not initialized');
+      console.log("❌ WebSocket Manager not initialized");
     }
 
     // 3. Test HTTP endpoint
@@ -400,16 +442,16 @@ class ConnectionManager {
         }
       })
       .then((data) => {
-        console.log('✅ HTTP Health Check: OK');
-        console.log('   Response:', data);
+        console.log("✅ HTTP Health Check: OK");
+        console.log("   Response:", data);
       })
       .catch((error) => {
-        console.log('❌ HTTP Health Check: FAILED');
-        console.log('   Error:', error.message);
+        console.log("❌ HTTP Health Check: FAILED");
+        console.log("   Error:", error.message);
       });
 
-    console.log('='.repeat(50));
-    console.log('💡 Check the output above for connection issues\n');
+    console.log("=".repeat(50));
+    console.log("💡 Check the output above for connection issues\n");
   }
 
   /**

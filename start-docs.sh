@@ -26,4 +26,4 @@ echo ""
 echo "🛑 To stop: pkill -f docs-server"
 echo ""
 
-node docs-server.mjs
+node chrome-extension/docs-server.mjs
