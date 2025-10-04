@@ -51,10 +51,26 @@ class ScreenshotManager {
     this.captureTimeout = 30000; // 30 second timeout
     this.currentCaptureController = null;
     this.activeCaptureListener = null; // Track active listener for cleanup
-    this.retryAttempts = 0;
-    this.maxRetries = 2; // Maximum retry attempts for transient failures
     this.screenshotHistory = new Map();
     this.sessionCode = this.generateSessionCode(); // Randomized session code
+
+    // Retry logic (using shared utility)
+    this.retryExecutor = new RetryExecutor({
+      maxRetries: 2,
+      baseDelay: 1000,
+      maxDelay: 5000,
+      retryablePatterns: [
+        "timeout",
+        "network",
+        "connection",
+        "unreachable",
+        "temporary",
+        "capture failed",
+        "tabs api",
+        "ERR_",
+      ],
+      debugPrefix: "[Screenshot]",
+    });
 
     // Thread-safe configuration to prevent race conditions
     const ThreadSafeConfigClass =
@@ -367,6 +383,9 @@ class ScreenshotManager {
    *
    * @since 1.2.0
    */
+  /**
+   * Capture screenshot with retry logic (using shared RetryExecutor)
+   */
   async captureWithRetry(
     selector,
     fullPage,
@@ -375,132 +394,38 @@ class ScreenshotManager {
     quality,
     source
   ) {
-    let lastError = null;
-
-    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
-      try {
-        if (attempt > 0) {
-          console.log(
-            `🔄 Screenshot retry attempt ${attempt}/${this.maxRetries} for: ${filename}`
-          );
-          this.addLogEntry(
-            "info",
-            `Retry attempt ${attempt}/${this.maxRetries}`
-          );
-          // Wait before retry (exponential backoff with 5-second cap)
-          const baseDelay = 1000;
-          const exponentialDelay = Math.pow(2, attempt) * baseDelay;
-          const cappedDelay = Math.min(exponentialDelay, 5000); // Max 5 seconds
-          console.log(`⏳ Waiting ${cappedDelay}ms before retry...`);
-          await new Promise((resolve) => setTimeout(resolve, cappedDelay));
-        }
-
-        this.retryAttempts = attempt;
-
-        // Choose capture method based on source
-        let result;
-        if (source === "panel") {
-          result = await this.captureViaBackground(
-            selector,
-            fullPage,
-            filename,
-            format,
-            quality
-          );
-        } else {
-          // Check if we're connected to the HTTP bridge for WebSocket method
-          if (!window.wsManager || !window.wsManager.isConnected) {
-            throw new Error("Not connected to HTTP bridge");
-          }
-          result = await this.captureViaWebSocket(
-            selector,
-            fullPage,
-            filename,
-            format,
-            quality
-          );
-        }
-
-        if (result.success) {
-          return result;
-        }
-
-        lastError = new Error(result.error);
-
-        // Check if error is retryable (network/timeout issues)
-        const isRetryable =
-          result.error &&
-          (result.error.includes("timeout") ||
-            result.error.includes("Network") ||
-            result.error.includes("ERR_") ||
-            result.error.includes("connection") ||
-            result.error.includes("capture failed"));
-
-        if (!isRetryable || attempt === this.maxRetries) {
-          return result;
-        }
-      } catch (error) {
-        lastError = error;
-        console.warn(
-          `⚠️ Screenshot capture attempt ${attempt + 1} failed:`,
-          error.message
+    return this.retryExecutor.executeWithRetry(async () => {
+      // Choose capture method based on source
+      let result;
+      if (source === "panel") {
+        result = await this.captureViaBackground(
+          selector,
+          fullPage,
+          filename,
+          format,
+          quality
         );
-
-        // Don't retry on non-recoverable errors
-        if (attempt === this.maxRetries || !this.isRetryableError(error)) {
-          throw error;
+      } else {
+        // Check if we're connected to the HTTP bridge for WebSocket method
+        if (!window.wsManager || !window.wsManager.isConnected) {
+          throw new Error("Not connected to HTTP bridge");
         }
+        result = await this.captureViaWebSocket(
+          selector,
+          fullPage,
+          filename,
+          format,
+          quality
+        );
       }
-    }
 
-    throw (
-      lastError ||
-      new Error("Screenshot capture failed after all retry attempts")
-    );
-  }
+      // If result indicates failure, throw error for retry logic
+      if (!result.success && result.error) {
+        throw new Error(result.error);
+      }
 
-  /**
-   * Check if an error is retryable for screenshot operations
-   * @param {Error} error - Error to check
-   * @returns {boolean} Whether error is retryable
-   */
-  isRetryableError(error) {
-    const retryablePatterns = [
-      "timeout",
-      "network",
-      "connection",
-      "unreachable",
-      "temporary",
-      "capture failed",
-      "tabs api",
-    ];
-
-    const nonRetryablePatterns = [
-      "extension context invalidated",
-      "context invalidated",
-      "extension context",
-      "disconnected port",
-      "message port closed",
-      "invalid selector",
-      "element not found",
-    ];
-
-    // First check if error is explicitly non-retryable
-    if (
-      nonRetryablePatterns.some((pattern) =>
-        error.message.toLowerCase().includes(pattern)
-      )
-    ) {
-      console.log(
-        `🚫 Non-retryable screenshot error detected: ${error.message}`
-      );
-      return false;
-    }
-
-    // Then check if it's retryable
-    return retryablePatterns.some((pattern) =>
-      error.message.toLowerCase().includes(pattern)
-    );
+      return result;
+    });
   }
 
   /**

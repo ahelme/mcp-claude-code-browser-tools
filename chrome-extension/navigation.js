@@ -24,8 +24,21 @@ class NavigationHandler {
     this.navigationTimeout = 10000; // 10 second timeout
     this.currentNavigationController = null;
     this.activeNavigationListener = null; // Track active listener for cleanup
-    this.retryAttempts = 0;
-    this.maxRetries = 2; // Maximum retry attempts for transient failures
+
+    // Retry logic (using shared utility)
+    this.retryExecutor = new RetryExecutor({
+      maxRetries: 2,
+      baseDelay: 1000,
+      maxDelay: 5000,
+      retryablePatterns: [
+        "timeout",
+        "network",
+        "connection",
+        "unreachable",
+        "temporary",
+      ],
+      debugPrefix: "[Navigation]",
+    });
 
     // Thread-safe configuration to prevent race conditions
     const ThreadSafeConfigClass =
@@ -379,66 +392,21 @@ class NavigationHandler {
   }
 
   /**
-   * Navigation with retry logic for transient failures
+   * Navigation with retry logic (using shared RetryExecutor)
    * @param {string} url - Normalized URL to navigate to
    * @returns {Promise<Object>} Navigation result
    */
   async navigateToUrlWithRetry(url) {
-    let lastError = null;
+    return this.retryExecutor.executeWithRetry(async () => {
+      const result = await this.navigateToUrl(url);
 
-    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
-      try {
-        if (attempt > 0) {
-          console.log(
-            `🔄 Navigation retry attempt ${attempt}/${this.maxRetries} for: ${url}`
-          );
-          this.addLogEntry(
-            "info",
-            `Retry attempt ${attempt}/${this.maxRetries}`
-          );
-          // Wait before retry (exponential backoff with 5-second cap)
-          const baseDelay = 1000;
-          const exponentialDelay = Math.pow(2, attempt) * baseDelay;
-          const cappedDelay = Math.min(exponentialDelay, 5000); // Max 5 seconds
-          console.log(`⏳ Waiting ${cappedDelay}ms before retry...`);
-          await new Promise((resolve) => setTimeout(resolve, cappedDelay));
-        }
-
-        this.retryAttempts = attempt;
-        const result = await this.navigateToUrl(url);
-
-        if (result.success) {
-          return result;
-        }
-
-        lastError = new Error(result.error);
-
-        // Check if error is retryable (network/timeout issues)
-        const isRetryable =
-          result.error &&
-          (result.error.includes("timeout") ||
-            result.error.includes("Network") ||
-            result.error.includes("ERR_") ||
-            result.error.includes("connection"));
-
-        if (!isRetryable || attempt === this.maxRetries) {
-          return result;
-        }
-      } catch (error) {
-        lastError = error;
-        console.warn(
-          `⚠️ Navigation attempt ${attempt + 1} failed:`,
-          error.message
-        );
-
-        // Don't retry on non-recoverable errors
-        if (attempt === this.maxRetries || !this.isRetryableError(error)) {
-          throw error;
-        }
+      // If result indicates failure, throw error for retry logic
+      if (!result.success && result.error) {
+        throw new Error(result.error);
       }
-    }
 
-    throw lastError || new Error("Navigation failed after all retry attempts");
+      return result;
+    });
   }
 
   /**
@@ -446,38 +414,8 @@ class NavigationHandler {
    * @param {Error} error - Error to check
    * @returns {boolean} Whether error is retryable
    */
-  isRetryableError(error) {
-    const retryablePatterns = [
-      "timeout",
-      "network",
-      "connection",
-      "unreachable",
-      "temporary",
-    ];
-
-    const nonRetryablePatterns = [
-      "extension context invalidated",
-      "context invalidated",
-      "extension context",
-      "disconnected port",
-      "message port closed",
-    ];
-
-    // First check if error is explicitly non-retryable
-    if (
-      nonRetryablePatterns.some((pattern) =>
-        error.message.toLowerCase().includes(pattern)
-      )
-    ) {
-      console.log(`🚫 Non-retryable error detected: ${error.message}`);
-      return false;
-    }
-
-    // Then check if it's retryable
-    return retryablePatterns.some((pattern) =>
-      error.message.toLowerCase().includes(pattern)
-    );
-  }
+  // Retry error checking now delegated to shared RetryExecutor
+  // Available via this.retryExecutor.isRetryableError(error)
 
   /**
    * Perform the actual navigation
