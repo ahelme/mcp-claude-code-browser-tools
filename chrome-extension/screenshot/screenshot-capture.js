@@ -34,9 +34,11 @@
 class ScreenshotCaptureEngine {
   /**
    * Create a new screenshot capture engine
+   * @param {FilenameGenerator} filenameGenerator - Filename generator instance for smart naming
    */
-  constructor() {
+  constructor(filenameGenerator = null) {
     this.isCapturing = false;
+    this.filenameGenerator = filenameGenerator;
     console.log("📸 ScreenshotCaptureEngine initialized");
   }
 
@@ -294,13 +296,24 @@ class ScreenshotCaptureEngine {
       this.isCapturing = true;
       console.log("🔄 Processing HTTP bridge screenshot request...");
 
+      // Generate smart filename using FilenameGenerator
+      const filename = this.filenameGenerator
+        ? await this.filenameGenerator.generateSmartFilename(
+            message.selector,
+            message.fullPage || false,
+            "png"
+          )
+        : `screenshot-${message.requestId || Date.now()}.png`;
+
+      console.log(`📝 Generated filename: ${filename}`);
+
       // Capture screenshot using background script method
       // IMPORTANT: sendToHttpBridge=false to avoid infinite loop!
       // We send the response via WebSocket directly below
       const result = await this.captureViaBackground(
         message.selector,
         message.fullPage || false,
-        `screenshot-${message.requestId || Date.now()}.png`,
+        filename,
         "png",
         90,
         false // Don't POST to HTTP bridge - we'll send WebSocket response directly

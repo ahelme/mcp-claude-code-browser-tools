@@ -60,7 +60,7 @@ class ScreenshotManager {
     this.uiManager = new ScreenshotUIManager(this.filenameGenerator);
 
     // Screenshot capture engine (using screenshot module)
-    this.captureEngine = new ScreenshotCaptureEngine();
+    this.captureEngine = new ScreenshotCaptureEngine(this.filenameGenerator);
 
     // Retry logic (using shared utility)
     this.retryExecutor = new RetryExecutor({
