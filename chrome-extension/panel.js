@@ -119,9 +119,10 @@ function initializeWebSocket() {
   wsManager.on("connected", () => {
     console.log("✅ WebSocket connected!");
     isConnected = true;
+    const host = settingsManager.get("serverHost");
+    const port = settingsManager.get("serverPort");
+
     if (connectionManager) {
-      const host = settingsManager.get("serverHost");
-      const port = settingsManager.get("serverPort");
       connectionManager.updateConnectionStatus(
         true,
         "Connected to HTTP Bridge"
@@ -129,6 +130,14 @@ function initializeWebSocket() {
       connectionManager.updateScanStatus(
         "connected",
         `Connected to ${host}:${port}`
+      );
+    }
+
+    // Add log entry for auto-connect (logDisplayManager is always available)
+    if (logDisplayManager) {
+      logDisplayManager.addEntry(
+        "info",
+        `✅ Auto-connected to ${host}:${port}`
       );
     }
   });
