@@ -321,7 +321,14 @@ class WebSocketManager {
 
     const newUrl = `ws://${host}:${port}/extension-ws`;
 
+    console.log(
+      `🔍 URL comparison - Current: "${this.url}", New: "${newUrl}", Same: ${
+        newUrl === this.url
+      }`
+    );
+
     if (newUrl !== this.url) {
+      console.log(`🔄 URLs differ - initiating reconnection`);
       this.host = host;
       this.port = port;
       this.url = newUrl;
@@ -329,6 +336,8 @@ class WebSocketManager {
       // Reconnect with new settings
       this.disconnect();
       setTimeout(() => this.connect(), 1000);
+    } else {
+      console.log(`✅ URLs match - skipping reconnection`);
     }
   }
 }

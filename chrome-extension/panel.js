@@ -188,11 +188,21 @@ function initializeNavigationHandler() {
 function setupEventListeners() {
   // Configuration panel events
   elements.serverHost.addEventListener("change", (e) => {
+    console.log(
+      `🔔 serverHost "change" event fired - old: "${settingsManager.get(
+        "serverHost"
+      )}", new: "${e.target.value}"`
+    );
     settingsManager.set("serverHost", e.target.value, true);
     updateWebSocketConnection();
   });
 
   elements.serverPort.addEventListener("change", (e) => {
+    console.log(
+      `🔔 serverPort "change" event fired - old: ${settingsManager.get(
+        "serverPort"
+      )}, new: ${parseInt(e.target.value, 10)}`
+    );
     settingsManager.set("serverPort", parseInt(e.target.value, 10), true);
     updateWebSocketConnection();
   });
