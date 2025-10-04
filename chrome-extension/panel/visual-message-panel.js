@@ -17,6 +17,7 @@ class VisualMessagePanel {
     this.screenshots = [];
     this.conversation = [];
     this.isInitialized = false;
+    this.elementPicker = null;
   }
 
   /**
@@ -25,16 +26,22 @@ class VisualMessagePanel {
    * @param {Function} sendMessageCallback - Callback to send messages via WebSocket
    */
   initialize(domElements, sendMessageCallback) {
-    console.log('🎨 Initializing Visual Message Panel...');
+    console.log("🎨 Initializing Visual Message Panel...");
 
     this.elements = domElements;
     this.sendMessageCallback = sendMessageCallback;
+
+    // Initialize element picker if available
+    if (window.ElementPicker) {
+      this.elementPicker = new window.ElementPicker();
+      console.log("🎯 Element picker initialized");
+    }
 
     this.setupEventListeners();
     this.loadRecentScreenshots();
     this.isInitialized = true;
 
-    console.log('✅ Visual Message Panel initialized');
+    console.log("✅ Visual Message Panel initialized");
   }
 
   /**
@@ -43,15 +50,15 @@ class VisualMessagePanel {
   setupEventListeners() {
     // Send message button
     if (this.elements.sendMessageBtn) {
-      this.elements.sendMessageBtn.addEventListener('click', () => {
+      this.elements.sendMessageBtn.addEventListener("click", () => {
         this.handleSendMessage();
       });
     }
 
     // Enter key to send (Cmd+Enter for send)
     if (this.elements.messageInput) {
-      this.elements.messageInput.addEventListener('keydown', (e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      this.elements.messageInput.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
           e.preventDefault();
           this.handleSendMessage();
         }
@@ -60,11 +67,59 @@ class VisualMessagePanel {
 
     // Screenshot checkboxes - delegate to parent container
     if (this.elements.screenshotList) {
-      this.elements.screenshotList.addEventListener('change', (e) => {
-        if (e.target.type === 'checkbox' && e.target.classList.contains('screenshot-checkbox')) {
+      this.elements.screenshotList.addEventListener("change", (e) => {
+        if (
+          e.target.type === "checkbox" &&
+          e.target.classList.contains("screenshot-checkbox")
+        ) {
           this.updateSelectedCount();
         }
       });
+    }
+
+    // Element picker button
+    if (this.elements.elementPickerBtn) {
+      this.elements.elementPickerBtn.addEventListener("click", () => {
+        this.startElementPicker();
+      });
+    }
+  }
+
+  /**
+   * Start element picker in the active tab
+   */
+  async startElementPicker() {
+    try {
+      // Get active tab
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      if (!tab) {
+        console.error("❌ No active tab found");
+        return;
+      }
+
+      // Send message to content script to start element picker
+      const response = await chrome.tabs.sendMessage(tab.id, {
+        type: "START_ELEMENT_PICKER",
+        tabId: tab.id,
+      });
+
+      if (response.success) {
+        console.log("✅ Element picker started");
+        // Update button state
+        if (this.elements.elementPickerBtn) {
+          this.elements.elementPickerBtn.textContent = "⏹️ Stop Picker";
+          this.elements.elementPickerBtn.classList.remove("aqua");
+          this.elements.elementPickerBtn.classList.add("danger");
+        }
+      } else {
+        console.error("❌ Failed to start element picker:", response.error);
+      }
+    } catch (error) {
+      console.error("❌ Element picker error:", error);
     }
   }
 
@@ -75,9 +130,21 @@ class VisualMessagePanel {
   async loadRecentScreenshots() {
     // Placeholder - will integrate with actual screenshot capture
     this.screenshots = [
-      { filename: 'nav-menu_5s.png', timestamp: Date.now() - 5000, path: '/screenshots/nav-menu_5s.png' },
-      { filename: 'button-primary_10s.png', timestamp: Date.now() - 10000, path: '/screenshots/button-primary_10s.png' },
-      { filename: 'footer_15s.png', timestamp: Date.now() - 15000, path: '/screenshots/footer_15s.png' },
+      {
+        filename: "nav-menu_5s.png",
+        timestamp: Date.now() - 5000,
+        path: "/screenshots/nav-menu_5s.png",
+      },
+      {
+        filename: "button-primary_10s.png",
+        timestamp: Date.now() - 10000,
+        path: "/screenshots/button-primary_10s.png",
+      },
+      {
+        filename: "footer_15s.png",
+        timestamp: Date.now() - 15000,
+        path: "/screenshots/footer_15s.png",
+      },
     ];
 
     this.renderScreenshotList();
@@ -89,9 +156,10 @@ class VisualMessagePanel {
   renderScreenshotList() {
     if (!this.elements.screenshotList) return;
 
-    const html = this.screenshots.map((screenshot, index) => {
-      const timeAgo = Math.floor((Date.now() - screenshot.timestamp) / 1000);
-      return `
+    const html = this.screenshots
+      .map((screenshot, index) => {
+        const timeAgo = Math.floor((Date.now() - screenshot.timestamp) / 1000);
+        return `
         <label class="screenshot-item">
           <input
             type="checkbox"
@@ -103,9 +171,11 @@ class VisualMessagePanel {
           <span class="screenshot-time">(${timeAgo}s ago)</span>
         </label>
       `;
-    }).join('');
+      })
+      .join("");
 
-    this.elements.screenshotList.innerHTML = html || '<div class="no-screenshots">No recent screenshots</div>';
+    this.elements.screenshotList.innerHTML =
+      html || '<div class="no-screenshots">No recent screenshots</div>';
     this.updateSelectedCount();
   }
 
@@ -113,11 +183,15 @@ class VisualMessagePanel {
    * Update the selected screenshot count display
    */
   updateSelectedCount() {
-    const checkboxes = this.elements.screenshotList?.querySelectorAll('.screenshot-checkbox:checked') || [];
+    const checkboxes =
+      this.elements.screenshotList?.querySelectorAll(
+        ".screenshot-checkbox:checked"
+      ) || [];
     const count = checkboxes.length;
 
     if (this.elements.selectedCount) {
-      this.elements.selectedCount.textContent = count > 0 ? `${count} selected` : '0 selected';
+      this.elements.selectedCount.textContent =
+        count > 0 ? `${count} selected` : "0 selected";
     }
   }
 
@@ -128,8 +202,10 @@ class VisualMessagePanel {
   getSelectedScreenshots() {
     if (!this.elements.screenshotList) return [];
 
-    const checkboxes = this.elements.screenshotList.querySelectorAll('.screenshot-checkbox:checked');
-    return Array.from(checkboxes).map(cb => {
+    const checkboxes = this.elements.screenshotList.querySelectorAll(
+      ".screenshot-checkbox:checked"
+    );
+    return Array.from(checkboxes).map((cb) => {
       const index = parseInt(cb.dataset.index);
       return this.screenshots[index];
     });
@@ -142,29 +218,33 @@ class VisualMessagePanel {
     const message = this.elements.messageInput?.value.trim();
 
     if (!message) {
-      console.warn('⚠️ Cannot send empty message');
+      console.warn("⚠️ Cannot send empty message");
       return;
     }
 
     const selectedScreenshots = this.getSelectedScreenshots();
 
-    console.log(`📤 Sending message: "${message}" with ${selectedScreenshots.length} screenshot(s)`);
+    console.log(
+      `📤 Sending message: "${message}" with ${selectedScreenshots.length} screenshot(s)`
+    );
 
     // Add message to conversation immediately (optimistic UI)
     this.addMessageToConversation({
-      type: 'user',
+      type: "user",
       text: message,
       screenshots: selectedScreenshots,
       timestamp: Date.now(),
-      status: 'sending'
+      status: "sending",
     });
 
     // Clear input
-    this.elements.messageInput.value = '';
+    this.elements.messageInput.value = "";
 
     // Uncheck all screenshots
-    const checkboxes = this.elements.screenshotList?.querySelectorAll('.screenshot-checkbox') || [];
-    checkboxes.forEach(cb => cb.checked = false);
+    const checkboxes =
+      this.elements.screenshotList?.querySelectorAll(".screenshot-checkbox") ||
+      [];
+    checkboxes.forEach((cb) => (cb.checked = false));
     this.updateSelectedCount();
 
     // Send via WebSocket
@@ -172,21 +252,21 @@ class VisualMessagePanel {
       try {
         await this.sendMessageCallback({
           message,
-          screenshots: selectedScreenshots.map(s => ({
+          screenshots: selectedScreenshots.map((s) => ({
             filename: s.filename,
-            path: s.path
-          }))
+            path: s.path,
+          })),
         });
 
         // Update status to sent
-        this.updateLastMessageStatus('sent');
+        this.updateLastMessageStatus("sent");
       } catch (error) {
-        console.error('❌ Failed to send message:', error);
-        this.updateLastMessageStatus('error');
+        console.error("❌ Failed to send message:", error);
+        this.updateLastMessageStatus("error");
       }
     } else {
-      console.warn('⚠️ No send callback configured');
-      this.updateLastMessageStatus('error');
+      console.warn("⚠️ No send callback configured");
+      this.updateLastMessageStatus("error");
     }
   }
 
@@ -217,32 +297,45 @@ class VisualMessagePanel {
   renderConversation() {
     if (!this.elements.conversationDisplay) return;
 
-    const html = this.conversation.map(msg => {
-      const time = new Date(msg.timestamp).toLocaleTimeString();
-      const statusIcon = msg.status === 'sending' ? '⏳' :
-                        msg.status === 'sent' ? '✓' :
-                        msg.status === 'error' ? '❌' : '';
+    const html = this.conversation
+      .map((msg) => {
+        const time = new Date(msg.timestamp).toLocaleTimeString();
+        const statusIcon =
+          msg.status === "sending"
+            ? "⏳"
+            : msg.status === "sent"
+            ? "✓"
+            : msg.status === "error"
+            ? "❌"
+            : "";
 
-      const screenshotBadge = msg.screenshots?.length > 0
-        ? `<span class="screenshot-badge">📎 ${msg.screenshots.length}</span>`
-        : '';
+        const screenshotBadge =
+          msg.screenshots?.length > 0
+            ? `<span class="screenshot-badge">📎 ${msg.screenshots.length}</span>`
+            : "";
 
-      return `
+        return `
         <div class="message ${msg.type}">
           <div class="message-header">
-            <span class="message-sender">${msg.type === 'user' ? 'You' : 'Claude'}</span>
+            <span class="message-sender">${
+              msg.type === "user" ? "You" : "Claude"
+            }</span>
             <span class="message-time">${time} ${statusIcon}</span>
           </div>
           <div class="message-text">${this.escapeHtml(msg.text)}</div>
           ${screenshotBadge}
         </div>
       `;
-    }).join('');
+      })
+      .join("");
 
-    this.elements.conversationDisplay.innerHTML = html || '<div class="no-messages">No messages yet. Start a conversation!</div>';
+    this.elements.conversationDisplay.innerHTML =
+      html ||
+      '<div class="no-messages">No messages yet. Start a conversation!</div>';
 
     // Auto-scroll to bottom
-    this.elements.conversationDisplay.scrollTop = this.elements.conversationDisplay.scrollHeight;
+    this.elements.conversationDisplay.scrollTop =
+      this.elements.conversationDisplay.scrollHeight;
   }
 
   /**
@@ -250,14 +343,14 @@ class VisualMessagePanel {
    * @param {Object} response - Response object with text, screenshots, metadata
    */
   receiveClaudeResponse(response) {
-    console.log('📥 Received response from Claude:', response);
+    console.log("📥 Received response from Claude:", response);
 
     this.addMessageToConversation({
-      type: 'claude',
-      text: response.text || response.message || 'No response text',
+      type: "claude",
+      text: response.text || response.message || "No response text",
       screenshots: response.screenshots || [],
       timestamp: Date.now(),
-      status: 'received'
+      status: "received",
     });
   }
 
@@ -267,7 +360,7 @@ class VisualMessagePanel {
    * @returns {string} Escaped text
    */
   escapeHtml(text) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }

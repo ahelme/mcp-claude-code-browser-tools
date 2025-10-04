@@ -94,6 +94,7 @@ function initializeDOM() {
     visualConversationDisplay: document.getElementById(
       "visual-conversation-display"
     ),
+    elementPickerBtn: document.getElementById("element-picker-btn"),
   };
 
   console.log("📋 DOM elements cached:", Object.keys(elements).length);
@@ -218,6 +219,7 @@ function initializeVisualMessagePanel() {
       screenshotList: elements.visualScreenshotList,
       selectedCount: elements.screenshotSelectedCount,
       conversationDisplay: elements.visualConversationDisplay,
+      elementPickerBtn: elements.elementPickerBtn,
     };
 
     // Initialize with send message callback

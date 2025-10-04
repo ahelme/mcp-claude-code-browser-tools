@@ -739,7 +739,16 @@
       <div class="screenshot-section">
         <div class="screenshot-section-header">
           <span>📎 Attach Screenshots:</span>
-          <span id="screenshot-selected-count">0 selected</span>
+          <div style="display: flex; gap: 4px; align-items: center">
+            <button
+              class="btn aqua"
+              id="element-picker-btn"
+              style="font-size: 8px; padding: 2px 8px; height: 16px"
+            >
+              🎯 Pick Element
+            </button>
+            <span id="screenshot-selected-count">0 selected</span>
+          </div>
         </div>
         <div id="visual-screenshot-list" class="screenshot-list">
           <div class="no-screenshots">No recent screenshots</div>
@@ -1088,6 +1097,7 @@
     <!-- Feature modules -->
     <script src="websocket.js"></script>
     <script src="navigation.js"></script>
+    <script src="element-picker.js"></script>
 
     <!-- Screenshot modules -->
     <script src="screenshot/filename-generator.js"></script>
