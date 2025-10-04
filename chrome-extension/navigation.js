@@ -410,76 +410,53 @@ class NavigationHandler {
         }
       }, this.navigationTimeout);
 
-      // Perform navigation using Chrome APIs
+      // Delegate navigation to background script via message passing
+      // DevTools panels don't have access to chrome.tabs API
       return new Promise((resolve, reject) => {
-        // Create managed listener for navigation completion
-        const updateListenerFunction = (updatedTabId, changeInfo, tab) => {
-          if (updatedTabId !== tabId) return;
-
-          // Check for loading complete
-          if (changeInfo.status === "complete" && tab.url) {
-            clearTimeout(timeoutId);
-            managedListener.remove(); // Use managed removal
-
-            const loadTime = Date.now() - startTime;
-            console.log(`✅ Navigation completed in ${loadTime}ms`);
-
-            resolve({
-              success: true,
-              finalUrl: tab.url,
-              title: tab.title,
-              loadTime,
-            });
-          }
-
-          // Check for navigation errors
-          if (changeInfo.status === "complete" && !tab.url) {
-            clearTimeout(timeoutId);
-            managedListener.remove(); // Use managed removal
-            reject(new Error("Navigation completed but no URL available"));
-          }
-        };
-
-        // Create managed listener with pool management
-        const managedListener = this.listenerPool.createManagedListener(
-          updateListenerFunction,
-          `navigation-${url.substring(0, 50)}`
-        );
-
-        // Store reference for legacy compatibility
-        this.activeNavigationListener = managedListener.listener;
+        const requestId = `nav_${Date.now()}`;
 
         // Set up timeout rejection
         this.currentNavigationController.signal.addEventListener(
           "abort",
           () => {
-            managedListener.remove(); // Use managed removal
-            this.activeNavigationListener = null;
             reject(
               new Error(`Navigation timeout after ${this.navigationTimeout}ms`)
             );
           }
         );
 
-        // Start listening for updates using managed listener
-        chrome.tabs.onUpdated.addListener(managedListener.listener);
-
-        // Perform the navigation
-        chrome.tabs.update(tabId, { url }, (tab) => {
-          if (chrome.runtime.lastError) {
+        // Send navigation request to background script
+        chrome.runtime.sendMessage(
+          {
+            type: "NAVIGATE_TAB",
+            tabId,
+            url,
+            requestId,
+            timeout: this.navigationTimeout,
+          },
+          (response) => {
             clearTimeout(timeoutId);
-            managedListener.remove(); // Use managed removal
-            this.activeNavigationListener = null;
-            reject(
-              new Error(
-                `Navigation failed: ${chrome.runtime.lastError.message}`
-              )
-            );
-            return;
-          }
 
-          console.log("🔄 Navigation started successfully");
-        });
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+              return;
+            }
+
+            const loadTime = Date.now() - startTime;
+
+            if (response && response.success) {
+              console.log(`✅ Navigation completed in ${loadTime}ms`);
+              resolve({
+                success: true,
+                finalUrl: response.url || url,
+                title: response.title || "",
+                loadTime,
+              });
+            } else {
+              reject(new Error(response?.error || "Navigation failed"));
+            }
+          }
+        );
       });
     } catch (error) {
       const loadTime = Date.now() - startTime;
@@ -558,15 +535,8 @@ class NavigationHandler {
       this.currentNavigationController = null;
     }
 
-    // Clean up any lingering event listeners
-    if (this.activeNavigationListener) {
-      try {
-        chrome.tabs.onUpdated.removeListener(this.activeNavigationListener);
-        this.activeNavigationListener = null;
-      } catch (error) {
-        console.warn("⚠️ Failed to remove navigation listener:", error.message);
-      }
-    }
+    // Navigation cleanup handled by background script
+    this.activeNavigationListener = null;
 
     this.isNavigating = false;
     this.navigationTimeout = 10000; // Reset to default

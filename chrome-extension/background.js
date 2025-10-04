@@ -94,6 +94,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       handleCopyToClipboard(message, sendResponse);
       return true;
 
+    case "NAVIGATE_TAB":
+      handleNavigateTab(message, sendResponse);
+      return true;
+
     case "PING":
       sendResponse({ success: true, timestamp: Date.now() });
       break;
@@ -859,6 +863,66 @@ async function executeScriptInTab(tabId, script) {
       }
     );
   });
+}
+
+async function handleNavigateTab(message, sendResponse) {
+  const { tabId, url, timeout = 10000 } = message;
+
+  console.log(`🧭 Navigating tab ${tabId} to: ${url}`);
+
+  try {
+    // Set up listener for navigation completion
+    const navigationCompleteListener = (updatedTabId, changeInfo, tab) => {
+      if (updatedTabId === tabId && changeInfo.status === "complete") {
+        chrome.tabs.onUpdated.removeListener(navigationCompleteListener);
+        clearTimeout(timeoutId);
+
+        console.log(`✅ Navigation completed: ${tab.url}`);
+        sendResponse({
+          success: true,
+          url: tab.url,
+          title: tab.title,
+        });
+      }
+    };
+
+    // Set up timeout
+    const timeoutId = setTimeout(() => {
+      chrome.tabs.onUpdated.removeListener(navigationCompleteListener);
+      console.error(`❌ Navigation timeout after ${timeout}ms`);
+      sendResponse({
+        success: false,
+        error: `Navigation timeout after ${timeout}ms`,
+      });
+    }, timeout);
+
+    // Start listening for navigation completion
+    chrome.tabs.onUpdated.addListener(navigationCompleteListener);
+
+    // Perform the navigation
+    chrome.tabs.update(tabId, { url }, (tab) => {
+      if (chrome.runtime.lastError) {
+        chrome.tabs.onUpdated.removeListener(navigationCompleteListener);
+        clearTimeout(timeoutId);
+        console.error(
+          `❌ Navigation failed: ${chrome.runtime.lastError.message}`
+        );
+        sendResponse({
+          success: false,
+          error: chrome.runtime.lastError.message,
+        });
+        return;
+      }
+
+      console.log("🔄 Navigation started successfully");
+    });
+  } catch (error) {
+    console.error(`❌ Navigation error:`, error);
+    sendResponse({
+      success: false,
+      error: error.message,
+    });
+  }
 }
 
 async function handleCopyToClipboard(message, sendResponse) {
