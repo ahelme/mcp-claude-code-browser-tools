@@ -51,8 +51,10 @@ class ScreenshotManager {
     this.captureTimeout = 30000; // 30 second timeout
     this.currentCaptureController = null;
     this.activeCaptureListener = null; // Track active listener for cleanup
-    this.screenshotHistory = new Map();
-    this.sessionCode = this.generateSessionCode(); // Randomized session code
+
+    // Filename generation (using shared module)
+    this.filenameGenerator = new FilenameGenerator();
+    this.screenshotHistory = this.filenameGenerator.screenshotHistory; // Reference for backward compatibility
 
     // Retry logic (using shared utility)
     this.retryExecutor = new RetryExecutor({
@@ -105,7 +107,6 @@ class ScreenshotManager {
     this.captureScreenshot = this.captureScreenshot.bind(this);
     this.captureViaBackground = this.captureViaBackground.bind(this);
     this.captureViaWebSocket = this.captureViaWebSocket.bind(this);
-    this.generateSmartFilename = this.generateSmartFilename.bind(this);
     this.updateUI = this.updateUI.bind(this);
 
     this.initializeEventListeners();
@@ -243,10 +244,14 @@ class ScreenshotManager {
         }`
       );
 
-      // Generate intelligent filename
+      // Generate intelligent filename (using FilenameGenerator module)
       const smartFilename =
         filename ||
-        (await this.generateSmartFilename(selector, fullPage, format));
+        (await this.filenameGenerator.generateSmartFilename(
+          selector,
+          fullPage,
+          format
+        ));
 
       console.log(
         `📸 Starting screenshot capture - fullPage: ${fullPage}, selector: ${
@@ -587,140 +592,9 @@ class ScreenshotManager {
     });
   }
 
-  /**
-   * Generate randomized session code (10 characters: alphanumeric)
-   * Format: xPqj3jTa2c
-   */
-  generateSessionCode() {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let code = "";
-    for (let i = 0; i < 10; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-  }
-
-  /**
-   * Trim page name to 4 letters (capitalize first letter)
-   * Examples: "Google" → "Goog", "github" → "Gith", "API" → "Api"
-   */
-  trimPageName(title) {
-    if (!title || title.length === 0) return "Page";
-
-    // Remove special characters and spaces, take first word
-    const cleaned = title.replace(/[^a-zA-Z0-9\s]/g, "").split(/\s+/)[0];
-    if (!cleaned || cleaned.length === 0) return "Page";
-
-    // Take first 4 characters and capitalize first letter
-    const trimmed = cleaned.substring(0, 4);
-    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
-  }
-
-  /**
-   * Generate intelligent filename based on page content
-   * Format: Goog_xPqj3jTa2c_25_10_02_0001.png
-   * - 4-letter page name
-   * - 10-char session code
-   * - Short date (YY_MM_DD)
-   * - 4-digit sequence number
-   */
-  async generateSmartFilename(selector, fullPage, format = "png") {
-    try {
-      // Get current page info
-      const pageInfo = await this.getPageInfo();
-
-      // Generate 4-letter page name
-      let baseName = this.trimPageName(pageInfo.title);
-
-      // Add selector info if capturing specific element
-      if (selector) {
-        const selectorName = this.sanitizeFilename(
-          selector.replace(/[#.]/g, "")
-        ).substring(0, 4);
-        baseName += `_${selectorName}`;
-      }
-
-      // Add fullPage indicator
-      if (fullPage) {
-        baseName += "_full";
-      }
-
-      // Add session code
-      baseName += `_${this.sessionCode}`;
-
-      // Add short date (YY_MM_DD)
-      const now = new Date();
-      const year = String(now.getFullYear()).slice(-2);
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const shortDate = `${year}_${month}_${day}`;
-
-      // Generate sequential number for this session
-      const sessionCount = this.getSessionScreenshotCount(baseName);
-      const paddedCount = String(sessionCount).padStart(4, "0");
-
-      // Use correct file extension based on format
-      const extension = format === "jpeg" ? "jpg" : format;
-      return `${baseName}_${shortDate}_${paddedCount}.${extension}`;
-    } catch (error) {
-      console.warn(
-        "⚠️ Could not generate smart filename, using fallback:",
-        error
-      );
-      return this.getFallbackFilename(selector, fullPage, format);
-    }
-  }
-
-  /**
-   * Get current page information for smart naming
-   */
-  async getPageInfo() {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(
-        {
-          type: "GET_PAGE_INFO",
-          tabId: chrome.devtools.inspectedWindow.tabId,
-        },
-        (response) => {
-          resolve(response || { title: "Untitled Page", url: "about:blank" });
-        }
-      );
-    });
-  }
-
-  /**
-   * Sanitize filename to be filesystem-safe
-   */
-  sanitizeFilename(name) {
-    return name
-      .replace(/[<>:"/\\|?*]/g, "_") // Replace invalid chars
-      .replace(/\s+/g, "_") // Replace spaces with underscores
-      .replace(/_+/g, "_") // Collapse multiple underscores
-      .replace(/^_|_$/g, "") // Trim leading/trailing underscores
-      .substring(0, 50); // Limit length
-  }
-
-  /**
-   * Get session screenshot count for filename numbering
-   */
-  getSessionScreenshotCount(baseName) {
-    const key = `session_${baseName}`;
-    const current = this.screenshotHistory.get(key) || 0;
-    const next = current + 1;
-    this.screenshotHistory.set(key, next);
-    return next;
-  }
-
-  /**
-   * Generate fallback filename if smart naming fails
-   */
-  getFallbackFilename(selector, fullPage, format = "png") {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const type = fullPage ? "fullpage" : selector ? "element" : "page";
-    const extension = format === "jpeg" ? "jpg" : format;
-    return `screenshot_${type}_${timestamp}.${extension}`;
-  }
+  // All filename generation methods moved to FilenameGenerator module
+  // (generateSessionCode, trimPageName, generateSmartFilename, getPageInfo,
+  //  sanitizeFilename, getSessionScreenshotCount, getFallbackFilename)
 
   /**
    * Update UI elements to show screenshot status
@@ -787,49 +661,16 @@ class ScreenshotManager {
     const previewDiv = document.querySelector(".screenshot-preview");
     if (!previewDiv) return;
 
-    // Generate next predicted filename (after current screenshot was taken)
-    const nextFilename = await this.predictNextFilename();
+    // Generate next predicted filename (using FilenameGenerator module)
+    const nextFilename = await this.filenameGenerator.predictNextFilename();
     const filenameSpan = previewDiv.querySelector(".screenshot-filename");
     if (filenameSpan) {
       filenameSpan.textContent = nextFilename;
     }
   }
 
-  /**
-   * Predict the next screenshot filename for UI preview
-   * Uses actual page title and smart naming logic to show accurate preview
-   * Format: Goog_xPqj3jTa2c_25_10_02_0001.png
-   */
-  async predictNextFilename() {
-    try {
-      // Get actual page info (same logic as generateSmartFilename)
-      const pageInfo = await this.getPageInfo();
-
-      // Generate 4-letter page name
-      const baseName = this.trimPageName(pageInfo.title);
-
-      // Add session code
-      const baseWithSession = `${baseName}_${this.sessionCode}`;
-
-      // Add short date (YY_MM_DD)
-      const now = new Date();
-      const year = String(now.getFullYear()).slice(-2);
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      const shortDate = `${year}_${month}_${day}`;
-
-      // Get NEXT count (current + 1 since we're predicting)
-      const currentCount =
-        this.screenshotHistory.get(`session_${baseWithSession}`) || 0;
-      const nextCount = currentCount + 1;
-      const paddedCount = String(nextCount).padStart(4, "0");
-
-      return `${baseWithSession}_${shortDate}_${paddedCount}.png`;
-    } catch (error) {
-      console.warn("⚠️ Could not predict next filename:", error);
-      return "Page_session_25_10_02_0001.png";
-    }
-  }
+  // Filename generation methods now delegated to FilenameGenerator module
+  // Available via this.filenameGenerator (generateSmartFilename, predictNextFilename, etc.)
 
   /**
    * Add screenshot to history tracking
